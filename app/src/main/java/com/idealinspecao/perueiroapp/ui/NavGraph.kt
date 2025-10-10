@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.idealinspecao.perueiroapp.ui.screens.DriverDashboardScreen
+import com.idealinspecao.perueiroapp.ui.screens.LoginScreen
 import com.idealinspecao.perueiroapp.ui.screens.ParentFormScreen
 import com.idealinspecao.perueiroapp.ui.screens.ParentsListScreen
 import com.idealinspecao.perueiroapp.ui.screens.ParentDashboardScreen
