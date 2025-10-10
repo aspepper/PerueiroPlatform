@@ -21,7 +21,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -66,16 +65,14 @@ fun LoginScreen(
             FormTextField(
                 value = cpf,
                 onValueChange = { cpf = it },
-                label = "CPF",
-                keyboardOptions = KeyboardOptions.Default
+                label = "CPF"
             )
             Spacer(modifier = Modifier.height(16.dp))
             FormTextField(
                 value = password,
                 onValueChange = { password = it },
                 label = "Senha",
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions.Default
+                visualTransformation = PasswordVisualTransformation()
             )
             Spacer(modifier = Modifier.height(16.dp))
 

@@ -29,7 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
@@ -40,9 +39,10 @@ fun ScreenScaffold(
     onBack: (() -> Unit)? = null,
     floatingActionButton: (@Composable () -> Unit)? = null,
     actions: @Composable () -> Unit = {},
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    snackbarHostState: SnackbarHostState? = null,
     content: @Composable (PaddingValues, SnackbarHostState) -> Unit
 ) {
+    val hostState = snackbarHostState ?: remember { SnackbarHostState() }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -66,9 +66,9 @@ fun ScreenScaffold(
         floatingActionButton = {
             floatingActionButton?.invoke()
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = { SnackbarHost(hostState = hostState) }
     ) { padding ->
-        content(padding, snackbarHostState)
+        content(padding, hostState)
     }
 }
 
@@ -78,7 +78,6 @@ fun FormTextField(
     onValueChange: (String) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     singleLine: Boolean = true,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     enabled: Boolean = true
@@ -89,7 +88,6 @@ fun FormTextField(
         label = { Text(label) },
         modifier = modifier.fillMaxWidth(),
         singleLine = singleLine,
-        keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation,
         enabled = enabled
     )
