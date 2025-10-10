@@ -47,14 +47,16 @@ fun ScreenScaffold(
         topBar = {
             TopAppBar(
                 title = { Text(title) },
-                navigationIcon = onBack?.let {
+                navigationIcon = if (onBack != null) {
                     {
-                        IconButton(onClick = it) {
+                        IconButton(onClick = onBack) {
                             Icon(Icons.Filled.ArrowBack, contentDescription = "Voltar")
                         }
                     }
+                } else {
+                    null
                 },
-                actions = { actions() },
+                actions = actions,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -63,9 +65,7 @@ fun ScreenScaffold(
                 )
             )
         },
-        floatingActionButton = {
-            floatingActionButton?.invoke()
-        },
+        floatingActionButton = floatingActionButton,
         snackbarHost = { SnackbarHost(hostState = hostState) }
     ) { padding ->
         content(padding, hostState)
