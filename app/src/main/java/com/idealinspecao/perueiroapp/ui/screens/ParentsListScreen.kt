@@ -1,0 +1,55 @@
+package com.idealinspecao.perueiroapp.ui.screens
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.idealinspecao.perueiroapp.data.model.Parent
+import com.idealinspecao.perueiroapp.ui.theme.PerueiroAppTheme
+
+@Composable
+fun ParentsListScreen(onAddParent: () -> Unit) {
+    val parents = listOf(
+        Parent("1", "John Doe", "123.456.789-00"),
+        Parent("2", "Jane Doe", "009.876.543-21")
+    )
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(modifier = Modifier.padding(16.dp)) {
+            items(parents) { parent ->
+                ListItem(
+                    headlineContent = { Text(parent.name) },
+                    supportingContent = { Text(parent.cpf) }
+                )
+            }
+        }
+        FloatingActionButton(
+            onClick = onAddParent,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(Icons.Filled.Add, contentDescription = "Add Parent")
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ParentsListScreenPreview() {
+    PerueiroAppTheme {
+        ParentsListScreen(onAddParent = {})
+    }
+}
