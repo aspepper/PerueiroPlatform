@@ -1,0 +1,309 @@
+package com.idealinspecao.perueiroapp
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.idealinspecao.perueiroapp.navigation.AppDestination
+import com.idealinspecao.perueiroapp.ui.screens.dashboard.DriverDashboardScreen
+import com.idealinspecao.perueiroapp.ui.screens.dashboard.GuardianDashboardScreen
+import com.idealinspecao.perueiroapp.ui.screens.login.ChangePasswordScreen
+import com.idealinspecao.perueiroapp.ui.screens.login.LoginScreen
+import com.idealinspecao.perueiroapp.ui.screens.management.DriverFormScreen
+import com.idealinspecao.perueiroapp.ui.screens.management.DriverListScreen
+import com.idealinspecao.perueiroapp.ui.screens.management.GuardianFormScreen
+import com.idealinspecao.perueiroapp.ui.screens.management.GuardianListScreen
+import com.idealinspecao.perueiroapp.ui.screens.management.SchoolFormScreen
+import com.idealinspecao.perueiroapp.ui.screens.management.SchoolListScreen
+import com.idealinspecao.perueiroapp.ui.screens.management.StudentFormScreen
+import com.idealinspecao.perueiroapp.ui.screens.management.StudentListScreen
+import com.idealinspecao.perueiroapp.ui.screens.management.VanFormScreen
+import com.idealinspecao.perueiroapp.ui.screens.management.VanListScreen
+import com.idealinspecao.perueiroapp.ui.screens.notifications.PaymentNotificationScreen
+import com.idealinspecao.perueiroapp.ui.screens.payments.PaymentFormScreen
+import com.idealinspecao.perueiroapp.ui.screens.payments.PaymentListScreen
+import com.idealinspecao.perueiroapp.viewmodel.IdealAppViewModel
+
+@Composable
+fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
+    val navController = rememberNavController()
+    val guardians by viewModel.guardians.collectAsState()
+    val schools by viewModel.schools.collectAsState()
+    val vans by viewModel.vans.collectAsState()
+    val drivers by viewModel.drivers.collectAsState()
+    val students by viewModel.students.collectAsState()
+    val payments by viewModel.payments.collectAsState()
+
+    NavHost(navController = navController, startDestination = AppDestination.Login.route) {
+        composable(AppDestination.Login.route) {
+            LoginScreen(
+                onDriverLogged = { cpf ->
+                    navController.navigate(AppDestination.DriverDashboard.buildRoute(cpf)) {
+                        popUpTo(AppDestination.Login.route) { inclusive = true }
+                    }
+                },
+                onGuardianLogged = { cpf ->
+                    navController.navigate(AppDestination.GuardianDashboard.buildRoute(cpf)) {
+                        popUpTo(AppDestination.Login.route) { inclusive = true }
+                    }
+                },
+                onChangePasswordRequired = { cpf ->
+                    navController.navigate(AppDestination.ChangePassword.buildRoute(cpf))
+                },
+                onRegisterDriver = {
+                    navController.navigate(AppDestination.DriverRegistration.route)
+                },
+                login = { cpf, password, role -> viewModel.login(cpf, password, role) }
+            )
+        }
+
+        composable(
+            route = AppDestination.ChangePassword.route,
+            arguments = listOf(navArgument("cpf") { type = NavType.StringType })
+        ) { entry ->
+            val cpf = entry.arguments?.getString("cpf") ?: return@composable
+            ChangePasswordScreen(
+                cpf = cpf,
+                onPasswordChanged = { navController.popBackStack(AppDestination.Login.route, inclusive = false) },
+                onBack = { navController.popBackStack() },
+                changePassword = { id, password -> viewModel.changeGuardianPassword(id, password) }
+            )
+        }
+
+        composable(
+            route = AppDestination.DriverDashboard.route,
+            arguments = listOf(navArgument("cpf") { type = NavType.StringType })
+        ) { entry ->
+            val cpf = entry.arguments?.getString("cpf") ?: return@composable
+            DriverDashboardScreen(
+                driverCpf = cpf,
+                fetchDriver = { viewModel.getDriver(it) },
+                onNavigateToGuardians = { navController.navigate(AppDestination.Guardians.route) },
+                onNavigateToSchools = { navController.navigate(AppDestination.Schools.route) },
+                onNavigateToVans = { navController.navigate(AppDestination.Vans.route) },
+                onNavigateToDrivers = { navController.navigate(AppDestination.Drivers.route) },
+                onNavigateToStudents = { navController.navigate(AppDestination.Students.route) },
+                onNavigateToPayments = { navController.navigate(AppDestination.Payments.route) },
+                onNavigateToNotifications = { navController.navigate(AppDestination.PaymentNotifications.route) }
+            )
+        }
+
+        composable(
+            route = AppDestination.GuardianDashboard.route,
+            arguments = listOf(navArgument("cpf") { type = NavType.StringType })
+        ) { entry ->
+            val cpf = entry.arguments?.getString("cpf") ?: return@composable
+            GuardianDashboardScreen(
+                guardianCpf = cpf,
+                fetchGuardian = { viewModel.getGuardian(it) },
+                students = students,
+                payments = payments,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(AppDestination.DriverRegistration.route) {
+            DriverFormScreen(
+                driver = null,
+                onBack = { navController.popBackStack() },
+                onSave = {
+                    viewModel.saveDriver(it)
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(AppDestination.Guardians.route) {
+            var editingGuardian by remember { mutableStateOf<com.idealinspecao.perueiroapp.data.local.GuardianEntity?>(null) }
+            var creatingGuardian by remember { mutableStateOf(false) }
+            if (!creatingGuardian && editingGuardian == null) {
+                GuardianListScreen(
+                    guardians = guardians,
+                    onBack = { navController.popBackStack() },
+                    onAddGuardian = {
+                        creatingGuardian = true
+                        editingGuardian = null
+                    },
+                    onEditGuardian = {
+                        editingGuardian = it
+                        creatingGuardian = false
+                    }
+                )
+            } else {
+                GuardianFormScreen(
+                    guardian = if (creatingGuardian) null else editingGuardian,
+                    onBack = {
+                        editingGuardian = null
+                        creatingGuardian = false
+                    },
+                    onSave = { viewModel.saveGuardian(it) },
+                    onCheckPendencies = { viewModel.refreshGuardianPendencies(it) }
+                )
+            }
+        }
+
+        composable(AppDestination.Schools.route) {
+            var editingSchool by remember { mutableStateOf<com.idealinspecao.perueiroapp.data.local.SchoolEntity?>(null) }
+            var creatingSchool by remember { mutableStateOf(false) }
+            if (!creatingSchool && editingSchool == null) {
+                SchoolListScreen(
+                    schools = schools,
+                    onBack = { navController.popBackStack() },
+                    onAddSchool = {
+                        creatingSchool = true
+                        editingSchool = null
+                    },
+                    onEditSchool = {
+                        editingSchool = it
+                        creatingSchool = false
+                    }
+                )
+            } else {
+                SchoolFormScreen(
+                    school = if (creatingSchool) null else editingSchool,
+                    onBack = {
+                        editingSchool = null
+                        creatingSchool = false
+                    },
+                    onSave = { viewModel.saveSchool(it) }
+                )
+            }
+        }
+
+        composable(AppDestination.Vans.route) {
+            var editingVan by remember { mutableStateOf<com.idealinspecao.perueiroapp.data.local.VanEntity?>(null) }
+            var creatingVan by remember { mutableStateOf(false) }
+            if (!creatingVan && editingVan == null) {
+                VanListScreen(
+                    vans = vans,
+                    onBack = { navController.popBackStack() },
+                    onAddVan = {
+                        creatingVan = true
+                        editingVan = null
+                    },
+                    onEditVan = {
+                        editingVan = it
+                        creatingVan = false
+                    }
+                )
+            } else {
+                VanFormScreen(
+                    van = if (creatingVan) null else editingVan,
+                    drivers = drivers,
+                    onBack = {
+                        editingVan = null
+                        creatingVan = false
+                    },
+                    onSave = { viewModel.saveVan(it) }
+                )
+            }
+        }
+
+        composable(AppDestination.Drivers.route) {
+            var editingDriver by remember { mutableStateOf<com.idealinspecao.perueiroapp.data.local.DriverEntity?>(null) }
+            var creatingDriver by remember { mutableStateOf(false) }
+            if (!creatingDriver && editingDriver == null) {
+                DriverListScreen(
+                    drivers = drivers,
+                    onBack = { navController.popBackStack() },
+                    onAddDriver = {
+                        creatingDriver = true
+                        editingDriver = null
+                    },
+                    onEditDriver = {
+                        editingDriver = it
+                        creatingDriver = false
+                    }
+                )
+            } else {
+                DriverFormScreen(
+                    driver = if (creatingDriver) null else editingDriver,
+                    onBack = {
+                        editingDriver = null
+                        creatingDriver = false
+                    },
+                    onSave = { viewModel.saveDriver(it) }
+                )
+            }
+        }
+
+        composable(AppDestination.Students.route) {
+            var editingStudent by remember { mutableStateOf<com.idealinspecao.perueiroapp.data.local.StudentEntity?>(null) }
+            var creatingStudent by remember { mutableStateOf(false) }
+            if (!creatingStudent && editingStudent == null) {
+                StudentListScreen(
+                    students = students,
+                    guardians = guardians,
+                    onBack = { navController.popBackStack() },
+                    onAddStudent = {
+                        creatingStudent = true
+                        editingStudent = null
+                    },
+                    onEditStudent = {
+                        editingStudent = it
+                        creatingStudent = false
+                    }
+                )
+            } else {
+                StudentFormScreen(
+                    student = if (creatingStudent) null else editingStudent,
+                    guardians = guardians,
+                    schools = schools,
+                    vans = vans,
+                    drivers = drivers,
+                    existingStudents = students,
+                    onBack = {
+                        editingStudent = null
+                        creatingStudent = false
+                    },
+                    onSave = { viewModel.saveStudent(it) }
+                )
+            }
+        }
+
+        composable(AppDestination.Payments.route) {
+            var editingPayment by remember { mutableStateOf<com.idealinspecao.perueiroapp.data.local.PaymentEntity?>(null) }
+            var creatingPayment by remember { mutableStateOf(false) }
+            if (!creatingPayment && editingPayment == null) {
+                PaymentListScreen(
+                    payments = payments,
+                    students = students,
+                    onBack = { navController.popBackStack() },
+                    onAddPayment = {
+                        creatingPayment = true
+                        editingPayment = null
+                    },
+                    onEditPayment = {
+                        editingPayment = it
+                        creatingPayment = false
+                    }
+                )
+            } else {
+                PaymentFormScreen(
+                    payment = if (creatingPayment) null else editingPayment,
+                    students = students,
+                    onBack = {
+                        editingPayment = null
+                        creatingPayment = false
+                    },
+                    onSave = { viewModel.savePayment(it) }
+                )
+            }
+        }
+
+        composable(AppDestination.PaymentNotifications.route) {
+            PaymentNotificationScreen(
+                guardians = guardians,
+                students = students,
+                onBack = { navController.popBackStack() }
+            )
+        }
+    }
+}
