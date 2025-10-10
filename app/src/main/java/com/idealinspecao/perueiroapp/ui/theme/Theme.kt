@@ -45,3 +45,16 @@ fun IdealInspecaoTheme(
         content = content
     )
 }
+
+@Composable
+fun PerueiroAppTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = true,
+    content: @Composable () -> Unit
+) {
+    IdealInspecaoTheme(
+        darkTheme = darkTheme,
+        dynamicColor = dynamicColor,
+        content = content
+    )
+}
