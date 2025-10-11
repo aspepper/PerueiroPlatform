@@ -2,9 +2,9 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": [
-      "ES2023",
       "DOM",
-      "DOM.Iterable"
+      "DOM.Iterable",
+      "ES2022"
     ],
     "allowJs": false,
     "skipLibCheck": true,
