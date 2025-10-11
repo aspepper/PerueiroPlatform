@@ -13,7 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.idealinspecao.perueiroapp.navigation.AppDestination
 import com.idealinspecao.perueiroapp.ui.screens.dashboard.DriverDashboardScreen
-import com.idealinspecao.perueiroapp.ui.screens.dashboard.GuardianDashboardScreen
+import com.idealinspecao.perueiroapp.ui.screens.dashboard.ParentDashboardScreen
 import com.idealinspecao.perueiroapp.ui.screens.login.ChangePasswordScreen
 import com.idealinspecao.perueiroapp.ui.screens.login.LoginScreen
 import com.idealinspecao.perueiroapp.ui.screens.management.DriverFormScreen
@@ -29,11 +29,13 @@ import com.idealinspecao.perueiroapp.ui.screens.management.VanListScreen
 import com.idealinspecao.perueiroapp.ui.screens.notifications.PaymentNotificationScreen
 import com.idealinspecao.perueiroapp.ui.screens.payments.PaymentFormScreen
 import com.idealinspecao.perueiroapp.ui.screens.payments.PaymentListScreen
+import com.idealinspecao.perueiroapp.ui.screens.splash.SplashScreen
 import com.idealinspecao.perueiroapp.viewmodel.IdealAppViewModel
 
 @Composable
 fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
     val navController = rememberNavController()
+    val loggedUser by viewModel.loggedUser.collectAsState()
     val guardians by viewModel.guardians.collectAsState()
     val schools by viewModel.schools.collectAsState()
     val vans by viewModel.vans.collectAsState()
@@ -41,7 +43,28 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
     val students by viewModel.students.collectAsState()
     val payments by viewModel.payments.collectAsState()
 
-    NavHost(navController = navController, startDestination = AppDestination.Login.route) {
+    NavHost(navController = navController, startDestination = AppDestination.Splash.route) {
+        composable(AppDestination.Splash.route) {
+            SplashScreen(
+                loggedUser = loggedUser,
+                onNavigateToLogin = {
+                    navController.navigate(AppDestination.Login.route) {
+                        popUpTo(AppDestination.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToDriver = { cpf ->
+                    navController.navigate(AppDestination.DriverDashboard.buildRoute(cpf)) {
+                        popUpTo(AppDestination.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToParent = { cpf ->
+                    navController.navigate(AppDestination.ParentDashboard.buildRoute(cpf)) {
+                        popUpTo(AppDestination.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(AppDestination.Login.route) {
             LoginScreen(
                 onDriverLogged = { cpf ->
@@ -49,8 +72,8 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                         popUpTo(AppDestination.Login.route) { inclusive = true }
                     }
                 },
-                onGuardianLogged = { cpf ->
-                    navController.navigate(AppDestination.GuardianDashboard.buildRoute(cpf)) {
+                onParentLogged = { cpf ->
+                    navController.navigate(AppDestination.ParentDashboard.buildRoute(cpf)) {
                         popUpTo(AppDestination.Login.route) { inclusive = true }
                     }
                 },
@@ -91,21 +114,32 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                 onNavigateToDrivers = { navController.navigate(AppDestination.Drivers.route) },
                 onNavigateToStudents = { navController.navigate(AppDestination.Students.route) },
                 onNavigateToPayments = { navController.navigate(AppDestination.Payments.route) },
-                onNavigateToNotifications = { navController.navigate(AppDestination.PaymentNotifications.route) }
+                onNavigateToNotifications = { navController.navigate(AppDestination.PaymentNotifications.route) },
+                onLogout = {
+                    viewModel.logout()
+                    navController.navigate(AppDestination.Splash.route) {
+                        popUpTo(AppDestination.Splash.route) { inclusive = true }
+                    }
+                }
             )
         }
 
         composable(
-            route = AppDestination.GuardianDashboard.route,
+            route = AppDestination.ParentDashboard.route,
             arguments = listOf(navArgument("cpf") { type = NavType.StringType })
         ) { entry ->
             val cpf = entry.arguments?.getString("cpf") ?: return@composable
-            GuardianDashboardScreen(
+            ParentDashboardScreen(
                 guardianCpf = cpf,
                 fetchGuardian = { viewModel.getGuardian(it) },
                 students = students,
                 payments = payments,
-                onBack = { navController.popBackStack() }
+                onLogout = {
+                    viewModel.logout()
+                    navController.navigate(AppDestination.Splash.route) {
+                        popUpTo(AppDestination.Splash.route) { inclusive = true }
+                    }
+                }
             )
         }
 

@@ -1,6 +1,7 @@
 package com.idealinspecao.perueiroapp.navigation
 
 sealed class AppDestination(val route: String) {
+    data object Splash : AppDestination("splash")
     data object Login : AppDestination("login")
     data object ChangePassword : AppDestination("changePassword/{cpf}") {
         fun buildRoute(cpf: String) = "changePassword/$cpf"
@@ -10,8 +11,8 @@ sealed class AppDestination(val route: String) {
         fun buildRoute(cpf: String) = "driverDashboard/$cpf"
     }
 
-    data object GuardianDashboard : AppDestination("guardianDashboard/{cpf}") {
-        fun buildRoute(cpf: String) = "guardianDashboard/$cpf"
+    data object ParentDashboard : AppDestination("parentDashboard/{cpf}") {
+        fun buildRoute(cpf: String) = "parentDashboard/$cpf"
     }
 
     data object Guardians : AppDestination("guardians")

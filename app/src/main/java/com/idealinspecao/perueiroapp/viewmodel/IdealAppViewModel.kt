@@ -10,14 +10,28 @@ import com.idealinspecao.perueiroapp.data.local.IdealRepository
 import com.idealinspecao.perueiroapp.data.local.PaymentEntity
 import com.idealinspecao.perueiroapp.data.local.SchoolEntity
 import com.idealinspecao.perueiroapp.data.local.StudentEntity
+import com.idealinspecao.perueiroapp.data.local.UserSessionDataSource
+import com.idealinspecao.perueiroapp.data.local.UserSession
 import com.idealinspecao.perueiroapp.data.local.VanEntity
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class IdealAppViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = IdealRepository(IdealDatabase.getInstance(application).idealDao())
+    private val sessionDataSource = UserSessionDataSource(application)
+
+    val loggedUser: StateFlow<LoggedUser?> = sessionDataSource.session
+        .map { session ->
+            session?.toLoggedUser()
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
 
     val guardians = repository.guardians.stateIn(
         scope = viewModelScope,
@@ -62,7 +76,10 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
                 when {
                     driver == null -> LoginOutcome.Error("Motorista não encontrado")
                     driver.password != password -> LoginOutcome.Error("Senha inválida")
-                    else -> LoginOutcome.Driver(driver)
+                    else -> {
+                        sessionDataSource.setSession(driver.cpf, UserRole.DRIVER.name)
+                        LoginOutcome.Driver(driver)
+                    }
                 }
             }
 
@@ -73,9 +90,18 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
                     guardian.password != password -> LoginOutcome.Error("Senha inválida")
                     guardian.mustChangePassword -> LoginOutcome.MustChangePassword(guardian.cpf)
                     guardian.isBlacklisted -> LoginOutcome.Error("Responsável bloqueado devido a pendências")
-                    else -> LoginOutcome.Guardian(guardian)
+                    else -> {
+                        sessionDataSource.setSession(guardian.cpf, UserRole.GUARDIAN.name)
+                        LoginOutcome.Guardian(guardian)
+                    }
                 }
             }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            sessionDataSource.clear()
         }
     }
 
@@ -155,6 +181,11 @@ data class GuardianPendencies(
     val reasons: List<String>,
     val vans: List<String>
 )
+
+data class LoggedUser(val cpf: String, val role: UserRole)
+
+private fun UserSession.toLoggedUser(): LoggedUser? =
+    runCatching { UserRole.valueOf(role) }.getOrNull()?.let { LoggedUser(cpf = cpf, role = it) }
 
 enum class UserRole { DRIVER, GUARDIAN }
 
