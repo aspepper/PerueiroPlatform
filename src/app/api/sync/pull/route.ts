@@ -1,4 +1,4 @@
-import { prisma } from "@/src/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 function unauthorized() { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }

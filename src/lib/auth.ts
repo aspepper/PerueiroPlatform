@@ -1,9 +1,9 @@
-<<<<<<< HEAD
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+
+import { prisma } from "./prisma";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -38,7 +38,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role
+          role: user.role,
         } as any;
       },
       credentials: {
@@ -67,31 +67,5 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       return (user as any)?.role === "ADMIN";
     },
   },
-  trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
 });
-=======
-export type SessionUser = {
-  id: string;
-  name: string;
-  role: "admin" | "operator";
-};
-
-export type Session = {
-  user: SessionUser;
-  issuedAt: string;
-};
-
-export async function auth(): Promise<Session> {
-  // Em uma implementação real os dados viriam de um provider OAuth/NextAuth.
-  // Mantemos um mock simples para permitir a renderização no ambiente de testes.
-  return {
-    user: {
-      id: "admin-1",
-      name: "Equipe Administrativa",
-      role: "admin"
-    },
-    issuedAt: new Date().toISOString()
-  };
-}
->>>>>>> 3774d396c579c7b72ea4cfd9efccb2e2fe0aa137
