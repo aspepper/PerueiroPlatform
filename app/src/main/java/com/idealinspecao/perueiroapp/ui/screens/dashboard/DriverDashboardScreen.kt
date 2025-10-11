@@ -4,16 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -213,17 +212,31 @@ private fun SummaryCard() {
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                SummaryItem(label = "Responsáveis", value = "Gerencie cadastros")
-                SummaryItem(label = "Financeiro", value = "Acompanhe cobranças")
+            BoxWithConstraints {
+                val itemWidth = (maxWidth - 16.dp) / 2
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    SummaryItem(
+                        label = "Responsáveis",
+                        value = "Gerencie cadastros",
+                        modifier = Modifier.width(itemWidth)
+                    )
+                    SummaryItem(
+                        label = "Financeiro",
+                        value = "Acompanhe cobranças",
+                        modifier = Modifier.width(itemWidth)
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun RowScope.SummaryItem(label: String, value: String) {
-    Column(modifier = Modifier.weight(1f)) {
+private fun SummaryItem(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
@@ -241,25 +254,27 @@ private fun RowScope.SummaryItem(label: String, value: String) {
 
 @Composable
 private fun ActionGrid(actions: List<DashboardAction>) {
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 24.dp)
     ) {
-        actions.chunked(2).forEach { rowItems ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                rowItems.forEach { action ->
-                    DashboardActionCard(
-                        action = action,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                if (rowItems.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
+        val cardWidth = (maxWidth - 16.dp) / 2
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            actions.chunked(2).forEach { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    rowItems.forEach { action ->
+                        DashboardActionCard(
+                            action = action,
+                            modifier = Modifier.width(cardWidth)
+                        )
+                    }
+                    if (rowItems.size == 1) {
+                        Spacer(modifier = Modifier.width(cardWidth))
+                    }
                 }
             }
         }

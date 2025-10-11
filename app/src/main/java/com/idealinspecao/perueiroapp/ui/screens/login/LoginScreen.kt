@@ -3,16 +3,16 @@ package com.idealinspecao.perueiroapp.ui.screens.login
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.weight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -192,31 +192,37 @@ fun LoginScreen(
 
 @Composable
 private fun RoleSelector(role: UserRole, onRoleSelected: (UserRole) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        RoleChip(
-            selected = role == UserRole.DRIVER,
-            label = "Motorista",
-            icon = Icons.Outlined.DirectionsBus,
-            onClick = { onRoleSelected(UserRole.DRIVER) }
-        )
-        RoleChip(
-            selected = role == UserRole.GUARDIAN,
-            label = "Responsável",
-            icon = Icons.Outlined.Person,
-            onClick = { onRoleSelected(UserRole.GUARDIAN) }
-        )
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val chipWidth = (maxWidth - 12.dp) / 2
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            RoleChip(
+                selected = role == UserRole.DRIVER,
+                label = "Motorista",
+                icon = Icons.Outlined.DirectionsBus,
+                onClick = { onRoleSelected(UserRole.DRIVER) },
+                modifier = Modifier.width(chipWidth)
+            )
+            RoleChip(
+                selected = role == UserRole.GUARDIAN,
+                label = "Responsável",
+                icon = Icons.Outlined.Person,
+                onClick = { onRoleSelected(UserRole.GUARDIAN) },
+                modifier = Modifier.width(chipWidth)
+            )
+        }
     }
 }
 
 @Composable
-private fun RowScope.RoleChip(
+private fun RoleChip(
     selected: Boolean,
     label: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     FilterChip(
         selected = selected,
@@ -241,7 +247,7 @@ private fun RowScope.RoleChip(
             selectedLabelColor = Color.White,
             labelColor = Color(0xFF1F2F5A)
         ),
-        modifier = Modifier.weight(1f)
+        modifier = modifier
     )
 }
 
