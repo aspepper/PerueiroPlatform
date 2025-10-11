@@ -3,16 +3,15 @@ package com.idealinspecao.perueiroapp.ui.screens.dashboard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -173,17 +172,37 @@ private fun FinancialSummary(studentsCount: Int, pendingCount: Int) {
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                SummaryInfo(label = "Alunos", value = studentsCount.toString())
-                SummaryInfo(label = "Pendências", value = pendingCount.toString(), highlight = pendingCount > 0)
+            BoxWithConstraints {
+                val itemWidth = (maxWidth - 16.dp) / 2
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    SummaryInfo(
+                        label = "Alunos",
+                        value = studentsCount.toString(),
+                        modifier = Modifier.width(itemWidth)
+                    )
+                    SummaryInfo(
+                        label = "Pendências",
+                        value = pendingCount.toString(),
+                        highlight = pendingCount > 0,
+                        modifier = Modifier.width(itemWidth)
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun RowScope.SummaryInfo(label: String, value: String, highlight: Boolean = false) {
-    Column(modifier = Modifier.weight(1f)) {
+private fun SummaryInfo(
+    label: String,
+    value: String,
+    highlight: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
         Text(text = label, style = MaterialTheme.typography.labelLarge, color = Color(0xFF6E7AA6))
         Spacer(modifier = Modifier.height(6.dp))
         Text(
