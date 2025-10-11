@@ -10,6 +10,8 @@ set -euo pipefail
 # Defaults foram ajustados para este app.
 # ============================
 
+Clear
+
 MODULE="${MODULE:-app}"
 VARIANT="${VARIANT:-debug}"
 APP_ID="${APP_ID:-com.idealinspecao.perueiroapp}"
