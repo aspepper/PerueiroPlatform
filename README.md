@@ -196,3 +196,19 @@ pnpm dev
 ```
 
 Acesse http://localhost:3000/login e entre com o admin definido nas variáveis de ambiente.
+
+
+# Prisma
+
+## Checagem objetiva via diff
+
+# 1) (opcional) garantir que o schema está válido
+npx prisma validate
+
+# 2) ver o diff (legível) — não aplica nada
+npx prisma migrate diff \
+  --from-url "$DATABASE_URL" \
+  --to-schema-datamodel ./prisma/schema.prisma
+
+# 3) checar por script SQL (útil para revisar plano de mudança)
+npx prisma migrate diff --from-url "postgresql://neondb_owner:npg_4c2uxJbNfnUE@ep-lingering-smoke-a8btkicc-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require" --to-schema-datamodel ./prisma/schema.prisma --script
