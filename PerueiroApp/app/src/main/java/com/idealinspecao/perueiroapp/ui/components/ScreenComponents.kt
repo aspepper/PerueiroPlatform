@@ -39,41 +39,36 @@ fun ScreenScaffold(
     title: String,
     onBack: (() -> Unit)? = null,
     floatingActionButton: (@Composable () -> Unit)? = null,
-    actions: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
     snackbarHostState: SnackbarHostState? = null,
     content: @Composable (PaddingValues, SnackbarHostState) -> Unit
 ) {
     val hostState = snackbarHostState ?: remember { SnackbarHostState() }
-    if (floatingActionButton != null) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(title) },
-                    navigationIcon = {
-                        if (onBack != null) {
-                            @Composable {
-                                IconButton(onClick = onBack) {
-                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
-                                }
-                            }
-                        } else {
-                            null
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(title) },
+                navigationIcon = {
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                         }
-                    },
-                    actions = actions as @Composable (RowScope.() -> Unit),
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    }
+                },
+                actions = actions,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
-            },
-            floatingActionButton = floatingActionButton,
-            snackbarHost = { SnackbarHost(hostState = hostState) }
-        ) { padding ->
-            content(padding, hostState)
-        }
+            )
+        },
+        floatingActionButton = floatingActionButton,
+        snackbarHost = { SnackbarHost(hostState = hostState) }
+    ) { padding ->
+        content(padding, hostState)
     }
 }
 
