@@ -1,6 +1,6 @@
 import "./globals.css";
 import { ReactNode } from "react";
-import { auth } from "@/lib/auth";
+import { AuthSessionProvider } from "@/components/auth-session-provider";
 
 export const metadata = {
   title: "Perueiros Admin",
@@ -8,10 +8,11 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  await auth();
   return (
     <html lang="pt-br">
-      <body>{children}</body>
+      <body>
+        <AuthSessionProvider>{children}</AuthSessionProvider>
+      </body>
     </html>
   );
 }
