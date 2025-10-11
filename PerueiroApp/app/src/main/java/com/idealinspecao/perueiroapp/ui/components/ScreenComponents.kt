@@ -65,7 +65,9 @@ fun ScreenScaffold(
                 )
             )
         },
-        floatingActionButton = floatingActionButton,
+        floatingActionButton = {
+            floatingActionButton?.invoke()
+        },
         snackbarHost = { SnackbarHost(hostState = hostState) }
     ) { padding ->
         content(padding, hostState)
