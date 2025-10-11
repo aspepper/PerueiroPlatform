@@ -4,11 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.idealinspecao.perueiroapp.ui.screens.DriverDashboardScreen
-import com.idealinspecao.perueiroapp.ui.screens.LoginScreen
+import com.idealinspecao.perueiroapp.ui.screens.login.LoginScreen
 import com.idealinspecao.perueiroapp.ui.screens.ParentFormScreen
 import com.idealinspecao.perueiroapp.ui.screens.ParentsListScreen
-import com.idealinspecao.perueiroapp.ui.screens.ParentDashboardScreen
+import com.idealinspecao.perueiroapp.ui.screens.dashboard.DriverDashboardScreen
+import com.idealinspecao.perueiroapp.ui.screens.dashboard.ParentDashboardScreen
+import com.idealinspecao.perueiroapp.viewmodel.LoginOutcome
 
 @Composable
 fun NavGraph() {
@@ -16,15 +17,35 @@ fun NavGraph() {
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {
             LoginScreen(
-                onDriverLogin = { navController.navigate("driver_dashboard") },
-                onParentLogin = { navController.navigate("parent_dashboard") }
+                onDriverLogged = { navController.navigate("driver_dashboard") },
+                onParentLogged = { navController.navigate("parent_dashboard") },
+                onChangePasswordRequired = { navController.navigate("change_password") },
+                onRegisterDriver = { navController.navigate("driver_registration") },
+                login = { _, _, _ -> LoginOutcome.Error("Funcionalidade não disponível") }
             )
         }
         composable("driver_dashboard") {
-            DriverDashboardScreen(onNavigate = { route -> navController.navigate(route) })
+            DriverDashboardScreen(
+                driverCpf = "",
+                fetchDriver = { null },
+                onNavigateToGuardians = { navController.navigate("parents_list") },
+                onNavigateToSchools = { },
+                onNavigateToVans = { },
+                onNavigateToDrivers = { },
+                onNavigateToStudents = { },
+                onNavigateToPayments = { },
+                onNavigateToNotifications = { },
+                onLogout = { navController.popBackStack("login", inclusive = false) }
+            )
         }
         composable("parent_dashboard") {
-            ParentDashboardScreen()
+            ParentDashboardScreen(
+                guardianCpf = "",
+                fetchGuardian = { null },
+                students = emptyList(),
+                payments = emptyList(),
+                onLogout = { navController.popBackStack("login", inclusive = false) }
+            )
         }
         composable("parents_list") {
             ParentsListScreen(onAddParent = { navController.navigate("parent_form") })
