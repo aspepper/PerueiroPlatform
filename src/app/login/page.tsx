@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 
 const errorMessages: Record<string, string> = {
   CredentialsSignin: "E-mail ou senha inválidos. Confira os dados e tente novamente.",
@@ -11,6 +11,14 @@ const errorMessages: Record<string, string> = {
 };
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<main className="login-page" aria-busy="true" />}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
   const { status } = useSession();
   const params = useSearchParams();
