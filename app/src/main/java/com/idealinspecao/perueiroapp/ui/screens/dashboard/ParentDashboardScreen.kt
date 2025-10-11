@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -181,7 +182,7 @@ private fun FinancialSummary(studentsCount: Int, pendingCount: Int) {
 }
 
 @Composable
-private fun SummaryInfo(label: String, value: String, highlight: Boolean = false) {
+private fun RowScope.SummaryInfo(label: String, value: String, highlight: Boolean = false) {
     Column(modifier = Modifier.weight(1f)) {
         Text(text = label, style = MaterialTheme.typography.labelLarge, color = Color(0xFF6E7AA6))
         Spacer(modifier = Modifier.height(6.dp))
