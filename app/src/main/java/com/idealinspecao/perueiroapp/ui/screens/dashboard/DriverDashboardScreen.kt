@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -221,7 +222,7 @@ private fun SummaryCard() {
 }
 
 @Composable
-private fun SummaryItem(label: String, value: String) {
+private fun RowScope.SummaryItem(label: String, value: String) {
     Column(modifier = Modifier.weight(1f)) {
         Text(
             text = label,
