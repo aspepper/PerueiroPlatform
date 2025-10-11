@@ -9,7 +9,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const params = useSearchParams();
-  const error = params.get("error");
+  const error = params?.get("error");
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

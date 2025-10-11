@@ -1,6 +1,6 @@
 import "./globals.css";
 import { ReactNode } from "react";
-import { auth } from "@/src/lib/auth";
+import { auth } from "@/lib/auth";
 
 export const metadata = {
   title: "Perueiros Admin",
