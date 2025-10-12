@@ -1,12 +1,6 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-export async function GET() {
-  const session = await auth();
-  return NextResponse.json(session);
-}
+const handler = NextAuth(authOptions);
 
-export async function POST() {
-  const session = await auth();
-  return NextResponse.json(session);
-}
+export { handler as GET, handler as POST };
