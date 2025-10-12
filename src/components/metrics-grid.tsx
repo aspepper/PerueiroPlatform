@@ -40,10 +40,17 @@ export default function MetricsGrid({ metrics = defaultMetrics }: { metrics?: Me
         return (
           <article
             key={metric.label}
-            className="rounded-3xl border border-slate-200 bg-white px-6 py-5 shadow-sm shadow-slate-900/5 transition hover:shadow-md"
+            className="rounded-3xl border border-slate-200/80 bg-white px-6 py-6 shadow-[0_20px_45px_-32px_rgba(15,23,42,0.45)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_60px_-28px_rgba(15,23,42,0.55)]"
           >
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-semibold text-slate-600">{metric.label}</p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-slate-400">
+                  {metric.label}
+                </p>
+                <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
+                  {metric.value.toLocaleString("pt-BR")}
+                </p>
+              </div>
               {variation ? (
                 <span
                   className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
@@ -57,10 +64,7 @@ export default function MetricsGrid({ metrics = defaultMetrics }: { metrics?: Me
                 </span>
               ) : null}
             </div>
-            <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900">
-              {metric.value.toLocaleString("pt-BR")}
-            </p>
-            <p className="mt-2 text-xs text-slate-500">{metric.description}</p>
+            <p className="mt-4 text-xs text-slate-500">{metric.description}</p>
           </article>
         );
       })}

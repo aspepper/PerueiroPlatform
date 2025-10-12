@@ -26,7 +26,7 @@ const reminders = [
 
 export default function FinancialSummary() {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm shadow-slate-900/5">
+    <section className="rounded-3xl border border-slate-200/80 bg-white px-6 py-7 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Saúde financeira</p>
         <h2 className="text-2xl font-semibold text-slate-900">Resumo financeiro</h2>
@@ -64,7 +64,7 @@ export default function FinancialSummary() {
 
         <div className="grid gap-3">
           {highlights.map((highlight) => (
-            <div key={highlight.title} className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-inner shadow-white/40">
+            <div key={highlight.title} className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-inner shadow-white/60">
               <p className="text-sm font-semibold text-slate-900">{highlight.title}</p>
               <p className="mt-1 text-xl font-semibold text-slate-900">{highlight.value}</p>
               <p className="text-xs text-slate-500">{highlight.description}</p>

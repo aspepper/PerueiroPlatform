@@ -32,14 +32,14 @@ function getStatusStyles(status: string) {
 
 export default function RoutesOverview() {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm shadow-slate-900/5">
+    <section className="rounded-3xl border border-slate-200/80 bg-white px-6 py-7 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Cobertura urbana</p>
           <h2 className="mt-1 text-2xl font-semibold text-slate-900">Rotas monitoradas</h2>
           <p className="text-sm text-slate-500">Resumo das linhas operacionais e nível de ocupação dos veículos</p>
         </div>
-        <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-primary-200 hover:text-primary-700">
+        <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-cyan-200 hover:text-cyan-700">
           Ver todas
         </button>
       </header>
@@ -48,7 +48,7 @@ export default function RoutesOverview() {
         {routes.map((route) => (
           <div
             key={route.name}
-            className="rounded-3xl border border-slate-200 bg-slate-50/60 px-5 py-4 shadow-inner shadow-white/40"
+            className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-inner shadow-white/60"
           >
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
