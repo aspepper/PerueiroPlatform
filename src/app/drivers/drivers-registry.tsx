@@ -1,273 +1,116 @@
 "use client";
 
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 
 type DriverRecord = {
-  id: string;
-  name: string;
   cpf: string;
+  name: string;
+  cnh: string | null;
+  phone: string | null;
+  email: string | null;
+};
+
+type DriverFormState = {
+  cpf: string;
+  name: string;
   cnh: string;
   phone: string;
   email: string;
 };
 
-const DRIVER_REGISTRY: DriverRecord[] = [
-  {
-    id: "1",
-    name: "Adriana Costa",
-    cpf: "123.456.789-01",
-    cnh: "98765432100",
-    phone: "(11) 91234-5678",
-    email: "adriana.costa@example.com",
-  },
-  {
-    id: "2",
-    name: "Bruno Almeida",
-    cpf: "234.567.890-12",
-    cnh: "87654321099",
-    phone: "(11) 99876-5432",
-    email: "bruno.almeida@example.com",
-  },
-  {
-    id: "3",
-    name: "Carla Menezes",
-    cpf: "345.678.901-23",
-    cnh: "76543210988",
-    phone: "(21) 98765-4321",
-    email: "carla.menezes@example.com",
-  },
-  {
-    id: "4",
-    name: "Daniel Souza",
-    cpf: "456.789.012-34",
-    cnh: "65432109877",
-    phone: "(31) 93456-7890",
-    email: "daniel.souza@example.com",
-  },
-  {
-    id: "5",
-    name: "Eduarda Martins",
-    cpf: "567.890.123-45",
-    cnh: "54321098766",
-    phone: "(41) 90012-3456",
-    email: "eduarda.martins@example.com",
-  },
-  {
-    id: "6",
-    name: "Felipe Tavares",
-    cpf: "678.901.234-56",
-    cnh: "43210987655",
-    phone: "(31) 98888-7777",
-    email: "felipe.tavares@example.com",
-  },
-  {
-    id: "7",
-    name: "Gabriela Rocha",
-    cpf: "789.012.345-67",
-    cnh: "32109876544",
-    phone: "(21) 95555-1234",
-    email: "gabriela.rocha@example.com",
-  },
-  {
-    id: "8",
-    name: "Heitor Fernandes",
-    cpf: "890.123.456-78",
-    cnh: "21098765433",
-    phone: "(51) 97777-8888",
-    email: "heitor.fernandes@example.com",
-  },
-  {
-    id: "9",
-    name: "Isabela Lima",
-    cpf: "901.234.567-89",
-    cnh: "10987654322",
-    phone: "(11) 96666-5555",
-    email: "isabela.lima@example.com",
-  },
-  {
-    id: "10",
-    name: "João Pedro",
-    cpf: "012.345.678-90",
-    cnh: "99887766550",
-    phone: "(71) 98899-7766",
-    email: "joao.pedro@example.com",
-  },
-  {
-    id: "11",
-    name: "Karen Oliveira",
-    cpf: "101.112.131-41",
-    cnh: "88776655449",
-    phone: "(19) 99777-3344",
-    email: "karen.oliveira@example.com",
-  },
-  {
-    id: "12",
-    name: "Lucas Ribeiro",
-    cpf: "202.223.242-52",
-    cnh: "77665544338",
-    phone: "(85) 98888-2211",
-    email: "lucas.ribeiro@example.com",
-  },
-  {
-    id: "13",
-    name: "Mariana Prado",
-    cpf: "303.334.353-63",
-    cnh: "66554433227",
-    phone: "(67) 99666-8899",
-    email: "mariana.prado@example.com",
-  },
-  {
-    id: "14",
-    name: "Nicolas Teixeira",
-    cpf: "404.445.464-74",
-    cnh: "55443322116",
-    phone: "(92) 99988-7766",
-    email: "nicolas.teixeira@example.com",
-  },
-  {
-    id: "15",
-    name: "Olívia Castro",
-    cpf: "505.556.575-85",
-    cnh: "44332211005",
-    phone: "(31) 97777-6655",
-    email: "olivia.castro@example.com",
-  },
-  {
-    id: "16",
-    name: "Paulo Henrique",
-    cpf: "606.667.686-96",
-    cnh: "33221100994",
-    phone: "(51) 98800-1122",
-    email: "paulo.henrique@example.com",
-  },
-  {
-    id: "17",
-    name: "Quitéria Ramos",
-    cpf: "707.778.797-07",
-    cnh: "22110099883",
-    phone: "(11) 91122-3344",
-    email: "quiteria.ramos@example.com",
-  },
-  {
-    id: "18",
-    name: "Rafael Borges",
-    cpf: "808.889.808-18",
-    cnh: "11009988772",
-    phone: "(21) 97788-6655",
-    email: "rafael.borges@example.com",
-  },
-  {
-    id: "19",
-    name: "Sabrina Leite",
-    cpf: "909.990.919-29",
-    cnh: "00998877661",
-    phone: "(62) 98555-4433",
-    email: "sabrina.leite@example.com",
-  },
-  {
-    id: "20",
-    name: "Tiago Gomes",
-    cpf: "111.222.333-44",
-    cnh: "11223344551",
-    phone: "(18) 99877-2211",
-    email: "tiago.gomes@example.com",
-  },
-  {
-    id: "21",
-    name: "Úrsula Figueiredo",
-    cpf: "222.333.444-55",
-    cnh: "22334455662",
-    phone: "(82) 98899-6677",
-    email: "ursula.figueiredo@example.com",
-  },
-  {
-    id: "22",
-    name: "Vinícius Nobre",
-    cpf: "333.444.555-66",
-    cnh: "33445566773",
-    phone: "(84) 99911-2233",
-    email: "vinicius.nobre@example.com",
-  },
-  {
-    id: "23",
-    name: "Wesley Duarte",
-    cpf: "444.555.666-77",
-    cnh: "44556677884",
-    phone: "(21) 97700-8899",
-    email: "wesley.duarte@example.com",
-  },
-  {
-    id: "24",
-    name: "Xuxa Matos",
-    cpf: "555.666.777-88",
-    cnh: "55667788995",
-    phone: "(11) 92233-4455",
-    email: "xuxa.matos@example.com",
-  },
-  {
-    id: "25",
-    name: "Yasmin Araújo",
-    cpf: "666.777.888-99",
-    cnh: "66778899006",
-    phone: "(31) 93344-5566",
-    email: "yasmin.araujo@example.com",
-  },
-  {
-    id: "26",
-    name: "Zeca Souza",
-    cpf: "777.888.999-00",
-    cnh: "77889900117",
-    phone: "(61) 94455-6677",
-    email: "zeca.souza@example.com",
-  },
-  {
-    id: "27",
-    name: "Ana Paula",
-    cpf: "888.999.000-11",
-    cnh: "88990011228",
-    phone: "(11) 95566-7788",
-    email: "ana.paula@example.com",
-  },
-  {
-    id: "28",
-    name: "Breno Vasconcelos",
-    cpf: "999.000.111-22",
-    cnh: "99001122339",
-    phone: "(81) 96677-8899",
-    email: "breno.vasconcelos@example.com",
-  },
-  {
-    id: "29",
-    name: "Clara Pacheco",
-    cpf: "121.212.121-21",
-    cnh: "10101010101",
-    phone: "(85) 97788-9900",
-    email: "clara.pacheco@example.com",
-  },
-  {
-    id: "30",
-    name: "Diego Freitas",
-    cpf: "131.313.131-31",
-    cnh: "20202020202",
-    phone: "(91) 98877-6655",
-    email: "diego.freitas@example.com",
-  },
-];
+const EMPTY_FORM_STATE: DriverFormState = {
+  cpf: "",
+  name: "",
+  cnh: "",
+  phone: "",
+  email: "",
+};
+
+const normalizeOptionalValue = (value: string) => {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
 
 export default function DriversRegistry() {
+  const [drivers, setDrivers] = useState<DriverRecord[]>([]);
+  const [hasLoadedDrivers, setHasLoadedDrivers] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [searchInput, setSearchInput] = useState("");
   const [appliedFilter, setAppliedFilter] = useState("");
   const [pageSize, setPageSize] = useState(15);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [formState, setFormState] = useState<DriverFormState>(EMPTY_FORM_STATE);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingCpf, setEditingCpf] = useState<string | null>(null);
+  const [processingDeleteCpf, setProcessingDeleteCpf] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadDrivers = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const response = await fetch("/api/drivers", {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.error ?? "Não foi possível carregar os motoristas.");
+        }
+
+        const payload = await response.json();
+        const fetchedDrivers: DriverRecord[] = (payload?.drivers ?? []).map(
+          (driver: DriverRecord) => ({
+            cpf: driver.cpf,
+            name: driver.name,
+            cnh: driver.cnh ?? null,
+            phone: driver.phone ?? null,
+            email: driver.email ?? null,
+          }),
+        );
+
+        setDrivers(fetchedDrivers);
+        setHasLoadedDrivers(true);
+      } catch (loadError) {
+        if ((loadError as Error).name === "AbortError") return;
+        setError((loadError as Error).message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadDrivers();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
   const filteredDrivers = useMemo(() => {
     const normalizedQuery = appliedFilter.trim().toLowerCase();
 
-    const results = DRIVER_REGISTRY.filter((driver) => {
+    const results = drivers.filter((driver) => {
       if (!normalizedQuery) return true;
 
-      return [driver.name, driver.cpf, driver.cnh, driver.phone, driver.email]
+      return [
+        driver.name,
+        driver.cpf,
+        driver.cnh ?? "",
+        driver.phone ?? "",
+        driver.email ?? "",
+      ]
         .map((value) => value.toLowerCase())
         .some((value) => value.includes(normalizedQuery));
     });
@@ -275,17 +118,47 @@ export default function DriversRegistry() {
     return [...results].sort((a, b) =>
       a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }),
     );
-  }, [appliedFilter]);
+  }, [appliedFilter, drivers]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [appliedFilter, pageSize]);
+  }, [appliedFilter, pageSize, filteredDrivers.length]);
 
   const totalPages = Math.max(1, Math.ceil(filteredDrivers.length / pageSize));
   const paginatedDrivers = filteredDrivers.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
+
+  const openCreateDialog = () => {
+    setDialogMode("create");
+    setFormState(EMPTY_FORM_STATE);
+    setFormError(null);
+    setEditingCpf(null);
+    setIsDialogOpen(true);
+  };
+
+  const openEditDialog = (driver: DriverRecord) => {
+    setDialogMode("edit");
+    setFormState({
+      cpf: driver.cpf,
+      name: driver.name,
+      cnh: driver.cnh ?? "",
+      phone: driver.phone ?? "",
+      email: driver.email ?? "",
+    });
+    setFormError(null);
+    setEditingCpf(driver.cpf);
+    setIsDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    if (isSubmitting) return;
+    setIsDialogOpen(false);
+    setFormState(EMPTY_FORM_STATE);
+    setEditingCpf(null);
+    setFormError(null);
+  };
 
   const handleSearch = () => {
     setAppliedFilter(searchInput);
@@ -310,6 +183,138 @@ export default function DriversRegistry() {
     });
   };
 
+  const handleFormChange = (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const { name, value } = event.target;
+    setFormState((previous) => ({ ...previous, [name]: value }));
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const trimmedName = formState.name.trim();
+    const trimmedCpf = formState.cpf.trim();
+
+    if (!trimmedName || !trimmedCpf) {
+      setFormError("Nome e CPF são obrigatórios.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setFormError(null);
+      setError(null);
+
+      const payload = {
+        name: trimmedName,
+        cpf: trimmedCpf,
+        cnh: normalizeOptionalValue(formState.cnh),
+        phone: normalizeOptionalValue(formState.phone),
+        email: normalizeOptionalValue(formState.email),
+      };
+
+      const response = await fetch(
+        dialogMode === "create"
+          ? "/api/drivers"
+          : `/api/drivers/${encodeURIComponent(editingCpf ?? "")}`,
+        {
+          method: dialogMode === "create" ? "POST" : "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      const responseBody = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          responseBody.error ??
+            (dialogMode === "create"
+              ? "Não foi possível cadastrar o motorista."
+              : "Não foi possível atualizar o motorista."),
+        );
+      }
+
+      const updatedDriver: DriverRecord = {
+        cpf: responseBody.driver.cpf,
+        name: responseBody.driver.name,
+        cnh: responseBody.driver.cnh ?? null,
+        phone: responseBody.driver.phone ?? null,
+        email: responseBody.driver.email ?? null,
+      };
+
+      setDrivers((previous) => {
+        if (dialogMode === "create") {
+          return [...previous, updatedDriver];
+        }
+
+        return previous.map((driver) =>
+          driver.cpf === updatedDriver.cpf ? updatedDriver : driver,
+        );
+      });
+      setHasLoadedDrivers(true);
+      setIsDialogOpen(false);
+      setFormState(EMPTY_FORM_STATE);
+      setEditingCpf(null);
+    } catch (submitError) {
+      setFormError((submitError as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (driver: DriverRecord) => {
+    const confirmed = window.confirm(
+      `Tem certeza de que deseja remover o motorista ${driver.name}? Essa ação não pode ser desfeita.`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setProcessingDeleteCpf(driver.cpf);
+      setError(null);
+
+      const response = await fetch(
+        `/api/drivers/${encodeURIComponent(driver.cpf)}`,
+        { method: "DELETE" },
+      );
+
+      const responseBody = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          responseBody.error ?? "Não foi possível remover o motorista.",
+        );
+      }
+
+      setDrivers((previous) =>
+        previous.filter((existing) => existing.cpf !== driver.cpf),
+      );
+      setHasLoadedDrivers(true);
+    } catch (deleteError) {
+      setError((deleteError as Error).message);
+    } finally {
+      setProcessingDeleteCpf(null);
+    }
+  };
+
+  const tableEmptyState = () => {
+    if (isLoading) {
+      return "Carregando motoristas...";
+    }
+
+    if (error && !hasLoadedDrivers) {
+      return error;
+    }
+
+    if (hasLoadedDrivers && drivers.length === 0) {
+      return "Nenhum usuário cadastrado como motorista";
+    }
+
+    return "Nenhum motorista encontrado. Ajuste a busca ou limpe os filtros para ver todos os registros.";
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -318,11 +323,18 @@ export default function DriversRegistry() {
         </p>
         <button
           type="button"
+          onClick={openCreateDialog}
           className="inline-flex items-center justify-center rounded-full bg-[#4338CA] px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3730A3]"
         >
           + Adicionar motorista
         </button>
       </div>
+
+      {error && hasLoadedDrivers && (
+        <div className="rounded-2xl border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3 text-sm text-[#B91C1C]">
+          {error}
+        </div>
+      )}
 
       <div className="flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
@@ -397,38 +409,49 @@ export default function DriversRegistry() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F3F4F6] text-[#111827]">
-              {paginatedDrivers.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-sm text-[#6B7280]">
-                    Nenhum motorista encontrado. Ajuste a busca ou limpe os filtros para ver todos os registros.
-                  </td>
-                </tr>
-              ) : (
+              {paginatedDrivers.length > 0 ? (
                 paginatedDrivers.map((driver) => (
-                  <tr key={driver.id} className="hover:bg-[#F9FAFB]">
-                    <td className="px-6 py-4 font-mono text-xs text-[#4B5563]">{driver.cpf}</td>
+                  <tr key={driver.cpf} className="hover:bg-[#F9FAFB]">
+                    <td className="px-6 py-4 font-mono text-xs text-[#4B5563]">
+                      {driver.cpf}
+                    </td>
                     <td className="px-6 py-4 font-medium">{driver.name}</td>
-                    <td className="px-6 py-4 text-[#4B5563]">{driver.cnh}</td>
-                    <td className="px-6 py-4 text-[#4B5563]">{driver.phone}</td>
-                    <td className="px-6 py-4 text-[#4B5563]">{driver.email}</td>
+                    <td className="px-6 py-4 text-[#4B5563]">
+                      {driver.cnh ?? "—"}
+                    </td>
+                    <td className="px-6 py-4 text-[#4B5563]">
+                      {driver.phone ?? "—"}
+                    </td>
+                    <td className="px-6 py-4 text-[#4B5563]">
+                      {driver.email ?? "—"}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
+                          onClick={() => openEditDialog(driver)}
                           className="rounded-full border border-[#4338CA] px-3 py-1 text-xs font-semibold text-[#4338CA] transition hover:bg-[#EEF2FF]"
                         >
                           Editar
                         </button>
                         <button
                           type="button"
-                          className="rounded-full border border-[#F87171] px-3 py-1 text-xs font-semibold text-[#B91C1C] transition hover:bg-[#FEF2F2]"
+                          onClick={() => handleDelete(driver)}
+                          disabled={processingDeleteCpf === driver.cpf}
+                          className="rounded-full border border-[#F87171] px-3 py-1 text-xs font-semibold text-[#B91C1C] transition hover:bg-[#FEF2F2] disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          Excluir
+                          {processingDeleteCpf === driver.cpf ? "Excluindo..." : "Excluir"}
                         </button>
                       </div>
                     </td>
                   </tr>
                 ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-sm text-[#6B7280]">
+                    {tableEmptyState()}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -461,6 +484,129 @@ export default function DriversRegistry() {
           </div>
         </div>
       </div>
+
+      {isDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F1730]/30 px-4 py-8">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-[#0F1730]">
+                {dialogMode === "create" ? "Adicionar motorista" : "Editar motorista"}
+              </h2>
+              <button
+                type="button"
+                onClick={closeDialog}
+                className="rounded-full p-2 text-[#6B7280] transition hover:bg-[#F3F4F6] hover:text-[#111827]"
+                aria-label="Fechar formulário"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label htmlFor="driver-name" className="block text-sm font-medium text-[#374151]">
+                    Nome completo
+                  </label>
+                  <input
+                    id="driver-name"
+                    name="name"
+                    value={formState.name}
+                    onChange={handleFormChange}
+                    className="mt-1 w-full rounded-xl border border-[#CBD5F5] bg-[#F8FAFF] px-4 py-2 text-sm text-[#1F2937] outline-none transition focus:border-[#4338CA] focus:ring-2 focus:ring-[#4338CA]/20"
+                    placeholder="Digite o nome do motorista"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="driver-cpf" className="block text-sm font-medium text-[#374151]">
+                    CPF
+                  </label>
+                  <input
+                    id="driver-cpf"
+                    name="cpf"
+                    value={formState.cpf}
+                    onChange={handleFormChange}
+                    className="mt-1 w-full rounded-xl border border-[#CBD5F5] bg-[#F8FAFF] px-4 py-2 text-sm text-[#1F2937] outline-none transition focus:border-[#4338CA] focus:ring-2 focus:ring-[#4338CA]/20 disabled:opacity-60"
+                    placeholder="000.000.000-00"
+                    required
+                    disabled={dialogMode === "edit"}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="driver-cnh" className="block text-sm font-medium text-[#374151]">
+                    CNH
+                  </label>
+                  <input
+                    id="driver-cnh"
+                    name="cnh"
+                    value={formState.cnh}
+                    onChange={handleFormChange}
+                    className="mt-1 w-full rounded-xl border border-[#CBD5F5] bg-[#F8FAFF] px-4 py-2 text-sm text-[#1F2937] outline-none transition focus:border-[#4338CA] focus:ring-2 focus:ring-[#4338CA]/20"
+                    placeholder="Número da CNH"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="driver-phone" className="block text-sm font-medium text-[#374151]">
+                    Celular
+                  </label>
+                  <input
+                    id="driver-phone"
+                    name="phone"
+                    value={formState.phone}
+                    onChange={handleFormChange}
+                    className="mt-1 w-full rounded-xl border border-[#CBD5F5] bg-[#F8FAFF] px-4 py-2 text-sm text-[#1F2937] outline-none transition focus:border-[#4338CA] focus:ring-2 focus:ring-[#4338CA]/20"
+                    placeholder="(00) 00000-0000"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="driver-email" className="block text-sm font-medium text-[#374151]">
+                    Email
+                  </label>
+                  <input
+                    id="driver-email"
+                    name="email"
+                    type="email"
+                    value={formState.email}
+                    onChange={handleFormChange}
+                    className="mt-1 w-full rounded-xl border border-[#CBD5F5] bg-[#F8FAFF] px-4 py-2 text-sm text-[#1F2937] outline-none transition focus:border-[#4338CA] focus:ring-2 focus:ring-[#4338CA]/20"
+                    placeholder="exemplo@email.com"
+                  />
+                </div>
+              </div>
+
+              {formError && (
+                <p className="rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-2 text-sm text-[#B91C1C]">
+                  {formError}
+                </p>
+              )}
+
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={closeDialog}
+                  className="rounded-full border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#4B5563] transition hover:bg-[#F3F4F6] disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-full bg-[#4338CA] px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting
+                    ? dialogMode === "create"
+                      ? "Salvando..."
+                      : "Atualizando..."
+                    : dialogMode === "create"
+                      ? "Cadastrar motorista"
+                      : "Salvar alterações"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
