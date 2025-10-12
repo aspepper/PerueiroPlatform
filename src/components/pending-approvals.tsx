@@ -21,7 +21,7 @@ const pendingSchools = [
 export default function PendingApprovals() {
   return (
     <section className="grid gap-5 lg:grid-cols-2">
-      <article className="rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm shadow-slate-900/5">
+      <article className="rounded-3xl border border-slate-200/80 bg-white px-6 py-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
         <header className="mb-5 flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Homologação</p>
@@ -35,7 +35,7 @@ export default function PendingApprovals() {
         </header>
         <div className="space-y-4">
           {pendingDrivers.map((driver) => (
-            <div key={driver.name} className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-inner shadow-white/40">
+            <div key={driver.name} className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-inner shadow-white/60">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-base font-semibold text-slate-900">{driver.name}</p>
@@ -54,7 +54,7 @@ export default function PendingApprovals() {
         </div>
       </article>
 
-      <article className="rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm shadow-slate-900/5">
+      <article className="rounded-3xl border border-slate-200/80 bg-white px-6 py-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
         <header className="mb-5 flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Integração</p>
@@ -68,7 +68,7 @@ export default function PendingApprovals() {
         </header>
         <div className="space-y-4">
           {pendingSchools.map((school) => (
-            <div key={school.name} className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-inner shadow-white/40">
+            <div key={school.name} className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-inner shadow-white/60">
               <div>
                 <p className="text-base font-semibold text-slate-900">{school.name}</p>
                 <p className="text-[0.7rem] font-medium uppercase tracking-[0.28em] text-slate-400">{school.students} alunos cadastrados</p>
