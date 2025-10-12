@@ -1,0 +1,71 @@
+﻿2025-10-12T15:39:17.8370105Z ##[group]Run npm run build
+2025-10-12T15:39:17.8370414Z [36;1mnpm run build[0m
+2025-10-12T15:39:17.8407635Z shell: /usr/bin/bash -e {0}
+2025-10-12T15:39:17.8407879Z env:
+2025-10-12T15:39:17.8408891Z   DATABASE_URL: ***
+2025-10-12T15:39:17.8409232Z   NEXTAUTH_URL: ***
+2025-10-12T15:39:17.8409474Z   NEXTAUTH_SECRET: ***
+2025-10-12T15:39:17.8409685Z   AUTH_TRUST_HOST: true
+2025-10-12T15:39:17.8409888Z ##[endgroup]
+2025-10-12T15:39:17.9561794Z 
+2025-10-12T15:39:17.9562663Z > perueiro-admin-web@0.1.0 build
+2025-10-12T15:39:17.9563446Z > prisma generate && next build
+2025-10-12T15:39:17.9563880Z 
+2025-10-12T15:39:18.7318471Z Loaded Prisma config from prisma.config.ts.
+2025-10-12T15:39:18.7413515Z 
+2025-10-12T15:39:18.9733505Z Prisma config detected, skipping environment variable loading.
+2025-10-12T15:39:18.9734418Z Prisma schema loaded from prisma/schema.prisma
+2025-10-12T15:39:19.4165527Z 
+2025-10-12T15:39:19.4166826Z ✔ Generated Prisma Client (v6.17.1) to ./node_modules/@prisma/client in 185ms
+2025-10-12T15:39:19.4168161Z 
+2025-10-12T15:39:19.4169896Z Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+2025-10-12T15:39:19.4171418Z 
+2025-10-12T15:39:19.4173226Z Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+2025-10-12T15:39:19.4174560Z 
+2025-10-12T15:39:19.9704791Z ⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+2025-10-12T15:39:19.9836166Z Attention: Next.js now collects completely anonymous telemetry regarding usage.
+2025-10-12T15:39:19.9844663Z This information is used to shape Next.js' roadmap and prioritize features.
+2025-10-12T15:39:19.9847818Z You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+2025-10-12T15:39:19.9848943Z https://nextjs.org/telemetry
+2025-10-12T15:39:19.9849267Z 
+2025-10-12T15:39:20.0809075Z   ▲ Next.js 14.2.32
+2025-10-12T15:39:20.0809591Z   - Environments: .env
+2025-10-12T15:39:20.0809879Z 
+2025-10-12T15:39:20.0944902Z    Creating an optimized production build ...
+2025-10-12T15:39:33.8199977Z  ✓ Compiled successfully
+2025-10-12T15:39:33.8211806Z    Linting and checking validity of types ...
+2025-10-12T15:39:40.7296389Z    Collecting page data ...
+2025-10-12T15:39:42.3677734Z    Generating static pages (0/17) ...
+2025-10-12T15:39:42.6920184Z    Generating static pages (4/17) 
+2025-10-12T15:39:42.7883415Z    Generating static pages (8/17) 
+2025-10-12T15:39:42.8582892Z    Generating static pages (12/17) 
+2025-10-12T15:39:43.0170739Z  ✓ Generating static pages (17/17)
+2025-10-12T15:39:43.9016880Z    Finalizing page optimization ...
+2025-10-12T15:39:43.9020625Z    Collecting build traces ...
+2025-10-12T15:39:56.1271107Z 
+2025-10-12T15:39:56.1298790Z Route (app)                              Size     First Load JS
+2025-10-12T15:39:56.1300348Z ┌ ƒ /                                    142 B          87.3 kB
+2025-10-12T15:39:56.1304275Z ├ ƒ /_not-found                          873 B          88.1 kB
+2025-10-12T15:39:56.1305232Z ├ ƒ /api/auth/[...nextauth]              0 B                0 B
+2025-10-12T15:39:56.1306166Z ├ ○ /api/sync/full                       0 B                0 B
+2025-10-12T15:39:56.1307099Z ├ ƒ /api/sync/pull                       0 B                0 B
+2025-10-12T15:39:56.1307977Z ├ ƒ /api/sync/push                       0 B                0 B
+2025-10-12T15:39:56.1308877Z ├ ƒ /blacklist                           187 B          96.1 kB
+2025-10-12T15:39:56.1309800Z ├ ƒ /clients                             187 B          96.1 kB
+2025-10-12T15:39:56.1310674Z ├ ƒ /dashboard                           679 B           106 kB
+2025-10-12T15:39:56.1320734Z ├ ƒ /debug-tailwind                      142 B          87.3 kB
+2025-10-12T15:39:56.1321665Z ├ ƒ /drivers                             3.3 kB         99.2 kB
+2025-10-12T15:39:56.1322681Z ├ ƒ /login                               1.18 kB          98 kB
+2025-10-12T15:39:56.1323459Z ├ ƒ /payments                            188 B          96.1 kB
+2025-10-12T15:39:56.1324731Z ├ ƒ /schools                             187 B          96.1 kB
+2025-10-12T15:39:56.1325508Z ├ ƒ /students                            187 B          96.1 kB
+2025-10-12T15:39:56.1326286Z └ ƒ /vans                                188 B          96.1 kB
+2025-10-12T15:39:56.1326887Z + First Load JS shared by all            87.2 kB
+2025-10-12T15:39:56.1327539Z   ├ chunks/117-082d75105b2c2d1d.js       31.6 kB
+2025-10-12T15:39:56.1328124Z   ├ chunks/fd9d1056-5d0c434f4506d830.js  53.6 kB
+2025-10-12T15:39:56.1328673Z   └ other shared chunks (total)          1.95 kB
+2025-10-12T15:39:56.1328976Z 
+2025-10-12T15:39:56.1328986Z 
+2025-10-12T15:39:56.1329318Z ○  (Static)   prerendered as static content
+2025-10-12T15:39:56.1329927Z ƒ  (Dynamic)  server-rendered on demand
+2025-10-12T15:39:56.1330199Z 

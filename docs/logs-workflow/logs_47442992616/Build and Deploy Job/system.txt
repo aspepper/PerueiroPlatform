@@ -1,0 +1,5 @@
+2025-10-12T15:38:22.5540000Z Requested labels: ubuntu-latest
+2025-10-12T15:38:22.5540000Z Job defined at: aspepper/PerueiroPlatform/.github/workflows/azure-static-web-apps-icy-water-08508ba0f.yml@refs/heads/main
+2025-10-12T15:38:22.5540000Z Waiting for a runner to pick up this job...
+2025-10-12T15:38:22.5570000Z Job is waiting for a hosted runner to come online.
+2025-10-12T15:38:22.5570000Z Job is about to start running on the hosted runner: GitHub Actions 1000000392

@@ -1,0 +1,47 @@
+﻿2025-10-12T15:40:27.4657542Z ##[group]Run Azure/static-web-apps-deploy@v1
+2025-10-12T15:40:27.4657861Z with:
+2025-10-12T15:40:27.4658510Z   azure_static_web_apps_api_token: ***
+2025-10-12T15:40:27.4658883Z   repo_token: ***
+2025-10-12T15:40:27.4659083Z   action: upload
+2025-10-12T15:40:27.4659275Z   app_location: deploy
+2025-10-12T15:40:27.4659475Z   skip_app_build: true
+2025-10-12T15:40:27.4659683Z   skip_api_build: true
+2025-10-12T15:40:27.4659880Z   is_static_export: false
+2025-10-12T15:40:27.4660082Z env:
+2025-10-12T15:40:27.4660786Z   DATABASE_URL: ***
+2025-10-12T15:40:27.4661099Z   NEXTAUTH_URL: ***
+2025-10-12T15:40:27.4661316Z   NEXTAUTH_SECRET: ***
+2025-10-12T15:40:27.4661514Z   AUTH_TRUST_HOST: true
+2025-10-12T15:40:27.4661710Z ##[endgroup]
+2025-10-12T15:40:27.4753149Z ##[command]/usr/bin/docker run --name d52ac7c04fcda4ef854729bde68009a72fdcb6_56958f --label d52ac7 --workdir /github/workspace --rm -e "DATABASE_URL" -e "NEXTAUTH_URL" -e "NEXTAUTH_SECRET" -e "AUTH_TRUST_HOST" -e "INPUT_AZURE_STATIC_WEB_APPS_API_TOKEN" -e "INPUT_REPO_TOKEN" -e "INPUT_ACTION" -e "INPUT_APP_LOCATION" -e "INPUT_API_LOCATION" -e "INPUT_SKIP_APP_BUILD" -e "INPUT_SKIP_API_BUILD" -e "INPUT_OUTPUT_LOCATION" -e "INPUT_IS_STATIC_EXPORT" -e "INPUT_API_BUILD_COMMAND" -e "INPUT_APP_ARTIFACT_LOCATION" -e "INPUT_APP_BUILD_COMMAND" -e "INPUT_ROUTES_LOCATION" -e "INPUT_CONFIG_FILE_LOCATION" -e "INPUT_PRODUCTION_BRANCH" -e "INPUT_DEPLOYMENT_ENVIRONMENT" -e "INPUT_DATA_API_LOCATION" -e "INPUT_GITHUB_ID_TOKEN" -e "HOME" -e "GITHUB_JOB" -e "GITHUB_REF" -e "GITHUB_SHA" -e "GITHUB_REPOSITORY" -e "GITHUB_REPOSITORY_OWNER" -e "GITHUB_REPOSITORY_OWNER_ID" -e "GITHUB_RUN_ID" -e "GITHUB_RUN_NUMBER" -e "GITHUB_RETENTION_DAYS" -e "GITHUB_RUN_ATTEMPT" -e "GITHUB_ACTOR_ID" -e "GITHUB_ACTOR" -e "GITHUB_WORKFLOW" -e "GITHUB_HEAD_REF" -e "GITHUB_BASE_REF" -e "GITHUB_EVENT_NAME" -e "GITHUB_SERVER_URL" -e "GITHUB_API_URL" -e "GITHUB_GRAPHQL_URL" -e "GITHUB_REF_NAME" -e "GITHUB_REF_PROTECTED" -e "GITHUB_REF_TYPE" -e "GITHUB_WORKFLOW_REF" -e "GITHUB_WORKFLOW_SHA" -e "GITHUB_REPOSITORY_ID" -e "GITHUB_TRIGGERING_ACTOR" -e "GITHUB_WORKSPACE" -e "GITHUB_ACTION" -e "GITHUB_EVENT_PATH" -e "GITHUB_ACTION_REPOSITORY" -e "GITHUB_ACTION_REF" -e "GITHUB_PATH" -e "GITHUB_ENV" -e "GITHUB_STEP_SUMMARY" -e "GITHUB_STATE" -e "GITHUB_OUTPUT" -e "RUNNER_OS" -e "RUNNER_ARCH" -e "RUNNER_NAME" -e "RUNNER_ENVIRONMENT" -e "RUNNER_TOOL_CACHE" -e "RUNNER_TEMP" -e "RUNNER_WORKSPACE" -e "ACTIONS_RUNTIME_URL" -e "ACTIONS_RUNTIME_TOKEN" -e "ACTIONS_CACHE_URL" -e "ACTIONS_RESULTS_URL" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" -v "/home/runner/work/PerueiroPlatform/PerueiroPlatform":"/github/workspace" d52ac7:c04fcda4ef854729bde68009a72fdcb6
+2025-10-12T15:40:28.7707115Z DeploymentId: 07fd498a-3b7f-4dd8-ac74-cb6fb33ffe38
+2025-10-12T15:40:28.7708841Z 
+2025-10-12T15:40:28.8862076Z [37mTry to validate location at: '/github/workspace/deploy'.[0m
+2025-10-12T15:40:28.8879945Z [37mApp Directory Location: 'deploy' was found.[0m
+2025-10-12T15:40:28.8881036Z [37mTry to validate location at: '/github/workspace/swa-db-connections'.[0m
+2025-10-12T15:40:28.8881852Z [37mLooking for event info[0m
+2025-10-12T15:40:29.4211577Z [37mSkipping step to build /github/workspace/deploy with Oryx[0m
+2025-10-12T15:40:29.4555731Z [37mDetected the following framework: Next.js[0m
+2025-10-12T15:40:29.4557351Z [37mTry to validate location at: '/github/workspace/deploy/.next'.[0m
+2025-10-12T15:40:29.4933120Z [33m[WARNING] Nodejs runtime version info is not provided for the Next.js app. Defaulting to version: 18. To change it, please use the apiRuntime property to set the custom node version as detailed at https://aka.ms/swa-nextjs-apiruntime. Supported Nodejs versions are 18, 20.[0m
+2025-10-12T15:40:29.4946045Z [37mPlease note: For Next.js applications if skip_api_build=true, Static Web Apps will not remove dev dependencies or add the sharp package by default. If you want these optimizations, kindly add them to your custom build steps before passing skip_app_build=true[0m
+2025-10-12T15:40:29.4976215Z [37mRepackaged Next.js app to deploy on the backend.[0m
+2025-10-12T15:40:29.4983838Z [37mSkipping step to build /github/workspace/deploy with Oryx[0m
+2025-10-12T15:40:29.4990004Z [33mWeb App Runtime Information. OS: linux, node version: 18[0m
+2025-10-12T15:40:30.6356108Z [37mZipping Api Artifacts[0m
+2025-10-12T15:40:40.3824545Z [37mDone Zipping Api Artifacts[0m
+2025-10-12T15:40:41.5311464Z [37mZipping App Artifacts[0m
+2025-10-12T15:40:41.5643214Z [37mDone Zipping App Artifacts[0m
+2025-10-12T15:40:41.5644023Z [37mUploading build artifacts.[0m
+2025-10-12T15:40:43.2985089Z [32mFinished Upload. Polling on deployment.[0m
+2025-10-12T15:40:43.5563458Z [37mStatus: InProgress. Time: 0.2555197(s)[0m
+2025-10-12T15:40:58.7098904Z [37mStatus: InProgress. Time: 15.4112836(s)[0m
+2025-10-12T15:41:13.8842556Z [37mStatus: InProgress. Time: 30.5854703(s)[0m
+2025-10-12T15:41:29.0188729Z [37mStatus: InProgress. Time: 45.7199386(s)[0m
+2025-10-12T15:41:44.1976078Z [37mStatus: InProgress. Time: 60.8988516(s)[0m
+2025-10-12T15:41:59.3253280Z [37mStatus: InProgress. Time: 76.0265628(s)[0m
+2025-10-12T15:42:14.4577305Z [37mStatus: Succeeded. Time: 91.1590155(s)[0m
+2025-10-12T15:42:14.4579664Z [32mDeployment Complete :)[0m
+2025-10-12T15:42:14.4580751Z [32mVisit your site at: https://icy-water-08508ba0f.2.azurestaticapps.net[0m
+2025-10-12T15:42:14.4949987Z [37mThanks for using Azure Static Web Apps![0m
+2025-10-12T15:42:14.4950641Z [37mExiting[0m
