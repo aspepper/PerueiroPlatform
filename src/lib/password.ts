@@ -20,3 +20,33 @@ export async function resolvePasswordHash(password: string, existingHash?: strin
 
   return bcrypt.hash(password, 10);
 }
+
+export async function verifyPassword(
+  passwordAttempt: string,
+  storedHash?: string | null,
+  fallbackPassword?: string,
+): Promise<boolean> {
+  if (storedHash) {
+    if (isBcryptHash(storedHash)) {
+      if (await bcrypt.compare(passwordAttempt, storedHash)) {
+        return true;
+      }
+    } else if (passwordAttempt === storedHash) {
+      return true;
+    }
+  }
+
+  if (!fallbackPassword) {
+    return false;
+  }
+
+  if (passwordAttempt === fallbackPassword) {
+    return true;
+  }
+
+  if (isBcryptHash(fallbackPassword)) {
+    return bcrypt.compare(passwordAttempt, fallbackPassword);
+  }
+
+  return false;
+}
