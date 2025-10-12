@@ -1,4 +1,15 @@
+import Link from "next/link";
 import LogoutButton from "@/components/logout-button";
+
+const cadastroLinks = [
+  { label: "Motoristas", href: "/drivers" },
+  { label: "Vans", href: "/vans" },
+  { label: "Escolas", href: "/schools" },
+  { label: "Clientes", href: "/clients" },
+  { label: "Alunos", href: "/students" },
+  { label: "Controle de Boletos", href: "/payments" },
+  { label: "Lista Negra", href: "/blacklist" },
+];
 
 export const metadata = { title: "Dashboard • Perueiro Admin" };
 export const dynamic = "force-dynamic";
@@ -27,6 +38,21 @@ export default function Page() {
                 Sincronizar agora
               </button>
               <LogoutButton variant="solid" />
+            </div>
+          </div>
+          <div className="mt-6 space-y-3">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.28em] text-[#6B7280]">Cadastros</p>
+            <div className="flex flex-wrap items-center gap-2">
+              {cadastroLinks.map(link => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="inline-flex items-center gap-2 rounded-[999px] border border-[#CBD5F5] bg-[#EEF2FF] px-4 py-2 text-[13px] font-semibold text-[#1E3A8A] transition hover:border-[#A5B4FC] hover:bg-[#E0E7FF]"
+                >
+                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[#60A5FA]" aria-hidden />
+                  {link.label}
+                </Link>
+              ))}
             </div>
           </div>
         </Card>

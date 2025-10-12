@@ -10,6 +10,7 @@ const cadastrosLinks = [
   { label: "Clientes", href: "/clients" },
   { label: "Alunos", href: "/students" },
   { label: "Controle de Boletos", href: "/payments" },
+  { label: "Lista Negra", href: "/blacklist" },
 ];
 
 const highlights = [
