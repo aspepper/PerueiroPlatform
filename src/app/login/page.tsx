@@ -62,63 +62,58 @@ function LoginContent() {
   const errorToDisplay = formError ?? queryError;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 via-white to-blue-50">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 lg:flex-row lg:items-center lg:justify-between">
-        <section className="relative flex w-full flex-1 flex-col gap-10 overflow-hidden rounded-3xl border border-slate-200 bg-white px-8 py-12 shadow-xl shadow-slate-900/10">
-          <div className="pointer-events-none absolute -left-16 -top-16 h-40 w-40 rounded-full bg-amber-300/70" aria-hidden />
-          <div className="pointer-events-none absolute -right-10 bottom-0 h-32 w-32 rounded-full bg-cyan-200/60" aria-hidden />
-
-          <div className="relative flex items-center gap-3 text-slate-700">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-300 text-2xl text-slate-900 shadow-md shadow-amber-500/30">
-              ✶
-            </span>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-slate-500">Perueiros Admin</span>
-              <span className="text-lg font-semibold text-slate-900">Faça as coisas com carinho</span>
-            </div>
+    <main className="flex min-h-screen items-center justify-center bg-[#f4f7fb]">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-6 py-12 lg:flex-row lg:items-center lg:justify-between">
+        <section className="relative flex w-full flex-1 flex-col justify-center gap-10 overflow-hidden rounded-[32px] bg-white/60 px-10 py-14 shadow-[0_35px_80px_-40px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+          <div className="pointer-events-none absolute -left-24 -top-28 h-72 w-72 rounded-full bg-[#ffde59]" aria-hidden />
+          <div className="pointer-events-none absolute left-32 top-6 h-24 w-24 rounded-3xl bg-white shadow-[0_25px_45px_rgba(255,222,89,0.35)]" aria-hidden />
+          <div className="pointer-events-none absolute left-40 top-16 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0ea5e9] text-2xl text-white shadow-lg shadow-[#0ea5e9]/40" aria-hidden>
+            🚌
           </div>
+          <div className="pointer-events-none absolute -bottom-24 -right-36 h-80 w-80 rounded-full bg-[#7bdcf6]" aria-hidden />
+          <div className="pointer-events-none absolute right-10 bottom-12 h-20 w-20 rotate-6 rounded-[32px] bg-white shadow-[0_30px_60px_-30px_rgba(14,165,233,0.65)]" aria-hidden />
 
-          <div className="relative space-y-5 text-slate-700">
-            <h1 className="text-3xl font-semibold text-slate-900 sm:text-[2.4rem]">Cuide da operação com atenção.</h1>
-            <p className="max-w-xl text-base text-slate-500">
+          <div className="relative flex max-w-lg flex-col gap-6 text-slate-700">
+            <span className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Perueiros Admin</span>
+            <h1 className="text-4xl font-semibold leading-[1.15] text-slate-900 sm:text-[2.75rem]">Faça as coisas com carinho.</h1>
+            <p className="text-base text-slate-600">
               Cuidar da logística escolar é um ato de atenção. Administre motoristas, alunos e escolas com a mesma dedicação que eles recebem diariamente.
             </p>
-            <ul className="space-y-3 text-sm text-slate-500">
+            <ul className="space-y-4 text-sm text-slate-600">
               <li className="flex items-center gap-3">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-600">•</span>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0ea5e9]/10 text-[#0ea5e9]">•</span>
                 Gestão de motoristas, alunos e escolas
               </li>
               <li className="flex items-center gap-3">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-600">•</span>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0ea5e9]/10 text-[#0ea5e9]">•</span>
                 Gestão de pagamentos e recorrências
               </li>
               <li className="flex items-center gap-3">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-600">•</span>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0ea5e9]/10 text-[#0ea5e9]">•</span>
                 Monitoramento de rotas e alertas em tempo real
               </li>
             </ul>
+            <footer className="text-sm font-medium text-slate-400">© 2025 Perueiros. Todos os direitos reservados.</footer>
           </div>
-
-          <footer className="relative text-sm text-slate-400">© 2025 Perueiros. Todos os direitos reservados.</footer>
         </section>
 
-        <section className="w-full max-w-md rounded-3xl border border-slate-200 bg-white px-8 py-10 shadow-xl shadow-slate-900/10">
+        <section className="relative z-10 w-full max-w-md rounded-[32px] border border-white/70 bg-white px-10 py-12 shadow-[0_45px_90px_-50px_rgba(15,23,42,0.55)]">
           <div className="flex items-center gap-3">
             <Image src="/perueiro-logo.svg" alt="Logotipo Perueiro" width={48} height={60} className="h-12 w-auto" />
             <div>
-              <h2 className="text-2xl font-semibold text-slate-900">Bem-vindo de volta</h2>
+              <h2 className="text-3xl font-semibold text-slate-900">Bem-vindo de volta</h2>
               <p className="text-sm text-slate-500">Acesso reservado aos administradores.</p>
             </div>
           </div>
 
-          <form className="mt-8 space-y-5" onSubmit={onSubmit}>
+          <form className="mt-8 space-y-6" onSubmit={onSubmit}>
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-semibold text-slate-700">
                 E-mail
               </label>
               <input
                 id="email"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 shadow-inner shadow-white/60 focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-100"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 shadow-inner shadow-white/60 transition focus:border-[#0ea5e9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0ea5e9]/20"
                 type="email"
                 placeholder="voce@perueiro.com"
                 autoComplete="email"
@@ -134,7 +129,7 @@ function LoginContent() {
               </label>
               <input
                 id="password"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 shadow-inner shadow-white/60 focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-100"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 shadow-inner shadow-white/60 transition focus:border-[#0ea5e9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0ea5e9]/20"
                 type="password"
                 placeholder="Digite sua senha"
                 autoComplete="current-password"
