@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 import { AuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { resolvePasswordHash } from "@/lib/password";
+import { resolvePasswordHash, verifyPassword } from "@/lib/password";
 
 async function ensureAdminAccount() {
   const email = process.env.ADMIN_EMAIL || "admin@perueiro.local";
@@ -82,7 +81,11 @@ export const authOptions: AuthOptions = {
           return null;
         }
 
-        const passwordMatches = await bcrypt.compare(credentials.password, user.password);
+        const passwordMatches = await verifyPassword(
+          credentials.password,
+          user.password,
+          process.env.ADMIN_PASSWORD,
+        );
         if (!passwordMatches) {
           return null;
         }
