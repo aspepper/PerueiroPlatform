@@ -1,4 +1,5 @@
 import LogoPerueiro from "@/components/logo-perueiro";
+import LoginForm from "./login-form";
 export const metadata = { title: "Login • Perueiro Admin" };
 export const dynamic = "force-dynamic";
 
@@ -42,26 +43,7 @@ export default function Page() {
           <h2 className="mb-1 text-[32px] font-extrabold text-[#0F1730]">Bem-vindo de volta</h2>
           <p className="mb-6 text-[16px] text-[#6B7280]">Acesso reservado aos administradores.</p>
 
-          <form className="space-y-5">
-            <div>
-              <label className="mb-2 block text-[13px] font-semibold text-[#334155]">E-mail</label>
-              <input type="email" placeholder="voce@perueiro.com"
-                     className="w-full rounded-[12px] border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] text-[#111827] outline-none ring-[#00D2D3]/20 transition focus:border-[#00D2D3] focus:ring-4" />
-            </div>
-            <div>
-              <label className="mb-2 block text-[13px] font-semibold text-[#334155]">Senha</label>
-              <input type="password" placeholder="••••••••"
-                     className="w-full rounded-[12px] border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] text-[#111827] outline-none ring-[#FFD54F]/20 transition focus:border-[#FFD54F] focus:ring-4" />
-            </div>
-            <button type="submit" className="w-full rounded-[14px] bg-[#0F1730] py-3 text-center text-[16px] font-extrabold text-white shadow-sm transition hover:brightness-110">
-              Entrar →
-            </button>
-            <hr className="my-2 border-[#E2E8F0]" />
-            <div className="flex items-center justify-between text-[12px] font-extrabold text-[#0F1730]">
-              <a href="#">Esqueci minha senha</a>
-              <a href="#">Precisa de ajuda?</a>
-            </div>
-          </form>
+          <LoginForm />
         </section>
       </div>
 

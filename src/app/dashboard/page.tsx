@@ -1,3 +1,5 @@
+import LogoutButton from "@/components/logout-button";
+
 export const metadata = { title: "Dashboard • Perueiro Admin" };
 export const dynamic = "force-dynamic";
 
@@ -20,9 +22,12 @@ export default function Page() {
                 Visualize indicadores prioritários, antecipe decisões operacionais e mantenha a saúde da operação em equilíbrio.
               </p>
             </div>
-            <button className="h-10 rounded-[12px] bg-[#0F1730] px-4 text-[14px] font-semibold text-white hover:brightness-110">
-              Sincronizar agora
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <button className="h-10 rounded-[12px] bg-[#0F1730] px-4 text-[14px] font-semibold text-white hover:brightness-110">
+                Sincronizar agora
+              </button>
+              <LogoutButton variant="solid" />
+            </div>
           </div>
         </Card>
 
