@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import LogoutButton from "@/components/logout-button";
 
 import LogoutButton from "@/components/logout-button";
 

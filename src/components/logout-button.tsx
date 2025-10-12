@@ -1,10 +1,19 @@
 "use client";
 
 import { signOut } from "next-auth/react";
+import { useState } from "react";
 
-export default function LogoutButton() {
-  const handleLogout = () => {
-    void signOut({ callbackUrl: "/login" });
+function LogoutButton() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoading(true);
+    try {
+      await signOut({ callbackUrl: "/login" });
+    } catch (error) {
+      console.error("Failed to sign out", error);
+      setIsLoading(false);
+    }
   };
 
   return (
