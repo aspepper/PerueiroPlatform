@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 interface RegistryPageShellProps {
@@ -27,6 +28,12 @@ export default function RegistryPageShell({
                 <p className="max-w-2xl text-[0.95rem] leading-relaxed text-[#4B5563]">{description}</p>
               </div>
             </div>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 rounded-full border border-[#4338CA] px-4 py-2 text-sm font-semibold text-[#4338CA] transition hover:bg-[#4338CA] hover:text-white"
+            >
+              Voltar para o Dashboard
+            </Link>
           </div>
 
           <div className="mt-8 rounded-[20px] border border-dashed border-[#CBD5F5] bg-[#F9FAFB] p-6 text-[0.95rem] text-[#4B5563]">
