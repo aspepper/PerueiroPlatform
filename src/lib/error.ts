@@ -58,11 +58,46 @@ async function flushTelemetry() {
     return;
   }
 
+  type FlushOptions = {
+    isAppCrashing?: boolean;
+    callback?: () => void;
+  };
+
   await new Promise<void>((resolve) => {
-    client.flush({
-      isAppCrashing: false,
-      callback: () => resolve(),
-    });
+    const flush = client.flush as
+      | ((options: FlushOptions) => void)
+      | (() => void)
+      | undefined;
+
+    if (!flush) {
+      resolve();
+      return;
+    }
+
+    if (flush.length === 0) {
+      try {
+        (flush as () => void)();
+      } finally {
+        resolve();
+      }
+      return;
+    }
+
+    let settled = false;
+    const callback = () => {
+      if (settled) return;
+      settled = true;
+      resolve();
+    };
+
+    try {
+      (flush as (options: FlushOptions) => void)({
+        isAppCrashing: false,
+        callback,
+      });
+    } catch {
+      callback();
+    }
   });
 }
 
