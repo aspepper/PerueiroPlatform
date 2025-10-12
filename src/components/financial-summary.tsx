@@ -3,86 +3,51 @@ const summary = {
   overdue: 9120.75,
   nextBilling: "15/10/2025",
   collectionRate: 92,
+  collectionGoal: 95,
 };
 
-const highlights = [
+const details = [
   {
-    title: "Pagamentos liquidados",
-    value: "R$ 73.420,00",
-    description: "Total recebido nos últimos 30 dias",
+    label: "Inadimplência atual",
+    value: summary.overdue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
   },
   {
-    title: "Repasses às escolas",
-    value: "R$ 28.540,00",
-    description: "Conciliação confirmada na semana",
+    label: "Próxima rodada de cobranças",
+    value: summary.nextBilling,
   },
-];
-
-const reminders = [
-  "Reforçar cobrança de parcelas atrasadas",
-  "Enviar relatório consolidado às diretorias",
-  "Agendar conferência com financeiro da rede",
+  {
+    label: "Índice de arrecadação",
+    value: `${summary.collectionRate}% (meta ${summary.collectionGoal}%)`,
+  },
 ];
 
 export default function FinancialSummary() {
   return (
-    <section className="rounded-3xl border border-slate-200/80 bg-white px-6 py-7 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
-      <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Saúde financeira</p>
-        <h2 className="text-2xl font-semibold text-slate-900">Resumo financeiro</h2>
-        <p className="text-sm text-slate-500">Situação atualizada do fluxo de recebimentos da plataforma</p>
+    <section className="w-full max-w-3xl rounded-[36px] border border-[#E5E7EB] bg-white px-10 py-12 shadow-[0_60px_120px_-70px_rgba(15,23,42,0.55)] sm:px-14 sm:py-16">
+      <header className="space-y-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#6E778C]">Saúde financeira</p>
+        <h2 className="text-4xl font-semibold italic text-[#101B3A] sm:text-[2.65rem]">Resumo financeiro</h2>
+        <p className="max-w-xl text-base leading-relaxed text-[#6B7280]">
+          Situação atual do fluxo de recebimentos da plataforma
+        </p>
       </header>
 
-      <div className="mt-6 space-y-6">
-        <div className="rounded-3xl bg-slate-900 px-6 py-6 text-white shadow-inner shadow-black/30">
-          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-white/70">Receita projetada</p>
-          <p className="mt-3 text-[2.15rem] font-semibold">
+      <div className="mt-12 space-y-10">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#6E778C]">Receita projetada</p>
+          <p className="mt-3 text-[2.75rem] font-semibold text-[#101B3A] sm:text-[3.25rem]">
             {summary.revenue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
           </p>
-          <dl className="mt-4 grid gap-3 text-sm text-white/80">
-            <div className="flex items-center justify-between gap-4">
-              <dt>Inadimplência atual</dt>
-              <dd className="rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white">
-                {summary.overdue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <dt>Próxima rodada de cobranças</dt>
-              <dd className="rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white/90">{summary.nextBilling}</dd>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <dt>Índice de arrecadação</dt>
-              <dd className="flex items-center gap-2 font-semibold text-white">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-sm">
-                  {summary.collectionRate}%
-                </span>
-                Meta mensal
-              </dd>
-            </div>
-          </dl>
         </div>
 
-        <div className="grid gap-3">
-          {highlights.map((highlight) => (
-            <div key={highlight.title} className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-inner shadow-white/60">
-              <p className="text-sm font-semibold text-slate-900">{highlight.title}</p>
-              <p className="mt-1 text-xl font-semibold text-slate-900">{highlight.value}</p>
-              <p className="text-xs text-slate-500">{highlight.description}</p>
+        <dl className="space-y-5 text-base text-[#6B7280]">
+          {details.map((detail) => (
+            <div key={detail.label} className="flex items-center justify-between gap-6">
+              <dt className="font-medium">{detail.label}</dt>
+              <dd className="text-right font-semibold text-[#101B3A]">{detail.value}</dd>
             </div>
           ))}
-        </div>
-
-        <div className="rounded-3xl border border-slate-200 bg-white px-5 py-5 shadow-inner shadow-slate-900/5">
-          <p className="text-sm font-semibold text-slate-900">Próximos passos</p>
-          <ul className="mt-4 space-y-3 text-xs text-slate-500">
-            {reminders.map((reminder) => (
-              <li key={reminder} className="flex items-start gap-3">
-                <span className="mt-1 h-2 w-2 rounded-full bg-cyan-500" aria-hidden />
-                <span>{reminder}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        </dl>
       </div>
     </section>
   );
