@@ -1,10 +1,10 @@
 import { prisma } from "../src/lib/prisma";
-import bcrypt from "bcryptjs";
+import { resolvePasswordHash } from "../src/lib/password";
 
 async function main() {
-  const email = process.env.ADMIN_EMAIL || "admin@perueiros.local";
+  const email = process.env.ADMIN_EMAIL || "admin@perueiro.local";
   const password = process.env.ADMIN_PASSWORD || "admin123";
-  const hash = await bcrypt.hash(password, 10);
+  const hash = await resolvePasswordHash(password);
   const user = await prisma.user.upsert({
     where: { email },
     update: { password: hash, role: "ADMIN" },
