@@ -1,3 +1,5 @@
+import "./dashboard.css";
+
 import DashboardHeader from "@/components/dashboard-header";
 import FinancialSummary from "@/components/financial-summary";
 import MetricsGrid, { type Metric } from "@/components/metrics-grid";
@@ -79,26 +81,32 @@ export default async function DashboardPage() {
   const { metrics, loadError } = await loadDashboardMetrics();
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10">
-      <DashboardHeader />
+    <main className="dashboard-page">
+      <div className="dashboard-page__halo dashboard-page__halo--primary" aria-hidden />
+      <div className="dashboard-page__halo dashboard-page__halo--secondary" aria-hidden />
+      <div className="dashboard-page__halo dashboard-page__halo--tertiary" aria-hidden />
 
-      {loadError ? (
-        <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          Não foi possível atualizar todos os indicadores em tempo real. Os números exibidos representam um valor padrão.
-        </p>
-      ) : null}
+      <div className="dashboard-page__content">
+        <DashboardHeader />
 
-      <section className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <MetricsGrid metrics={metrics} />
-          <RoutesOverview />
-          <PendingApprovals />
-        </div>
-        <div className="space-y-6">
-          <FinancialSummary />
-          <RecentIncidents />
-        </div>
-      </section>
+        {loadError ? (
+          <p className="dashboard-page__alert">
+            Não foi possível atualizar todos os indicadores em tempo real. Os números exibidos representam um valor padrão.
+          </p>
+        ) : null}
+
+        <section className="dashboard-content-grid">
+          <div className="dashboard-content-grid__main">
+            <MetricsGrid metrics={metrics} />
+            <RoutesOverview />
+            <PendingApprovals />
+          </div>
+          <div className="dashboard-content-grid__sidebar">
+            <FinancialSummary />
+            <RecentIncidents />
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

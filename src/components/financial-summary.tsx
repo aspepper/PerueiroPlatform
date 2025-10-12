@@ -26,7 +26,7 @@ const reminders = [
 
 export default function FinancialSummary() {
   return (
-    <section className="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-lg shadow-slate-900/5">
+    <section className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-lg shadow-slate-900/10 backdrop-blur-xl">
       <header className="space-y-1">
         <h2 className="text-lg font-semibold text-slate-900">Resumo financeiro</h2>
         <p className="text-sm text-slate-500">Situação atualizada do fluxo de recebimentos da plataforma</p>
@@ -56,14 +56,17 @@ export default function FinancialSummary() {
         </div>
         <div className="grid gap-4">
           {highlights.map((highlight) => (
-            <div key={highlight.title} className="rounded-2xl border border-slate-100/70 bg-slate-50/70 p-4">
+            <div
+              key={highlight.title}
+              className="rounded-2xl border border-white/50 bg-white/60 p-4 shadow-sm shadow-slate-900/5 backdrop-blur"
+            >
               <p className="text-sm font-semibold text-slate-900">{highlight.title}</p>
               <p className="text-xl font-semibold text-slate-900">{highlight.value}</p>
               <p className="text-xs text-slate-500">{highlight.description}</p>
             </div>
           ))}
         </div>
-        <div className="rounded-2xl border border-slate-100/70 bg-slate-50/70 p-4">
+        <div className="rounded-2xl border border-white/50 bg-white/60 p-4 shadow-sm shadow-slate-900/5 backdrop-blur">
           <p className="text-sm font-semibold text-slate-900">Próximos passos</p>
           <ul className="mt-3 space-y-2 text-xs text-slate-500">
             {reminders.map((reminder) => (

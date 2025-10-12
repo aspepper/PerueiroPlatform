@@ -36,7 +36,7 @@ function getStatusBadge(status: string) {
 
 export default function RecentIncidents() {
   return (
-    <section className="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-lg shadow-slate-900/5">
+    <section className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-lg shadow-slate-900/10 backdrop-blur-xl">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">Ocorrências recentes</h2>
@@ -48,7 +48,10 @@ export default function RecentIncidents() {
       </header>
       <div className="mt-6 space-y-4">
         {incidents.map((incident) => (
-          <div key={incident.id} className="flex items-center gap-4 rounded-2xl border border-slate-100/70 bg-slate-50/70 p-5">
+          <div
+            key={incident.id}
+            className="flex items-center gap-4 rounded-2xl border border-white/50 bg-white/60 p-5 shadow-sm shadow-slate-900/5 backdrop-blur"
+          >
             <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary-500" aria-hidden />
             <div className="flex flex-1 flex-col gap-2">
               <div className="flex flex-wrap items-center justify-between gap-4">

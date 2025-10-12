@@ -40,7 +40,7 @@ export default function MetricsGrid({ metrics = defaultMetrics }: { metrics?: Me
         return (
           <article
             key={metric.label}
-            className="group relative overflow-hidden rounded-3xl border border-white/80 bg-white/80 p-6 shadow-lg shadow-slate-900/5 transition duration-200 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
+            className="group relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 p-6 shadow-lg shadow-slate-900/10 backdrop-blur-xl transition duration-200 ease-out hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-900/20"
           >
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600 opacity-80" aria-hidden />
             <p className="text-sm font-medium text-slate-500">{metric.label}</p>

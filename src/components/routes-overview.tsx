@@ -32,7 +32,7 @@ function getStatusStyles(status: string) {
 
 export default function RoutesOverview() {
   return (
-    <section className="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-lg shadow-slate-900/5">
+    <section className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-lg shadow-slate-900/10 backdrop-blur-xl">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">Rotas monitoradas</h2>
@@ -46,7 +46,7 @@ export default function RoutesOverview() {
         {routes.map((route) => (
           <div
             key={route.name}
-            className="group rounded-2xl border border-slate-100/70 bg-slate-50/60 p-5 transition hover:border-primary-200 hover:bg-primary-50/50"
+            className="group rounded-2xl border border-white/50 bg-white/60 p-5 shadow-sm shadow-slate-900/5 backdrop-blur transition hover:-translate-y-0.5 hover:border-primary-200/80 hover:bg-primary-50/60"
           >
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
@@ -61,7 +61,7 @@ export default function RoutesOverview() {
                 {route.status}
               </span>
             </div>
-            <div className="mt-4 h-2 rounded-full bg-white/70">
+            <div className="mt-4 h-2 rounded-full bg-white/80">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-primary-400 to-primary-600"
                 style={{ width: `${route.occupancy}%` }}
