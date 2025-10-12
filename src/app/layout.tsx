@@ -4,6 +4,8 @@ import { Inter } from "next/font/google";
 import { ReactNode } from "react";
 import { AuthSessionProvider } from "@/components/auth-session-provider";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Perueiros Admin",
   description: "Painel administrativo para Perueiros",
