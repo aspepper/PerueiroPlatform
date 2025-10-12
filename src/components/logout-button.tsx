@@ -11,9 +11,9 @@ export default function LogoutButton() {
     <button
       type="button"
       onClick={handleLogout}
-      className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-600 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.25)] transition hover:border-rose-200 hover:text-rose-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
+      className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
     >
-      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-base" aria-hidden>
+      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/10 text-base" aria-hidden>
         ⎋
       </span>
       Logout

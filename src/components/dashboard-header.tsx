@@ -54,46 +54,48 @@ export default function DashboardHeader() {
   const today = formatDate();
 
   return (
-    <header className="relative overflow-hidden rounded-[2.75rem] border border-slate-200/60 bg-white/95 p-10 text-slate-900 shadow-[0_30px_90px_-48px_rgba(15,23,42,0.35)] backdrop-blur">
+    <header className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 text-white shadow-xl ring-1 ring-slate-900/10">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_60%)]"
-        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.18),transparent_65%)]"
+        aria-hidden
       />
-      <div className="pointer-events-none absolute inset-0 border border-white/70 opacity-20" aria-hidden="true" />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"
+        aria-hidden
+      />
 
-      <div className="relative space-y-10">
+      <div className="relative flex flex-col gap-10 p-8 sm:p-10 lg:p-12">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-2xl space-y-5">
-            <p className="inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-primary-600">
+          <div className="max-w-2xl space-y-4">
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-cyan-200/80">
               Centro de Controle • Perueiros
             </p>
-            <div className="space-y-4">
-              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-[2.5rem]">
-                Operação estável e conectada em tempo real
+            <div className="space-y-3">
+              <h1 className="text-3xl font-semibold leading-tight tracking-tight text-white sm:text-[2.6rem]">
+                Operações em sincronia com o dia a dia
               </h1>
-              <p className="max-w-xl text-sm text-slate-600">
-                Acompanhe solicitações, supervisione rotas monitoradas e controle o ciclo financeiro da plataforma em uma visão
-                centralizada.
+              <p className="max-w-xl text-sm text-slate-200/90">
+                Acompanhe solicitações, supervisione rotas monitoradas e mantenha o controle financeiro da plataforma em uma visão centralizada.
               </p>
             </div>
           </div>
 
-          <div className="flex w-full flex-col gap-4 text-sm text-slate-500 sm:flex-row sm:items-start sm:justify-between lg:w-auto lg:flex-col lg:items-end">
-            <div className="flex flex-col items-start gap-2 text-left text-xs font-semibold uppercase tracking-[0.28em] text-slate-500 sm:flex-row sm:items-center sm:gap-3 lg:flex-col lg:items-end">
-              <span className="rounded-full border border-slate-200/80 bg-white/80 px-4 py-1 text-[0.7rem] text-slate-600">
+          <div className="flex w-full flex-col gap-4 text-sm sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:flex-col lg:items-end">
+            <div className="flex flex-col items-start gap-3 text-left text-xs font-semibold uppercase tracking-[0.28em] text-slate-200 sm:flex-row sm:items-center sm:gap-4 lg:flex-col lg:items-end">
+              <span className="rounded-full border border-white/20 bg-white/10 px-4 py-1 text-[0.7rem] text-slate-100">
                 {today}
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1 text-[0.7rem] font-semibold text-emerald-600">
-                <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-400/20 px-4 py-1 text-[0.7rem] font-semibold text-emerald-100">
+                <span className="inline-flex h-2 w-2 rounded-full bg-emerald-300" aria-hidden />
                 Operação estável
               </span>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center justify-end gap-3 text-sm">
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_45px_-30px_rgba(15,23,42,0.4)] transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white/15 px-5 py-3 font-semibold text-white transition hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20" aria-hidden>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-lg" aria-hidden>
                   ↻
                 </span>
                 Sincronizar agora
@@ -103,61 +105,46 @@ export default function DashboardHeader() {
           </div>
         </div>
 
-        <nav className="rounded-[2rem] border border-slate-200/70 bg-slate-50/80 p-5 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.28)]">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <span className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-500">Cadastros</span>
-            <div className="flex flex-wrap items-center gap-2">
-              {cadastrosLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="inline-flex items-center gap-2 rounded-full border border-transparent bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-primary-200 hover:text-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
-                >
-                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary-500" aria-hidden />
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </nav>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {highlights.map((highlight) => (
+            <article
+              key={highlight.label}
+              className="rounded-3xl border border-white/10 bg-white/8 px-6 py-5 text-left shadow-[0_18px_60px_-40px_rgba(15,23,42,0.6)] backdrop-blur"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-200/80">{highlight.label}</p>
+              <p className="mt-3 text-3xl font-semibold tracking-tight text-white">{highlight.value}</p>
+              <p className="mt-2 text-xs text-slate-200/80">{highlight.caption}</p>
+            </article>
+          ))}
+        </div>
 
-        <div className="flex flex-col gap-6 xl:flex-row">
-          <div className="grid flex-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {highlights.map((highlight) => (
-              <article
-                key={highlight.label}
-                className="group relative overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_70px_-48px_rgba(15,23,42,0.28)] transition duration-300 ease-out hover:-translate-y-1 hover:border-primary-200/60 hover:shadow-[0_32px_80px_-45px_rgba(15,23,42,0.32)]"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary-100/20 via-white/70 to-white/90 opacity-0 transition duration-500 group-hover:opacity-100" aria-hidden />
-                <div className="relative space-y-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-500">{highlight.label}</p>
-                  <p className="text-3xl font-semibold tracking-tight text-slate-900">{highlight.value}</p>
-                  <p className="text-xs text-slate-500">{highlight.caption}</p>
-                </div>
-              </article>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <dl className="grid gap-3 text-xs text-slate-200/90 sm:grid-cols-3 sm:gap-4">
+            {statusDetails.map((item) => (
+              <div key={item.label} className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3">
+                <dt className="font-semibold uppercase tracking-[0.24em] text-slate-300/80">{item.label}</dt>
+                <dd className="mt-2 text-sm font-semibold text-white">{item.value}</dd>
+              </div>
             ))}
-          </div>
+          </dl>
 
-          <section className="w-full max-w-md overflow-hidden rounded-[2.25rem] border border-slate-200/70 bg-white/90 p-6 text-sm text-slate-600 shadow-[0_24px_70px_-48px_rgba(15,23,42,0.3)] xl:w-[360px]">
-            <header className="space-y-1 text-left">
-              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-primary-600">Status da plataforma</p>
-              <h2 className="text-xl font-semibold text-slate-900">Sincronização ativa</h2>
-              <p>Monitoramento contínuo dos sistemas conectados ao centro de controle.</p>
-            </header>
-            <dl className="mt-6 space-y-4">
-              {statusDetails.map((item) => (
-                <div key={item.label} className="flex items-center justify-between gap-3 text-xs text-slate-500">
-                  <dt className="font-semibold uppercase tracking-[0.2em] text-slate-400">{item.label}</dt>
-                  <dd className="rounded-full border border-slate-200/80 bg-slate-50 px-3 py-1 text-[0.7rem] font-semibold text-slate-600">
-                    {item.value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-6 text-xs text-slate-500">
-              Alertas serão enviados automaticamente caso qualquer integração apresente instabilidade durante o período operacional.
-            </p>
-          </section>
+          <nav className="w-full rounded-3xl border border-white/10 bg-white/8 px-5 py-4 text-slate-100 backdrop-blur lg:w-auto">
+            <div className="flex flex-col gap-3 text-sm lg:flex-row lg:items-center lg:gap-4">
+              <span className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-200/80">Cadastros</span>
+              <div className="flex flex-wrap items-center gap-2">
+                {cadastrosLinks.map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
+                  >
+                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-cyan-200" aria-hidden />
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </nav>
         </div>
       </div>
     </header>
