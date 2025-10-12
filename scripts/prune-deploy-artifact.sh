@@ -15,7 +15,12 @@ fi
 
 PRISMA_CLIENT_DIR="$DEPLOY_DIR/node_modules/.prisma/client"
 if [[ -d "$PRISMA_CLIENT_DIR" ]]; then
-  find "$PRISMA_CLIENT_DIR" -maxdepth 1 -type f -name 'libquery_engine-*' ! -name '*linux*' -delete || true
+  # Preserve the Linux query engine. Prisma 6 renamed the binary to
+  # "libquery_engine-debian-openssl-*.so.node", so instead of deleting
+  # everything that does not contain "linux" we explicitly prune only the
+  # binaries that target other platforms.
+  find "$PRISMA_CLIENT_DIR" -maxdepth 1 -type f -name 'libquery_engine-*' \
+    \( -name '*-darwin-*' -o -name '*-windows-*' \) -delete || true
   find "$PRISMA_CLIENT_DIR" -maxdepth 1 -type f -name 'libquery_engine-*' -name '*linux-musl*' -delete || true
   find "$PRISMA_CLIENT_DIR" -maxdepth 1 -type f -name 'migration-engine*' -delete || true
   find "$PRISMA_CLIENT_DIR" -maxdepth 1 -type f -name 'introspection-engine*' -delete || true
@@ -26,9 +31,7 @@ PRISMA_ENGINES_DIR="$DEPLOY_DIR/node_modules/@prisma/engines"
 if [[ -d "$PRISMA_ENGINES_DIR" ]]; then
   find "$PRISMA_ENGINES_DIR" -maxdepth 1 -type f \
     \( -name 'libquery_engine-*' -o -name 'migration-engine*' -o -name 'introspection-engine*' -o -name 'prisma-fmt*' \) \
-    ! -name '*linux*' -delete || true
-  find "$PRISMA_ENGINES_DIR" -maxdepth 1 -type f -name '*-darwin-*' -delete || true
-  find "$PRISMA_ENGINES_DIR" -maxdepth 1 -type f -name '*-windows-*' -delete || true
+    \( -name '*-darwin-*' -o -name '*-windows-*' \) -delete || true
 fi
 
 # Remove Next.js build cache artifacts that are not required at runtime
