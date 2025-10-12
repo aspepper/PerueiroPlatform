@@ -32,7 +32,7 @@ const defaultMetrics: Metric[] = [
 
 export default function MetricsGrid({ metrics = defaultMetrics }: { metrics?: Metric[] }) {
   return (
-    <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {metrics.map((metric) => {
         const variation = metric.variation;
         const status = metric.status ?? "up";
@@ -40,34 +40,27 @@ export default function MetricsGrid({ metrics = defaultMetrics }: { metrics?: Me
         return (
           <article
             key={metric.label}
-            className="group relative overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/80 p-6 shadow-[0_26px_70px_-48px_rgba(15,23,42,0.35)] transition duration-300 ease-out hover:-translate-y-1 hover:border-primary-200/60 hover:shadow-[0_32px_80px_-40px_rgba(15,23,42,0.35)]"
+            className="rounded-3xl border border-slate-200 bg-white px-6 py-5 shadow-sm shadow-slate-900/5 transition hover:shadow-md"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-100/20 via-white/60 to-white/80 opacity-0 transition duration-500 group-hover:opacity-100" aria-hidden="true" />
-            <div className="absolute -right-16 top-1/3 h-44 w-44 rounded-full bg-primary-200/30 blur-3xl opacity-0 transition duration-500 group-hover:opacity-100" aria-hidden="true" />
-            <div className="relative space-y-5">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-slate-500">{metric.label}</p>
-                {variation ? (
-                  <span
-                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wide ${
-                      status === "up"
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-600"
-                        : "border-rose-200 bg-rose-50 text-rose-600"
-                    }`}
-                  >
-                    <span aria-hidden>{status === "up" ? "▲" : "▼"}</span>
-                    {variation}
-                  </span>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <span className="text-[2.6rem] font-semibold tracking-tight text-slate-900">
-                  {metric.value.toLocaleString("pt-BR")}
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm font-semibold text-slate-600">{metric.label}</p>
+              {variation ? (
+                <span
+                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+                    status === "up"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  <span aria-hidden>{status === "up" ? "▲" : "▼"}</span>
+                  {variation}
                 </span>
-                <div className="h-1.5 w-16 rounded-full bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600" aria-hidden="true" />
-              </div>
-              <p className="text-sm text-slate-600">{metric.description}</p>
+              ) : null}
             </div>
+            <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900">
+              {metric.value.toLocaleString("pt-BR")}
+            </p>
+            <p className="mt-2 text-xs text-slate-500">{metric.description}</p>
           </article>
         );
       })}
