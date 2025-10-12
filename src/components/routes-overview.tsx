@@ -32,11 +32,11 @@ function getStatusStyles(status: string) {
 
 export default function RoutesOverview() {
   return (
-    <section className="relative overflow-hidden rounded-[2.5rem] border border-white/40 bg-white/75 p-6 shadow-[0_45px_90px_-50px_rgba(15,23,42,0.55)] backdrop-blur-xl">
-      <div className="pointer-events-none absolute -right-20 top-1/2 h-56 w-56 -translate-y-1/2 rounded-full bg-primary-400/20 blur-3xl" aria-hidden />
+    <section className="relative overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/80 p-6 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.32)]">
+      <div className="pointer-events-none absolute -right-20 top-1/2 h-56 w-56 -translate-y-1/2 rounded-full bg-primary-200/25 blur-3xl" aria-hidden="true" />
       <header className="relative flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-600/70">Cobertura urbana</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-600/80">Cobertura urbana</p>
           <h2 className="mt-1 text-2xl font-semibold text-slate-900">Rotas monitoradas</h2>
           <p className="text-sm text-slate-500">Resumo das linhas operacionais e nível de ocupação dos veículos</p>
         </div>
@@ -48,9 +48,9 @@ export default function RoutesOverview() {
         {routes.map((route) => (
           <div
             key={route.name}
-            className="group relative overflow-hidden rounded-[2rem] border border-white/60 bg-white/60 p-5 shadow-[0_30px_60px_-40px_rgba(15,23,42,0.45)] backdrop-blur transition hover:-translate-y-1 hover:border-primary-200/70 hover:shadow-[0_50px_90px_-45px_rgba(15,23,42,0.45)]"
+            className="group relative overflow-hidden rounded-[1.9rem] border border-slate-200/70 bg-white/80 p-5 shadow-[0_18px_55px_-40px_rgba(15,23,42,0.28)] transition hover:-translate-y-1 hover:border-primary-200/70 hover:shadow-[0_26px_70px_-38px_rgba(15,23,42,0.3)]"
           >
-            <div className="pointer-events-none absolute -right-24 top-0 h-40 w-40 bg-gradient-to-br from-primary-400/25 via-primary-300/10 to-transparent blur-2xl opacity-0 transition duration-300 group-hover:opacity-100" aria-hidden />
+            <div className="pointer-events-none absolute -right-24 top-0 h-40 w-40 bg-gradient-to-br from-primary-200/25 via-primary-100/10 to-transparent blur-2xl opacity-0 transition duration-300 group-hover:opacity-100" aria-hidden="true" />
             <div className="relative flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="text-lg font-semibold text-slate-900">{route.name}</p>
@@ -61,7 +61,7 @@ export default function RoutesOverview() {
               <span
                 className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-wide ${getStatusStyles(route.status)}`}
               >
-                <span className="hidden text-base leading-none sm:inline" aria-hidden>
+                <span className="hidden text-base leading-none sm:inline" aria-hidden="true">
                   {route.status.toLowerCase().includes("atenção") ? "!" : "●"}
                 </span>
                 {route.status}
@@ -74,7 +74,7 @@ export default function RoutesOverview() {
               />
               <div
                 className="absolute inset-y-0 left-0 w-full bg-[linear-gradient(120deg,rgba(255,255,255,0.2)_0%,rgba(255,255,255,0)_40%)] bg-[length:180%_100%] opacity-0 transition group-hover:opacity-100"
-                aria-hidden
+                aria-hidden="true"
               />
             </div>
             <p className="mt-4 text-xs text-slate-500">

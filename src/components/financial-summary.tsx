@@ -26,16 +26,16 @@ const reminders = [
 
 export default function FinancialSummary() {
   return (
-    <section className="relative overflow-hidden rounded-[2.5rem] border border-white/35 bg-white/70 p-6 shadow-[0_45px_90px_-50px_rgba(15,23,42,0.55)] backdrop-blur-xl">
-      <div className="pointer-events-none absolute -right-24 top-1/4 h-56 w-56 rounded-full bg-primary-400/20 blur-3xl" aria-hidden />
+    <section className="relative overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/80 p-6 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.32)]">
+      <div className="pointer-events-none absolute -right-24 top-1/4 h-56 w-56 rounded-full bg-primary-200/25 blur-3xl" aria-hidden="true" />
       <header className="relative space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary-600/70">Saúde financeira</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary-600/80">Saúde financeira</p>
         <h2 className="text-2xl font-semibold text-slate-900">Resumo financeiro</h2>
         <p className="text-sm text-slate-500">Situação atualizada do fluxo de recebimentos da plataforma</p>
       </header>
       <div className="relative mt-7 space-y-6">
-        <div className="relative overflow-hidden rounded-[2.25rem] bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 p-6 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
-          <div className="pointer-events-none absolute -left-24 top-0 h-56 w-56 rounded-full bg-white/15 blur-3xl" aria-hidden />
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 p-6 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+          <div className="pointer-events-none absolute -left-24 top-0 h-56 w-56 rounded-full bg-white/15 blur-3xl" aria-hidden="true" />
           <div className="relative flex flex-col gap-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-100/80">Receita projetada</p>
@@ -70,9 +70,9 @@ export default function FinancialSummary() {
           {highlights.map((highlight) => (
             <div
               key={highlight.title}
-              className="relative overflow-hidden rounded-[1.9rem] border border-white/45 bg-white/60 p-4 shadow-[0_30px_60px_-45px_rgba(15,23,42,0.45)] backdrop-blur"
+              className="relative overflow-hidden rounded-[1.6rem] border border-slate-200/70 bg-white/80 p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.28)]"
             >
-              <div className="pointer-events-none absolute -right-16 top-1/2 h-24 w-24 -translate-y-1/2 bg-gradient-to-br from-primary-300/20 via-primary-200/5 to-transparent blur-2xl" aria-hidden />
+              <div className="pointer-events-none absolute -right-16 top-1/2 h-24 w-24 -translate-y-1/2 bg-gradient-to-br from-primary-200/20 via-primary-100/10 to-transparent blur-2xl" aria-hidden="true" />
               <div className="relative space-y-2">
                 <p className="text-sm font-semibold text-slate-900">{highlight.title}</p>
                 <p className="text-2xl font-semibold text-slate-900">{highlight.value}</p>
@@ -81,12 +81,12 @@ export default function FinancialSummary() {
             </div>
           ))}
         </div>
-        <div className="rounded-[1.9rem] border border-white/45 bg-white/60 p-5 shadow-[0_30px_60px_-45px_rgba(15,23,42,0.45)] backdrop-blur">
+        <div className="rounded-[1.6rem] border border-slate-200/70 bg-white/80 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.28)]">
           <p className="text-sm font-semibold text-slate-900">Próximos passos</p>
           <ul className="mt-4 space-y-3 text-xs text-slate-500">
             {reminders.map((reminder) => (
               <li key={reminder} className="flex items-start gap-3">
-                <span className="mt-1 flex h-2 w-2 items-center justify-center rounded-full bg-primary-500" aria-hidden />
+                <span className="mt-1 flex h-2 w-2 items-center justify-center rounded-full bg-primary-500" aria-hidden="true" />
                 <span>{reminder}</span>
               </li>
             ))}
