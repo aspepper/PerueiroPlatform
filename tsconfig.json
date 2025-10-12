@@ -34,11 +34,12 @@
     ]
   },
   "include": [
-    "../next-env.d.ts",
+    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    "**/*.d.ts",
     ".next/types/**/*.ts"
-, "../src/pages/_app.tsx", "../src/components/dashboard-header.tsx"  ],
+  ],
   "exclude": [
     "node_modules"
   ]
