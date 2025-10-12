@@ -36,11 +36,11 @@ function getStatusBadge(status: string) {
 
 export default function RecentIncidents() {
   return (
-    <section className="relative overflow-hidden rounded-[2.5rem] border border-white/40 bg-white/75 p-6 shadow-[0_45px_90px_-50px_rgba(15,23,42,0.55)] backdrop-blur-xl">
-      <div className="pointer-events-none absolute -left-16 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full bg-primary-400/20 blur-3xl" aria-hidden />
+    <section className="relative overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/80 p-6 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.32)]">
+      <div className="pointer-events-none absolute -left-16 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full bg-primary-200/25 blur-3xl" aria-hidden="true" />
       <header className="relative flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary-600/70">Central de alertas</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary-600/80">Central de alertas</p>
           <h2 className="mt-1 text-2xl font-semibold text-slate-900">Ocorrências recentes</h2>
           <p className="text-sm text-slate-500">Monitoramento em tempo real das solicitações abertas pelos motoristas</p>
         </div>
@@ -52,10 +52,10 @@ export default function RecentIncidents() {
         {incidents.map((incident) => (
           <div
             key={incident.id}
-            className="group relative flex items-center gap-4 overflow-hidden rounded-[1.9rem] border border-white/60 bg-white/60 p-5 shadow-[0_30px_60px_-45px_rgba(15,23,42,0.45)] backdrop-blur transition hover:-translate-y-1 hover:border-primary-200/70"
+            className="group relative flex items-center gap-4 overflow-hidden rounded-[1.6rem] border border-slate-200/70 bg-white/80 p-5 shadow-[0_18px_55px_-40px_rgba(15,23,42,0.28)] transition hover:-translate-y-1 hover:border-primary-200/70"
           >
-            <div className="pointer-events-none absolute -right-16 top-1/2 h-32 w-32 -translate-y-1/2 bg-gradient-to-br from-primary-400/25 via-primary-300/10 to-transparent blur-2xl opacity-0 transition duration-300 group-hover:opacity-100" aria-hidden />
-            <span className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500/15 to-primary-400/5 text-primary-600">
+            <div className="pointer-events-none absolute -right-16 top-1/2 h-32 w-32 -translate-y-1/2 bg-gradient-to-br from-primary-200/25 via-primary-100/10 to-transparent blur-2xl opacity-0 transition duration-300 group-hover:opacity-100" aria-hidden="true" />
+            <span className="relative flex h-10 w-10 items-center justify-center rounded-2xl border border-primary-100 bg-primary-50/80 text-primary-600">
               •
             </span>
             <div className="relative flex flex-1 flex-col gap-3">
@@ -63,7 +63,7 @@ export default function RecentIncidents() {
                 <p className="text-base font-semibold text-slate-900">
                   {incident.type} · {incident.route}
                 </p>
-                <span className="rounded-full border border-slate-200/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.26em] text-slate-500">
+                <span className="rounded-full border border-slate-200/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.26em] text-slate-500">
                   Protocolo {incident.id}
                 </span>
               </div>

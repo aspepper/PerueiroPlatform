@@ -82,10 +82,6 @@ export default async function DashboardPage() {
 
   return (
     <main className="dashboard-page">
-      <div className="dashboard-page__halo dashboard-page__halo--primary" aria-hidden />
-      <div className="dashboard-page__halo dashboard-page__halo--secondary" aria-hidden />
-      <div className="dashboard-page__halo dashboard-page__halo--tertiary" aria-hidden />
-
       <div className="dashboard-page__content">
         <DashboardHeader />
 

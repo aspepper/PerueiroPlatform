@@ -40,13 +40,13 @@ export default function MetricsGrid({ metrics = defaultMetrics }: { metrics?: Me
         return (
           <article
             key={metric.label}
-            className="group relative overflow-hidden rounded-[2.25rem] border border-white/50 bg-white/80 p-6 shadow-[0_40px_80px_-40px_rgba(15,23,42,0.4)] backdrop-blur-xl transition duration-300 ease-out hover:-translate-y-1 hover:border-primary-200/60 hover:shadow-[0_55px_110px_-45px_rgba(15,23,42,0.45)]"
+            className="group relative overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/80 p-6 shadow-[0_26px_70px_-48px_rgba(15,23,42,0.35)] transition duration-300 ease-out hover:-translate-y-1 hover:border-primary-200/60 hover:shadow-[0_32px_80px_-40px_rgba(15,23,42,0.35)]"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-200/15 via-white/40 to-white/70 opacity-0 transition duration-500 group-hover:opacity-100" aria-hidden />
-            <div className="absolute -right-16 top-1/3 h-48 w-48 rounded-full bg-primary-400/20 blur-3xl opacity-0 transition duration-500 group-hover:opacity-100" aria-hidden />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-100/20 via-white/60 to-white/80 opacity-0 transition duration-500 group-hover:opacity-100" aria-hidden="true" />
+            <div className="absolute -right-16 top-1/3 h-44 w-44 rounded-full bg-primary-200/30 blur-3xl opacity-0 transition duration-500 group-hover:opacity-100" aria-hidden="true" />
             <div className="relative space-y-5">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-slate-400">{metric.label}</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-slate-500">{metric.label}</p>
                 {variation ? (
                   <span
                     className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wide ${
@@ -61,12 +61,12 @@ export default function MetricsGrid({ metrics = defaultMetrics }: { metrics?: Me
                 ) : null}
               </div>
               <div className="space-y-2">
-                <span className="text-[2.8rem] font-semibold tracking-tight text-slate-900">
+                <span className="text-[2.6rem] font-semibold tracking-tight text-slate-900">
                   {metric.value.toLocaleString("pt-BR")}
                 </span>
-                <div className="h-1.5 w-16 rounded-full bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600" aria-hidden />
+                <div className="h-1.5 w-16 rounded-full bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600" aria-hidden="true" />
               </div>
-              <p className="text-sm text-slate-500">{metric.description}</p>
+              <p className="text-sm text-slate-600">{metric.description}</p>
             </div>
           </article>
         );
