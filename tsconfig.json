@@ -2,9 +2,9 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": [
-      "ES2023",
       "DOM",
-      "DOM.Iterable"
+      "DOM.Iterable",
+      "ES2022"
     ],
     "allowJs": false,
     "skipLibCheck": true,
@@ -34,11 +34,11 @@
     ]
   },
   "include": [
-    "next-env.d.ts",
+    "../next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-  ],
+, "../src/pages/_app.tsx", "../src/components/dashboard-header.tsx"  ],
   "exclude": [
     "node_modules"
   ]
