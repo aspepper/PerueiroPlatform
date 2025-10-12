@@ -3,68 +3,78 @@ const pendingDrivers = [
     name: "João Mendes",
     since: "2h",
     documents: ["CNH", "Antecedentes"],
-    route: "Zona Norte"
+    route: "Zona Norte",
   },
   {
     name: "Camila Nunes",
     since: "5h",
     documents: ["Vistoria", "Seguro"],
-    route: "Zona Leste"
-  }
+    route: "Zona Leste",
+  },
 ];
 
 const pendingSchools = [
   { name: "Colégio Horizonte", since: "1 dia", students: 284 },
-  { name: "Escola Viva", since: "3 dias", students: 156 }
+  { name: "Escola Viva", since: "3 dias", students: 156 },
 ];
 
 export default function PendingApprovals() {
   return (
-    <section className="grid gap-4 lg:grid-cols-2">
-      <article className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-        <header className="mb-4 flex items-center justify-between">
+    <section className="grid gap-6 lg:grid-cols-2">
+      <article className="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-lg shadow-slate-900/5">
+        <header className="mb-5 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Motoristas aguardando aprovação</h2>
-            <p className="text-sm text-slate-500">Documentos enviados pelo app aguardando revisão</p>
+            <p className="text-sm text-slate-500">Documentos enviados pelo app aguardando revisão da equipe</p>
           </div>
-          <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
+          <span className="rounded-full bg-primary-100 px-4 py-1 text-sm font-semibold text-primary-700">
             {pendingDrivers.length}
           </span>
         </header>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {pendingDrivers.map((driver) => (
-            <div key={driver.name} className="rounded-xl border border-slate-100 p-4">
-              <div className="flex items-center justify-between">
+            <div
+              key={driver.name}
+              className="rounded-2xl border border-slate-100/80 bg-slate-50/70 p-5 transition hover:border-primary-200 hover:bg-primary-50/50"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="font-semibold text-slate-800">{driver.name}</p>
-                  <p className="text-xs text-slate-400">Rota sugerida: {driver.route}</p>
+                  <p className="font-semibold text-slate-900">{driver.name}</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Rota sugerida · {driver.route}</p>
                 </div>
-                <span className="text-xs font-semibold text-primary-600">{driver.since}</span>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary-600 shadow-sm">
+                  {driver.since}
+                </span>
               </div>
-              <p className="mt-2 text-xs text-slate-500">Documentos: {driver.documents.join(", ")}</p>
+              <p className="mt-3 text-xs text-slate-500">Documentos: {driver.documents.join(", ")}</p>
             </div>
           ))}
         </div>
       </article>
 
-      <article className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-        <header className="mb-4 flex items-center justify-between">
+      <article className="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-lg shadow-slate-900/5">
+        <header className="mb-5 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Escolas aguardando integração</h2>
-            <p className="text-sm text-slate-500">Solicitações feitas pelo app dos gestores escolares</p>
+            <p className="text-sm text-slate-500">Solicitações realizadas pelos gestores escolares na última semana</p>
           </div>
-          <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
+          <span className="rounded-full bg-primary-100 px-4 py-1 text-sm font-semibold text-primary-700">
             {pendingSchools.length}
           </span>
         </header>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {pendingSchools.map((school) => (
-            <div key={school.name} className="flex items-center justify-between rounded-xl border border-slate-100 p-4">
+            <div
+              key={school.name}
+              className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-100/80 bg-slate-50/70 p-5 transition hover:border-primary-200 hover:bg-primary-50/50"
+            >
               <div>
-                <p className="font-semibold text-slate-800">{school.name}</p>
-                <p className="text-xs text-slate-400">{school.students} alunos cadastrados</p>
+                <p className="font-semibold text-slate-900">{school.name}</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{school.students} alunos cadastrados</p>
               </div>
-              <span className="text-xs font-semibold text-primary-600">{school.since}</span>
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary-600 shadow-sm">
+                {school.since}
+              </span>
             </div>
           ))}
         </div>
