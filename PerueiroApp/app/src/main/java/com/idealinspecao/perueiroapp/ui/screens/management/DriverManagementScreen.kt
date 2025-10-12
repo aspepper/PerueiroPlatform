@@ -118,13 +118,19 @@ fun DriverFormScreen(
             FormTextField(password, { password = it }, "Senha de acesso")
             Button(
                 onClick = {
-                    if (cpf.isBlank() || name.isBlank()) {
+                    val normalizedCpf = cpf.filter { it.isDigit() }
+                    val trimmedName = name.trim()
+
+                    cpf = normalizedCpf
+                    name = trimmedName
+
+                    if (normalizedCpf.isEmpty() || trimmedName.isEmpty()) {
                         coroutineScope.launch { snackbar.showSnackbar("CPF e nome são obrigatórios") }
                     } else {
                         onSave(
                             DriverEntity(
-                                cpf = cpf,
-                                name = name,
+                                cpf = normalizedCpf,
+                                name = trimmedName,
                                 birthDate = birthDate,
                                 address = address,
                                 phone = phone,
