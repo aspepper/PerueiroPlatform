@@ -16,7 +16,7 @@ export default function RegistryPageShell({
 }: RegistryPageShellProps) {
   return (
     <main className="min-h-screen w-full bg-[#F5F7FB] text-slate-900">
-      <div className="mx-auto max-w-5xl px-6 py-10">
+      <div className="mx-auto max-w-7xl px-6 py-10">
         <section className="rounded-[24px] border border-[#E5E7EB] bg-white p-8 shadow-sm sm:p-10">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div className="space-y-4">
