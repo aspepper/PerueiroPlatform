@@ -1,8 +1,0 @@
-ALTER TABLE "Van" ADD COLUMN "billingDay" INTEGER NOT NULL DEFAULT 10;
-ALTER TABLE "Van" ADD COLUMN "monthlyFee" DECIMAL(12,2) NOT NULL DEFAULT 0;
-
-ALTER TABLE "Payment" ADD COLUMN "vanId" BIGINT;
-
-ALTER TABLE "Payment" ADD CONSTRAINT "Payment_vanId_fkey" FOREIGN KEY ("vanId") REFERENCES "Van"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
-CREATE INDEX "Payment_vanId_dueDate_idx" ON "Payment"("vanId", "dueDate");
