@@ -168,6 +168,9 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                     onEditGuardian = {
                         editingGuardian = it
                         creatingGuardian = false
+                    },
+                    onDeleteGuardian = {
+                        viewModel.deleteGuardian(it.cpf)
                     }
                 )
             } else {
@@ -197,6 +200,9 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                     onEditSchool = {
                         editingSchool = it
                         creatingSchool = false
+                    },
+                    onDeleteSchool = {
+                        viewModel.deleteSchool(it.id)
                     }
                 )
             } else {
@@ -225,6 +231,9 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                     onEditVan = {
                         editingVan = it
                         creatingVan = false
+                    },
+                    onDeleteVan = {
+                        viewModel.deleteVan(it.id)
                     }
                 )
             } else {
@@ -254,6 +263,9 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                     onEditDriver = {
                         editingDriver = it
                         creatingDriver = false
+                    },
+                    onDeleteDriver = {
+                        viewModel.deleteDriver(it.cpf)
                     }
                 )
             } else {
@@ -283,6 +295,9 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                     onEditStudent = {
                         editingStudent = it
                         creatingStudent = false
+                    },
+                    onDeleteStudent = {
+                        viewModel.deleteStudent(it.id)
                     }
                 )
             } else {
@@ -317,6 +332,9 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                     onEditPayment = {
                         editingPayment = it
                         creatingPayment = false
+                    },
+                    onDeletePayment = {
+                        viewModel.deletePayment(it.id)
                     }
                 )
             } else {

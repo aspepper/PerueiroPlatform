@@ -9,9 +9,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.idealinspecao.perueiroapp.data.local.SchoolEntity
+import com.idealinspecao.perueiroapp.ui.components.ConfirmationDialog
 import com.idealinspecao.perueiroapp.ui.components.FormTextField
 import com.idealinspecao.perueiroapp.ui.components.InfoCard
 import com.idealinspecao.perueiroapp.ui.components.ScreenScaffold
@@ -33,7 +37,8 @@ fun SchoolListScreen(
     schools: List<SchoolEntity>,
     onBack: () -> Unit,
     onAddSchool: () -> Unit,
-    onEditSchool: (SchoolEntity) -> Unit
+    onEditSchool: (SchoolEntity) -> Unit,
+    onDeleteSchool: (SchoolEntity) -> Unit
 ) {
     ScreenScaffold(
         title = "Escolas",
@@ -43,7 +48,10 @@ fun SchoolListScreen(
                 Icon(Icons.Default.Add, contentDescription = "Adicionar escola")
             }
         }
-    ) { padding, _ ->
+    ) { padding, snackbar ->
+        var schoolToDelete by remember { mutableStateOf<SchoolEntity?>(null) }
+        val coroutineScope = rememberCoroutineScope()
+
         if (schools.isEmpty()) {
             Column(
                 modifier = Modifier
@@ -67,10 +75,31 @@ fun SchoolListScreen(
                     InfoCard(
                         title = school.fantasyName,
                         description = "Razão social: ${school.corporateName}\nContato: ${school.contact}",
-                        onClick = { onEditSchool(school) }
+                        onClick = { onEditSchool(school) },
+                        actions = {
+                            IconButton(onClick = { onEditSchool(school) }) {
+                                Icon(Icons.Outlined.Edit, contentDescription = "Editar")
+                            }
+                            IconButton(onClick = { schoolToDelete = school }) {
+                                Icon(Icons.Outlined.Delete, contentDescription = "Remover")
+                            }
+                        }
                     )
                 }
             }
+        }
+
+        schoolToDelete?.let { school ->
+            ConfirmationDialog(
+                title = "Remover escola?",
+                message = "Confirma a exclusão de ${school.fantasyName}?",
+                onConfirm = {
+                    onDeleteSchool(school)
+                    coroutineScope.launch { snackbar.showSnackbar("Escola removida") }
+                    schoolToDelete = null
+                },
+                onDismiss = { schoolToDelete = null }
+            )
         }
     }
 }

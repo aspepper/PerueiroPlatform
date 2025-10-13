@@ -9,9 +9,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.idealinspecao.perueiroapp.data.local.PaymentEntity
 import com.idealinspecao.perueiroapp.data.local.StudentEntity
+import com.idealinspecao.perueiroapp.ui.components.ConfirmationDialog
 import com.idealinspecao.perueiroapp.ui.components.FormTextField
 import com.idealinspecao.perueiroapp.ui.components.InfoCard
 import com.idealinspecao.perueiroapp.ui.components.ScreenScaffold
@@ -37,7 +41,8 @@ fun PaymentListScreen(
     students: List<StudentEntity>,
     onBack: () -> Unit,
     onAddPayment: () -> Unit,
-    onEditPayment: (PaymentEntity) -> Unit
+    onEditPayment: (PaymentEntity) -> Unit,
+    onDeletePayment: (PaymentEntity) -> Unit
 ) {
     ScreenScaffold(
         title = "Pagamentos",
@@ -47,7 +52,10 @@ fun PaymentListScreen(
                 Icon(Icons.Default.Add, contentDescription = "Adicionar pagamento")
             }
         }
-    ) { padding, _ ->
+    ) { padding, snackbar ->
+        var paymentToDelete by remember { mutableStateOf<PaymentEntity?>(null) }
+        val coroutineScope = rememberCoroutineScope()
+
         if (payments.isEmpty()) {
             Column(
                 modifier = Modifier
@@ -72,10 +80,31 @@ fun PaymentListScreen(
                     InfoCard(
                         title = student?.name ?: "Aluno desconhecido",
                         description = "Data: ${payment.paymentDate}\nValor: R$ ${"%.2f".format(payment.amount)}\nStatus: ${payment.status}",
-                        onClick = { onEditPayment(payment) }
+                        onClick = { onEditPayment(payment) },
+                        actions = {
+                            IconButton(onClick = { onEditPayment(payment) }) {
+                                Icon(Icons.Outlined.Edit, contentDescription = "Editar")
+                            }
+                            IconButton(onClick = { paymentToDelete = payment }) {
+                                Icon(Icons.Outlined.Delete, contentDescription = "Remover")
+                            }
+                        }
                     )
                 }
             }
+        }
+
+        paymentToDelete?.let { payment ->
+            ConfirmationDialog(
+                title = "Remover pagamento?",
+                message = "Confirma a exclusão do lançamento em ${payment.paymentDate}?",
+                onConfirm = {
+                    onDeletePayment(payment)
+                    coroutineScope.launch { snackbar.showSnackbar("Pagamento removido") }
+                    paymentToDelete = null
+                },
+                onDismiss = { paymentToDelete = null }
+            )
         }
     }
 }

@@ -9,6 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,11 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Refresh
 import com.idealinspecao.perueiroapp.data.local.GuardianEntity
+import com.idealinspecao.perueiroapp.ui.components.ConfirmationDialog
 import com.idealinspecao.perueiroapp.ui.components.FormTextField
 import com.idealinspecao.perueiroapp.ui.components.InfoCard
 import com.idealinspecao.perueiroapp.ui.components.ScreenScaffold
@@ -44,7 +47,8 @@ fun GuardianListScreen(
     guardians: List<GuardianEntity>,
     onBack: () -> Unit,
     onAddGuardian: () -> Unit,
-    onEditGuardian: (GuardianEntity) -> Unit
+    onEditGuardian: (GuardianEntity) -> Unit,
+    onDeleteGuardian: (GuardianEntity) -> Unit
 ) {
     ScreenScaffold(
         title = "Responsáveis",
@@ -54,7 +58,10 @@ fun GuardianListScreen(
                 Icon(Icons.Default.Add, contentDescription = "Adicionar")
             }
         }
-    ) { padding, _ ->
+    ) { padding, snackbar ->
+        var guardianToDelete by remember { mutableStateOf<GuardianEntity?>(null) }
+        val coroutineScope = rememberCoroutineScope()
+
         if (guardians.isEmpty()) {
             Column(
                 modifier = Modifier
@@ -78,10 +85,31 @@ fun GuardianListScreen(
                     InfoCard(
                         title = guardian.name,
                         description = "CPF: ${guardian.cpf}\nTelefone: ${guardian.mobile}",
-                        onClick = { onEditGuardian(guardian) }
+                        onClick = { onEditGuardian(guardian) },
+                        actions = {
+                            IconButton(onClick = { onEditGuardian(guardian) }) {
+                                Icon(Icons.Outlined.Edit, contentDescription = "Editar")
+                            }
+                            IconButton(onClick = { guardianToDelete = guardian }) {
+                                Icon(Icons.Outlined.Delete, contentDescription = "Remover")
+                            }
+                        }
                     )
                 }
             }
+        }
+
+        guardianToDelete?.let { guardian ->
+            ConfirmationDialog(
+                title = "Remover responsável?",
+                message = "Confirma a exclusão de ${guardian.name}?",
+                onConfirm = {
+                    onDeleteGuardian(guardian)
+                    coroutineScope.launch { snackbar.showSnackbar("Responsável removido") }
+                    guardianToDelete = null
+                },
+                onDismiss = { guardianToDelete = null }
+            )
         }
     }
 }

@@ -9,9 +9,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +31,7 @@ import com.idealinspecao.perueiroapp.data.local.GuardianEntity
 import com.idealinspecao.perueiroapp.data.local.SchoolEntity
 import com.idealinspecao.perueiroapp.data.local.StudentEntity
 import com.idealinspecao.perueiroapp.data.local.VanEntity
+import com.idealinspecao.perueiroapp.ui.components.ConfirmationDialog
 import com.idealinspecao.perueiroapp.ui.components.FormTextField
 import com.idealinspecao.perueiroapp.ui.components.InfoCard
 import com.idealinspecao.perueiroapp.ui.components.ScreenScaffold
@@ -41,7 +45,8 @@ fun StudentListScreen(
     guardians: List<GuardianEntity>,
     onBack: () -> Unit,
     onAddStudent: () -> Unit,
-    onEditStudent: (StudentEntity) -> Unit
+    onEditStudent: (StudentEntity) -> Unit,
+    onDeleteStudent: (StudentEntity) -> Unit
 ) {
     ScreenScaffold(
         title = "Alunos",
@@ -51,7 +56,10 @@ fun StudentListScreen(
                 Icon(Icons.Default.Add, contentDescription = "Adicionar aluno")
             }
         }
-    ) { padding, _ ->
+    ) { padding, snackbar ->
+        var studentToDelete by remember { mutableStateOf<StudentEntity?>(null) }
+        val coroutineScope = rememberCoroutineScope()
+
         if (students.isEmpty()) {
             Column(
                 modifier = Modifier
@@ -77,10 +85,31 @@ fun StudentListScreen(
                     InfoCard(
                         title = student.name,
                         description = "Responsáveis: Pai $father / Mãe $mother",
-                        onClick = { onEditStudent(student) }
+                        onClick = { onEditStudent(student) },
+                        actions = {
+                            IconButton(onClick = { onEditStudent(student) }) {
+                                Icon(Icons.Outlined.Edit, contentDescription = "Editar")
+                            }
+                            IconButton(onClick = { studentToDelete = student }) {
+                                Icon(Icons.Outlined.Delete, contentDescription = "Remover")
+                            }
+                        }
                     )
                 }
             }
+        }
+
+        studentToDelete?.let { student ->
+            ConfirmationDialog(
+                title = "Remover aluno?",
+                message = "Confirma a exclusão de ${student.name}?",
+                onConfirm = {
+                    onDeleteStudent(student)
+                    coroutineScope.launch { snackbar.showSnackbar("Aluno removido") }
+                    studentToDelete = null
+                },
+                onDismiss = { studentToDelete = null }
+            )
         }
     }
 }
