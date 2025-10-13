@@ -45,10 +45,28 @@ export async function POST(request: Request) {
   }
   if (Array.isArray(payload.vans)) {
     for (const v of payload.vans) {
+      const billingDay = Number.parseInt(String(v.billingDay ?? 10), 10);
+      const monthlyFee = Number(v.monthlyFee ?? 0);
       upserts.push(prisma.van.upsert({
         where: { plate: v.plate },
-        update: v,
-        create: v,
+        update: {
+          model: v.model,
+          plate: v.plate,
+          color: v.color,
+          year: v.year,
+          driverCpf: v.driverCpf,
+          billingDay: Number.isNaN(billingDay) ? 10 : billingDay,
+          monthlyFee,
+        },
+        create: {
+          model: v.model,
+          plate: v.plate,
+          color: v.color,
+          year: v.year,
+          driverCpf: v.driverCpf,
+          billingDay: Number.isNaN(billingDay) ? 10 : billingDay,
+          monthlyFee,
+        },
       }));
     }
   }
@@ -65,8 +83,26 @@ export async function POST(request: Request) {
     for (const p of payload.payments) {
       upserts.push(prisma.payment.upsert({
         where: { id: BigInt(p.id ?? 0) },
-        update: { studentId: BigInt(p.studentId), dueDate: new Date(p.dueDate), paidAt: p.paidAt ? new Date(p.paidAt) : null, amount: p.amount, discount: p.discount ?? 0, status: p.status ?? "PENDING", boletoId: p.boletoId ?? null },
-        create: { studentId: BigInt(p.studentId), dueDate: new Date(p.dueDate), paidAt: p.paidAt ? new Date(p.paidAt) : null, amount: p.amount, discount: p.discount ?? 0, status: p.status ?? "PENDING", boletoId: p.boletoId ?? null },
+        update: {
+          studentId: BigInt(p.studentId),
+          vanId: p.vanId ? BigInt(p.vanId) : null,
+          dueDate: new Date(p.dueDate),
+          paidAt: p.paidAt ? new Date(p.paidAt) : null,
+          amount: p.amount,
+          discount: p.discount ?? 0,
+          status: p.status ?? "PENDING",
+          boletoId: p.boletoId ?? null,
+        },
+        create: {
+          studentId: BigInt(p.studentId),
+          vanId: p.vanId ? BigInt(p.vanId) : null,
+          dueDate: new Date(p.dueDate),
+          paidAt: p.paidAt ? new Date(p.paidAt) : null,
+          amount: p.amount,
+          discount: p.discount ?? 0,
+          status: p.status ?? "PENDING",
+          boletoId: p.boletoId ?? null,
+        },
       }));
     }
   }

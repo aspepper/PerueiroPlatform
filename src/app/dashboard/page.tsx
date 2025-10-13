@@ -13,7 +13,7 @@ const cadastroLinks = [
   { label: "Escolas", href: "/schools" },
   { label: "Clientes", href: "/clients" },
   { label: "Alunos", href: "/students" },
-  { label: "Controle de Boletos", href: "/payments" },
+  { label: "Controle de Pagamentos", href: "/payments" },
   { label: "Lista Negra", href: "/blacklist" },
 ] as const;
 
@@ -91,7 +91,10 @@ async function loadDashboardData() {
     prisma.guardian.count(),
     prisma.payment.count({ where: { status: "PENDING" } }),
     prisma.payment.count({ where: { status: "OVERDUE" } }),
-    prisma.payment.aggregate({ _sum: { amount: true, discount: true } }),
+    prisma.payment.aggregate({
+      where: { status: { not: "CANCELED" } },
+      _sum: { amount: true, discount: true },
+    }),
     prisma.payment.aggregate({
       where: { status: { in: ["PENDING", "OVERDUE"] } },
       _sum: { amount: true, discount: true },

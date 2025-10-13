@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import {
+  reconcileStudentPayments,
+  type StudentPaymentSnapshot,
+} from "@/lib/payments-lifecycle";
 
 const formatStudent = (student: {
   id: bigint;
@@ -124,6 +128,18 @@ export async function PUT(
       );
     }
 
+    const previous = await prisma.student.findUnique({
+      where: { id: studentId },
+      select: { id: true, guardianCpf: true, vanId: true },
+    });
+
+    if (!previous) {
+      return NextResponse.json(
+        { error: "Aluno não encontrado." },
+        { status: 404 },
+      );
+    }
+
     const student = await prisma.student.update({
       where: { id: studentId },
       data: {
@@ -154,6 +170,20 @@ export async function PUT(
         blacklist: true,
       },
     });
+
+    const nextSnapshot: StudentPaymentSnapshot = {
+      id: student.id,
+      guardianCpf: student.guardianCpf,
+      vanId: student.vanId,
+    };
+
+    const previousSnapshot: StudentPaymentSnapshot = {
+      id: previous.id,
+      guardianCpf: previous.guardianCpf,
+      vanId: previous.vanId,
+    };
+
+    await reconcileStudentPayments(previousSnapshot, nextSnapshot);
 
     return NextResponse.json({ student: formatStudent(student) });
   } catch (error) {

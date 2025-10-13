@@ -11,6 +11,8 @@ type VanRecord = {
   plate: string;
   driverCpf: string | null;
   driverName: string | null;
+  billingDay: number;
+  monthlyFee: number;
 };
 
 type VanFormState = {
@@ -19,6 +21,8 @@ type VanFormState = {
   color: string;
   year: string;
   driverCpf: string;
+  billingDay: string;
+  monthlyFee: string;
 };
 
 type DriverOption = {
@@ -32,11 +36,28 @@ const EMPTY_FORM_STATE: VanFormState = {
   color: "",
   year: "",
   driverCpf: "",
+  billingDay: "10",
+  monthlyFee: "0,00",
 };
 
 const normalizeOptionalValue = (value: string) => {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+};
+
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+});
+
+const formatCurrency = (value: number) => currencyFormatter.format(value);
+
+const formatMonthlyFeeInput = (value: number) => {
+  if (!Number.isFinite(value)) return "0,00";
+  return value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 };
 
 export default function VansRegistry() {
@@ -82,7 +103,7 @@ export default function VansRegistry() {
 
         const payload = await response.json();
         const fetchedVans: VanRecord[] = (payload?.vans ?? []).map(
-          (van: VanRecord) => ({
+          (van: any) => ({
             id: van.id,
             model: van.model,
             color: van.color ?? null,
@@ -90,6 +111,8 @@ export default function VansRegistry() {
             plate: van.plate,
             driverCpf: van.driverCpf ?? null,
             driverName: van.driverName ?? null,
+            billingDay: Number(van.billingDay ?? 10),
+            monthlyFee: Number(van.monthlyFee ?? 0),
           }),
         );
 
@@ -160,6 +183,8 @@ export default function VansRegistry() {
         van.year ?? "",
         van.driverName ?? "",
         van.driverCpf ?? "",
+        String(van.billingDay ?? ""),
+        formatMonthlyFeeInput(van.monthlyFee ?? 0),
       ]
         .map((value) => value.toLowerCase())
         .some((value) => value.includes(normalizedQuery));
@@ -196,6 +221,8 @@ export default function VansRegistry() {
       color: van.color ?? "",
       year: van.year ?? "",
       driverCpf: van.driverCpf ?? "",
+      billingDay: String(van.billingDay ?? 10),
+      monthlyFee: formatMonthlyFeeInput(van.monthlyFee ?? 0),
     });
     setFormError(null);
     setEditingId(van.id);
@@ -256,12 +283,17 @@ export default function VansRegistry() {
       setFormError(null);
       setError(null);
 
+      const billingDay = formState.billingDay.trim();
+      const monthlyFeeInput = formState.monthlyFee.trim();
+
       const payload = {
         model: trimmedModel,
         plate: trimmedPlate,
         color: normalizeOptionalValue(formState.color),
         year: normalizeOptionalValue(formState.year),
         driverCpf: normalizeOptionalValue(formState.driverCpf),
+        billingDay: billingDay || "10",
+        monthlyFee: monthlyFeeInput || "0",
       };
 
       const response = await fetch(
@@ -294,6 +326,8 @@ export default function VansRegistry() {
         plate: responseBody.van.plate,
         driverCpf: responseBody.van.driverCpf ?? null,
         driverName: responseBody.van.driverName ?? null,
+        billingDay: Number(responseBody.van.billingDay ?? 10),
+        monthlyFee: Number(responseBody.van.monthlyFee ?? 0),
       };
 
       setVans((previous) => {
@@ -453,6 +487,12 @@ export default function VansRegistry() {
                   Ano
                 </th>
                 <th scope="col" className="px-6 py-4">
+                  Vencimento (dia)
+                </th>
+                <th scope="col" className="px-6 py-4">
+                  Mensalidade
+                </th>
+                <th scope="col" className="px-6 py-4">
                   Motorista vinculado
                 </th>
                 <th scope="col" className="px-6 py-4 text-right">
@@ -473,6 +513,12 @@ export default function VansRegistry() {
                     </td>
                     <td className="px-6 py-4 text-[#4B5563]">
                       {van.year ?? "—"}
+                    </td>
+                    <td className="px-6 py-4 text-[#4B5563]">
+                      Dia {van.billingDay}
+                    </td>
+                    <td className="px-6 py-4 text-[#111827]">
+                      {formatCurrency(van.monthlyFee)}
                     </td>
                     <td className="px-6 py-4 text-[#4B5563]">
                       {van.driverName ?? van.driverCpf ?? "—"}
@@ -554,7 +600,7 @@ export default function VansRegistry() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div>
                   <label htmlFor="van-model" className="block text-sm font-medium text-[#374151]">
                     Modelo
@@ -609,7 +655,36 @@ export default function VansRegistry() {
                     placeholder="2024"
                   />
                 </div>
-                <div className="sm:col-span-2">
+                <div>
+                  <label htmlFor="van-billing-day" className="block text-sm font-medium text-[#374151]">
+                    Dia do vencimento
+                  </label>
+                  <input
+                    id="van-billing-day"
+                    name="billingDay"
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={formState.billingDay}
+                    onChange={handleFormChange}
+                    className="mt-1 w-full rounded-xl border border-[#CBD5F5] bg-[#F8FAFF] px-4 py-2 text-sm text-[#1F2937] outline-none transition focus:border-[#4338CA] focus:ring-2 focus:ring-[#4338CA]/20"
+                    placeholder="10"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="van-monthly-fee" className="block text-sm font-medium text-[#374151]">
+                    Mensalidade (R$)
+                  </label>
+                  <input
+                    id="van-monthly-fee"
+                    name="monthlyFee"
+                    value={formState.monthlyFee}
+                    onChange={handleFormChange}
+                    className="mt-1 w-full rounded-xl border border-[#CBD5F5] bg-[#F8FAFF] px-4 py-2 text-sm text-[#1F2937] outline-none transition focus:border-[#4338CA] focus:ring-2 focus:ring-[#4338CA]/20"
+                    placeholder="450,00"
+                  />
+                </div>
+                <div className="sm:col-span-2 lg:col-span-3">
                   <label htmlFor="van-driver" className="block text-sm font-medium text-[#374151]">
                     Motorista responsável
                   </label>

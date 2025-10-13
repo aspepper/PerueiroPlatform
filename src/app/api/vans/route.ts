@@ -11,6 +11,8 @@ const formatVan = (van: {
   plate: string;
   driverCpf: string | null;
   driver: { name: string } | null;
+  billingDay: number;
+  monthlyFee: Prisma.Decimal;
 }) => ({
   id: van.id.toString(),
   model: van.model,
@@ -19,6 +21,8 @@ const formatVan = (van: {
   plate: van.plate,
   driverCpf: van.driverCpf,
   driverName: van.driver?.name ?? null,
+  billingDay: van.billingDay,
+  monthlyFee: Number(van.monthlyFee),
 });
 
 const sanitizeRequiredString = (value: unknown) =>
@@ -28,6 +32,46 @@ const sanitizeOptionalString = (value: unknown) => {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+};
+
+const sanitizeBillingDay = (value: unknown) => {
+  if (typeof value === "number" && Number.isInteger(value)) {
+    if (value >= 1 && value <= 31) return value;
+    return 10;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return 10;
+    const parsed = Number.parseInt(trimmed, 10);
+    if (Number.isNaN(parsed)) return 10;
+    if (parsed < 1 || parsed > 31) return 10;
+    return parsed;
+  }
+
+  return 10;
+};
+
+const sanitizeCurrency = (value: unknown) => {
+  if (value instanceof Prisma.Decimal) return value;
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return new Prisma.Decimal(value.toFixed(2));
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return new Prisma.Decimal(0);
+    const normalized = trimmed.replace(/\./g, "").replace(/,/g, ".");
+
+    if (!/^[-+]?\d*(\.\d+)?$/.test(normalized)) {
+      return new Prisma.Decimal(0);
+    }
+
+    return new Prisma.Decimal(normalized);
+  }
+
+  return new Prisma.Decimal(0);
 };
 
 export async function GET() {
@@ -42,6 +86,8 @@ export async function GET() {
         plate: true,
         driverCpf: true,
         driver: { select: { name: true } },
+        billingDay: true,
+        monthlyFee: true,
       },
     });
 
@@ -74,6 +120,8 @@ export async function POST(request: Request) {
         color: sanitizeOptionalString(body.color),
         year: sanitizeOptionalString(body.year),
         driverCpf: sanitizeOptionalString(body.driverCpf),
+        billingDay: sanitizeBillingDay(body.billingDay),
+        monthlyFee: sanitizeCurrency(body.monthlyFee),
       },
       select: {
         id: true,
@@ -83,6 +131,8 @@ export async function POST(request: Request) {
         plate: true,
         driverCpf: true,
         driver: { select: { name: true } },
+        billingDay: true,
+        monthlyFee: true,
       },
     });
 
