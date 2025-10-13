@@ -48,8 +48,7 @@ export default function RoutesOverview() {
         {routes.map((route) => (
           <div
             key={route.name}
-            className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-inner shadow-white/60"
-          >
+            className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-inner shadow-white/60">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="text-lg font-semibold text-slate-900">{route.name}</p>
@@ -58,8 +57,7 @@ export default function RoutesOverview() {
                 </p>
               </div>
               <span
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.7rem] font-semibold ${getStatusStyles(route.status)}`}
-              >
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.7rem] font-semibold ${getStatusStyles(route.status)}`}>
                 <span className="hidden text-base leading-none sm:inline" aria-hidden="true">
                   {route.status.toLowerCase().includes("atenção") ? "!" : "●"}
                 </span>
@@ -68,8 +66,8 @@ export default function RoutesOverview() {
             </div>
             <div className="mt-5 h-2 overflow-hidden rounded-full bg-white">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500"
-                style={{ width: `${route.occupancy}%` }}
+                className={`h-full rounded-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 occupancy-width`}
+                data-occupancy={route.occupancy}
               />
             </div>
             <p className="mt-3 text-xs text-slate-500">
