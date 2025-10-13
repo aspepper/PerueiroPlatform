@@ -17,3 +17,4 @@ node_modules
 .next
 pnpm-lock.yaml
 yarn.lock
+tsconfig.tsbuildinfo
