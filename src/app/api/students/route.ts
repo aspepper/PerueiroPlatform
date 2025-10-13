@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import {
+  reconcileStudentPayments,
+  type StudentPaymentSnapshot,
+} from "@/lib/payments-lifecycle";
 
 const formatStudent = (student: {
   id: bigint;
@@ -157,6 +161,14 @@ export async function POST(request: Request) {
         blacklist: true,
       },
     });
+
+    const snapshot: StudentPaymentSnapshot = {
+      id: student.id,
+      guardianCpf: student.guardianCpf,
+      vanId: student.vanId,
+    };
+
+    await reconcileStudentPayments(null, snapshot);
 
     return NextResponse.json({ student: formatStudent(student) }, { status: 201 });
   } catch (error) {

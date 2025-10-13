@@ -26,7 +26,7 @@ const defaultMetrics: Metric[] = [
     value: 37,
     variation: "-9%",
     status: "down",
-    description: "Boletos que expiram nos próximos 5 dias",
+    description: "Pagamentos que vencem nos próximos 5 dias",
   },
 ];
 
