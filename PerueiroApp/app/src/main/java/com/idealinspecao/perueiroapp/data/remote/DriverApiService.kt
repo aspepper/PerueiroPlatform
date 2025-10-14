@@ -24,12 +24,12 @@ class DriverApiService(
 
             val driverUrl = buildDriverUrl(driver.cpf)
             val requestBuilder = Request.Builder()
-                .header("Content-Type", JSON_MEDIA_TYPE_STRING)
+                .addHeader("Content-Type", JSON_MEDIA_TYPE_STRING)
 
             val request = if (alreadyExists) {
                 requestBuilder
                     .url(driverUrl)
-                    .put(payloadString.toRequestBody(mediaType))
+                    .method("PUT", payloadString.toRequestBody(mediaType))
                     .build()
             } else {
                 requestBuilder
@@ -44,8 +44,8 @@ class DriverApiService(
                 if (!alreadyExists && response.code == HTTP_CONFLICT) {
                     val updateRequest = Request.Builder()
                         .url(driverUrl)
-                        .header("Content-Type", JSON_MEDIA_TYPE_STRING)
-                        .put(payloadString.toRequestBody(mediaType))
+                        .addHeader("Content-Type", JSON_MEDIA_TYPE_STRING)
+                        .method("PUT", payloadString.toRequestBody(mediaType))
                         .build()
 
                     client.newCall(updateRequest).execute().use { updateResponse ->
@@ -61,7 +61,7 @@ class DriverApiService(
                 } else if (alreadyExists && response.code == HTTP_NOT_FOUND) {
                     val createRequest = Request.Builder()
                         .url(baseUrl)
-                        .header("Content-Type", JSON_MEDIA_TYPE_STRING)
+                        .addHeader("Content-Type", JSON_MEDIA_TYPE_STRING)
                         .post(payloadString.toRequestBody(mediaType))
                         .build()
 
@@ -98,6 +98,29 @@ class DriverApiService(
             put(key, JSONObject.NULL)
         } else {
             put(key, value.trim())
+        }
+    }
+
+    private fun buildDriverUrl(cpf: String): String {
+        return baseUrl
+            .toHttpUrl()
+            .newBuilder()
+            .addPathSegment(cpf.trim())
+            .build()
+            .toString()
+    }
+
+    private fun createDriver(payloadString: String) {
+        val request = Request.Builder()
+            .url(baseUrl)
+            .addHeader("Content-Type", JSON_MEDIA_TYPE_STRING)
+            .post(payloadString.toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw IOException("Falha ao sincronizar motorista: HTTP ${response.code}")
+            }
         }
     }
 
