@@ -162,23 +162,29 @@
    npx prisma generate
    ```
 
-6. **Popular um usuário administrador** – crie `prisma/seed.ts` e rode:
+6. **Executar as migrações**
+   ```
+   npx prisma migrate dev --name implement-monthly-payment --create-only
+   npx prisma migrate deploy
+   ```
+
+7. **Popular um usuário administrador** – crie `prisma/seed.ts` e rode:
    ```bash
    npx prisma db seed
    ```
    O script já lê `ADMIN_EMAIL`/`ADMIN_PASSWORD` para definir o login inicial.
 
-7. **Configurar autenticação (NextAuth)**
+8. **Configurar autenticação (NextAuth)**
    - Utilize o provider de credenciais (`src/lib/auth.ts`) para validar o usuário administrador via Prisma.
    - Restrinja o acesso com `middleware.ts`, garantindo que apenas sessões com `role === "ADMIN"` alcancem o dashboard.
 
-8. **Executar a aplicação**
+9. **Executar a aplicação**
    ```bash
    npm run dev
    ```
    Acesse `http://localhost:3000/login`, informe as credenciais seed e navegue até o dashboard administrativo.
 
-9. **Integração com o aplicativo Kotlin**
+10. **Integração com o aplicativo Kotlin**
    - Utilize o mesmo `NEXTAUTH_SECRET` como `x-api-key` em todas as requisições do app móvel.
    - Endpoints:
      - `POST /api/sync/push` – recebe os registros (`guardians`, `schools`, `drivers`, `vans`, `students`, `payments`).
