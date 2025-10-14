@@ -2,13 +2,10 @@ import { Role } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { resolvePasswordHash } from "@/lib/password";
+import { normalizeCpf } from "@/lib/cpf";
 
 const DEFAULT_PASSWORD = process.env.DEFAULT_USER_PASSWORD || "perueiro123";
 const DEFAULT_DOMAIN = process.env.DEFAULT_USER_DOMAIN || "perueiro.local";
-
-function normalizeCpf(cpf: string) {
-  return cpf.replace(/\D+/g, "");
-}
 
 function fallbackEmail(cpf: string, role: Role) {
   const prefix = role === "DRIVER" ? "motorista" : role === "GUARDIAN" ? "responsavel" : "usuario";
