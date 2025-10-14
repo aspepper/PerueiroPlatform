@@ -73,7 +73,7 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
     suspend fun login(cpf: String, password: String, userRole: UserRole): LoginOutcome {
         return when (userRole) {
             UserRole.DRIVER -> {
-                val driver = repository.getDriver(cpf)
+                val driver = ensureDriverLoaded(cpf)
                 when {
                     driver == null -> LoginOutcome.Error("Motorista não encontrado")
                     driver.password != password -> LoginOutcome.Error("Senha inválida")
@@ -85,7 +85,7 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
             }
 
             UserRole.GUARDIAN -> {
-                val guardian = repository.getGuardian(cpf)
+                val guardian = ensureGuardianLoaded(cpf)
                 when {
                     guardian == null -> LoginOutcome.Error("Responsável não encontrado")
                     guardian.password != password -> LoginOutcome.Error("Senha inválida")
@@ -98,6 +98,22 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
                 }
             }
         }
+    }
+
+    private suspend fun ensureDriverLoaded(cpf: String): DriverEntity? {
+        val localDriver = repository.getDriver(cpf)
+        if (localDriver != null) return localDriver
+
+        repository.syncFromServer(UserRole.DRIVER, cpf)
+        return repository.getDriver(cpf)
+    }
+
+    private suspend fun ensureGuardianLoaded(cpf: String): GuardianEntity? {
+        val localGuardian = repository.getGuardian(cpf)
+        if (localGuardian != null) return localGuardian
+
+        repository.syncFromServer(UserRole.GUARDIAN, cpf)
+        return repository.getGuardian(cpf)
     }
 
     fun logout() {
