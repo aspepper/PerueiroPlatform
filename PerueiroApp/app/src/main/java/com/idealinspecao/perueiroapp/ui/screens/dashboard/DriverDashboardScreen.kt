@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AttachMoney
@@ -126,6 +128,7 @@ fun DriverDashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
         ) {
             HeroHeader(
                 name = driver?.name,
@@ -147,6 +150,8 @@ fun DriverDashboardScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             ActionGrid(actions = actions)
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
