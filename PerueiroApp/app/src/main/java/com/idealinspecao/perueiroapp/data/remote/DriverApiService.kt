@@ -58,8 +58,19 @@ class DriverApiService(
 
                         throw IOException("Falha ao sincronizar motorista: HTTP ${updateResponse.code}")
                     }
+                } else if (alreadyExists && response.code == HTTP_NOT_FOUND) {
+                    val createRequest = Request.Builder()
+                        .url(baseUrl)
+                        .header("Content-Type", JSON_MEDIA_TYPE_STRING)
+                        .post(payloadString.toRequestBody(mediaType))
+                        .build()
 
-                    return@withContext
+                    client.newCall(createRequest).execute().use { createResponse ->
+                        if (createResponse.isSuccessful) return@withContext
+                        throw IOException("Falha ao sincronizar motorista: HTTP ${createResponse.code}")
+                    }
+                } else {
+                    throw IOException("Falha ao sincronizar motorista: HTTP ${response.code}")
                 }
 
                 if (alreadyExists && response.code == HTTP_NOT_FOUND) {
@@ -96,28 +107,5 @@ class DriverApiService(
         private val JSON_MEDIA_TYPE = JSON_MEDIA_TYPE_STRING.toMediaType()
         private const val HTTP_CONFLICT = 409
         private const val HTTP_NOT_FOUND = 404
-    }
-
-    private fun buildDriverUrl(cpf: String): String {
-        return baseUrl
-            .toHttpUrl()
-            .newBuilder()
-            .addPathSegment(cpf)
-            .build()
-            .toString()
-    }
-
-    @Throws(IOException::class)
-    private fun createDriver(payloadString: String) {
-        val createRequest = Request.Builder()
-            .url(baseUrl)
-            .header("Content-Type", JSON_MEDIA_TYPE_STRING)
-            .post(payloadString.toRequestBody(JSON_MEDIA_TYPE))
-            .build()
-
-        client.newCall(createRequest).execute().use { createResponse ->
-            if (createResponse.isSuccessful) return
-            throw IOException("Falha ao sincronizar motorista: HTTP ${createResponse.code}")
-        }
     }
 }
