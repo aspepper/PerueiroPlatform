@@ -19,8 +19,17 @@ interface IdealDao {
     @Query("DELETE FROM guardians WHERE cpf = :cpf")
     suspend fun deleteGuardian(cpf: String)
 
+    @Query("UPDATE guardians SET isBlacklisted = 0")
+    suspend fun clearGuardianBlacklist()
+
+    @Query("UPDATE guardians SET isBlacklisted = 1 WHERE cpf IN (:cpfs)")
+    suspend fun setGuardiansBlacklisted(cpfs: List<String>)
+
     @Upsert
     suspend fun upsertSchool(school: SchoolEntity)
+
+    @Upsert
+    suspend fun upsertSchools(schools: List<SchoolEntity>)
 
     @Query("SELECT * FROM schools ORDER BY fantasyName")
     fun observeSchools(): Flow<List<SchoolEntity>>
@@ -30,6 +39,9 @@ interface IdealDao {
 
     @Query("DELETE FROM schools WHERE id = :id")
     suspend fun deleteSchool(id: Long)
+
+    @Query("DELETE FROM schools")
+    suspend fun clearSchools()
 
     @Upsert
     suspend fun upsertVan(van: VanEntity)

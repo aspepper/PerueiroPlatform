@@ -5,6 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,6 +17,7 @@ import com.idealinspecao.perueiroapp.ui.screens.dashboard.DriverDashboardScreen
 import com.idealinspecao.perueiroapp.ui.screens.dashboard.ParentDashboardScreen
 import com.idealinspecao.perueiroapp.ui.screens.login.ChangePasswordScreen
 import com.idealinspecao.perueiroapp.ui.screens.login.LoginScreen
+import com.idealinspecao.perueiroapp.ui.screens.DriverRegistrationSuccessScreen
 import com.idealinspecao.perueiroapp.ui.screens.management.DriverFormScreen
 import com.idealinspecao.perueiroapp.ui.screens.management.DriverListScreen
 import com.idealinspecao.perueiroapp.ui.screens.management.GuardianFormScreen
@@ -31,6 +33,7 @@ import com.idealinspecao.perueiroapp.ui.screens.payments.PaymentFormScreen
 import com.idealinspecao.perueiroapp.ui.screens.payments.PaymentListScreen
 import com.idealinspecao.perueiroapp.ui.screens.splash.SplashScreen
 import com.idealinspecao.perueiroapp.viewmodel.IdealAppViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
@@ -144,12 +147,48 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
         }
 
         composable(AppDestination.DriverRegistration.route) {
+            val coroutineScope = rememberCoroutineScope()
+            var isSaving by remember { mutableStateOf(false) }
+            var submissionError by remember { mutableStateOf<String?>(null) }
+
             DriverFormScreen(
                 driver = null,
-                onBack = { navController.popBackStack() },
-                onSave = {
-                    viewModel.saveDriver(it)
-                    navController.popBackStack()
+                onBack = {
+                    if (!isSaving) {
+                        navController.popBackStack()
+                    }
+                },
+                onSave = { driver ->
+                    if (isSaving) return@DriverFormScreen
+
+                    coroutineScope.launch {
+                        isSaving = true
+                        submissionError = null
+                        try {
+                            viewModel.registerDriver(driver)
+                            navController.navigate(AppDestination.DriverRegistrationSuccess.route) {
+                                popUpTo(AppDestination.DriverRegistration.route) { inclusive = true }
+                            }
+                        } catch (exception: Exception) {
+                            submissionError = exception.message
+                                ?: "Não foi possível concluir o cadastro. Tente novamente."
+                        } finally {
+                            isSaving = false
+                        }
+                    }
+                },
+                isSubmitting = isSaving,
+                submissionError = submissionError
+            )
+        }
+
+        composable(AppDestination.DriverRegistrationSuccess.route) {
+            DriverRegistrationSuccessScreen(
+                onGoToLogin = {
+                    navController.navigate(AppDestination.Login.route) {
+                        popUpTo(AppDestination.Splash.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -275,7 +314,11 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                         editingDriver = null
                         creatingDriver = false
                     },
-                    onSave = { viewModel.saveDriver(it) }
+                    onSave = {
+                        viewModel.saveDriver(it)
+                        editingDriver = null
+                        creatingDriver = false
+                    }
                 )
             }
         }
