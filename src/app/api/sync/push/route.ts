@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ensureDriverUser, ensureGuardianUser } from "@/lib/user-accounts";
 import { NextResponse } from "next/server";
 
 function requireApiKey(request: Request) {
@@ -18,11 +19,23 @@ export async function POST(request: Request) {
 
   if (Array.isArray(payload.guardians)) {
     for (const g of payload.guardians) {
-      upserts.push(prisma.guardian.upsert({
-        where: { cpf: g.cpf },
-        update: g,
-        create: g,
-      }));
+      upserts.push((async () => {
+        const guardian = await prisma.guardian.upsert({
+          where: { cpf: g.cpf },
+          update: g,
+          create: g,
+          select: {
+            cpf: true,
+            name: true,
+            userId: true,
+          },
+        });
+        await ensureGuardianUser({
+          cpf: guardian.cpf,
+          name: guardian.name,
+          userId: guardian.userId,
+        });
+      })());
     }
   }
   if (Array.isArray(payload.schools)) {
@@ -36,11 +49,25 @@ export async function POST(request: Request) {
   }
   if (Array.isArray(payload.drivers)) {
     for (const d of payload.drivers) {
-      upserts.push(prisma.driver.upsert({
-        where: { cpf: d.cpf },
-        update: d,
-        create: d,
-      }));
+      upserts.push((async () => {
+        const driver = await prisma.driver.upsert({
+          where: { cpf: d.cpf },
+          update: d,
+          create: d,
+          select: {
+            cpf: true,
+            name: true,
+            email: true,
+            userId: true,
+          },
+        });
+        await ensureDriverUser({
+          cpf: driver.cpf,
+          name: driver.name,
+          email: driver.email,
+          userId: driver.userId,
+        });
+      })());
     }
   }
   if (Array.isArray(payload.vans)) {

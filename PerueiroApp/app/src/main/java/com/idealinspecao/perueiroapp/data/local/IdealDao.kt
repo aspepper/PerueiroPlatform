@@ -31,6 +31,9 @@ interface IdealDao {
     @Query("UPDATE guardians SET isBlacklisted = 0")
     suspend fun clearGuardianBlacklist()
 
+    @Query("UPDATE guardians SET isBlacklisted = 0 WHERE cpf IN (:cpfs)")
+    suspend fun clearSpecificGuardiansFromBlacklist(cpfs: List<String>)
+
     @Query("UPDATE guardians SET isBlacklisted = 1 WHERE cpf IN (:cpfs)")
     suspend fun setGuardiansBlacklisted(cpfs: List<String>)
 

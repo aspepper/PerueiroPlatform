@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { ensureGuardianUser } from "@/lib/user-accounts";
 
 const formatClient = (client: {
   cpf: string;
@@ -100,7 +101,14 @@ export async function PUT(
         landline: true,
         workAddress: true,
         workPhone: true,
+        userId: true,
       },
+    });
+
+    await ensureGuardianUser({
+      cpf: client.cpf,
+      name: client.name,
+      userId: client.userId,
     });
 
     return NextResponse.json({ client: formatClient(client) });

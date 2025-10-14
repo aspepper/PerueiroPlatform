@@ -69,40 +69,34 @@ class IdealRepository(
     suspend fun syncFromServer(userRole: UserRole?, userCpf: String?) {
         withContext(Dispatchers.IO) {
             try {
-                val payload = syncApiService.fetchFullSync()
+                val payload = syncApiService.fetchFullSync(userRole, userCpf)
 
                 val existingGuardians = dao.getAllGuardians().associateBy { it.cpf }
                 val guardiansToPersist = payload.guardians.map { it.toEntity(existingGuardians[it.cpf]) }
-                dao.clearGuardians()
                 if (guardiansToPersist.isNotEmpty()) {
                     dao.upsertGuardians(guardiansToPersist)
                 }
 
                 val existingDrivers = dao.getAllDrivers().associateBy { it.cpf }
                 val driversToPersist = payload.drivers.map { it.toEntity(existingDrivers[it.cpf]) }
-                dao.clearDrivers()
                 if (driversToPersist.isNotEmpty()) {
                     dao.upsertDrivers(driversToPersist)
                 }
 
-                dao.clearSchools()
                 if (payload.schools.isNotEmpty()) {
                     dao.upsertSchools(payload.schools.map { it.toEntity() })
                 }
 
-                dao.clearVans()
                 if (payload.vans.isNotEmpty()) {
                     dao.upsertVans(payload.vans.map { it.toEntity() })
                 }
 
-                dao.clearStudents()
                 val studentsToPersist = payload.students.map { it.toEntity() }
                 if (studentsToPersist.isNotEmpty()) {
                     dao.upsertStudents(studentsToPersist)
                 }
 
                 val filteredPayments = payload.filterPayments(userRole, userCpf)
-                dao.clearPayments()
                 if (filteredPayments.isNotEmpty()) {
                     dao.upsertPayments(filteredPayments.map { it.toEntity() })
                 }
@@ -112,7 +106,13 @@ class IdealRepository(
                     .mapNotNull { it.guardianCpf }
                     .distinct()
 
-                dao.clearGuardianBlacklist()
+                val guardianCpfs = payload.guardians.map { it.cpf }
+                if (userRole == null) {
+                    dao.clearGuardianBlacklist()
+                } else if (guardianCpfs.isNotEmpty()) {
+                    dao.clearSpecificGuardiansFromBlacklist(guardianCpfs)
+                }
+
                 if (blacklistedGuardians.isNotEmpty()) {
                     dao.setGuardiansBlacklisted(blacklistedGuardians)
                 }
