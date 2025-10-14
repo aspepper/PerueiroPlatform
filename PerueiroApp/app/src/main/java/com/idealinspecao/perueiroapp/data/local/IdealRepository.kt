@@ -1,8 +1,13 @@
 package com.idealinspecao.perueiroapp.data.local
 
+import android.util.Log
+import com.idealinspecao.perueiroapp.data.remote.DriverApiService
 import kotlinx.coroutines.flow.Flow
 
-class IdealRepository(private val dao: IdealDao) {
+class IdealRepository(
+    private val dao: IdealDao,
+    private val driverApiService: DriverApiService = DriverApiService()
+) {
     val guardians: Flow<List<GuardianEntity>> = dao.observeGuardians()
     val schools: Flow<List<SchoolEntity>> = dao.observeSchools()
     val vans: Flow<List<VanEntity>> = dao.observeVans()
@@ -22,7 +27,16 @@ class IdealRepository(private val dao: IdealDao) {
     suspend fun getVan(id: Long) = dao.getVan(id)
     suspend fun deleteVan(id: Long) = dao.deleteVan(id)
 
-    suspend fun saveDriver(driver: DriverEntity) = dao.upsertDriver(driver)
+    suspend fun saveDriver(driver: DriverEntity) {
+        val alreadyExists = dao.getDriver(driver.cpf) != null
+        dao.upsertDriver(driver)
+
+        try {
+            driverApiService.syncDriver(driver, alreadyExists)
+        } catch (exception: Exception) {
+            Log.e(TAG, "Erro ao sincronizar motorista ${driver.cpf}", exception)
+        }
+    }
     suspend fun getDriver(cpf: String) = dao.getDriver(cpf)
     suspend fun deleteDriver(cpf: String) = dao.deleteDriver(cpf)
 
@@ -35,3 +49,5 @@ class IdealRepository(private val dao: IdealDao) {
     fun observePaymentsByStudent(studentId: Long) = dao.observePaymentsByStudent(studentId)
     suspend fun deletePayment(id: Long) = dao.deletePayment(id)
 }
+
+private const val TAG = "IdealRepository"
