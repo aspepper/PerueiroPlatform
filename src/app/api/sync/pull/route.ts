@@ -91,7 +91,10 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
   const guardiansMap = new Map<string, NonNullable<typeof driverStudents[number]["guardian"]>>();
   const schoolsMap = new Map<string, NonNullable<typeof driverStudents[number]["school"]>>();
   const vansMap = new Map<string, typeof driverVans[number]>();
-  const students: typeof driverStudents[number][] = [];
+  const students: Omit<
+    (typeof driverStudents)[number],
+    "guardian" | "school" | "van" | "payments"
+  >[] = [];
   const paymentsMap = new Map<string, (typeof driverStudents[number]["payments"])[number]>();
 
   for (const van of driverVans) {
@@ -172,7 +175,10 @@ async function pullForGuardian(cpf: string, updatedSince: Date | null) {
   const driversMap = new Map<string, NonNullable<typeof guardianStudents[number]["driver"]>>();
   const vansMap = new Map<string, NonNullable<typeof guardianStudents[number]["van"]>>();
   const schoolsMap = new Map<string, NonNullable<typeof guardianStudents[number]["school"]>>();
-  const students: typeof guardianStudents[number][] = [];
+  const students: Omit<
+    (typeof guardianStudents)[number],
+    "school" | "van" | "driver" | "payments"
+  >[] = [];
   const paymentsMap = new Map<string, (typeof guardianStudents[number]["payments"])[number]>();
 
   for (const student of guardianStudents) {
