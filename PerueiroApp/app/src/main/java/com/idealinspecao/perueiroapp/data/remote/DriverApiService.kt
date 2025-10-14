@@ -3,6 +3,7 @@ package com.idealinspecao.perueiroapp.data.remote
 import com.idealinspecao.perueiroapp.data.local.DriverEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -21,14 +22,20 @@ class DriverApiService(
             val payloadString = payload.toString()
             val mediaType = JSON_MEDIA_TYPE
 
+            val driverUrl = buildDriverUrl(driver.cpf)
             val requestBuilder = Request.Builder()
-                .url(if (alreadyExists) "$baseUrl/${driver.cpf}" else baseUrl)
                 .header("Content-Type", JSON_MEDIA_TYPE_STRING)
 
             val request = if (alreadyExists) {
-                requestBuilder.put(payloadString.toRequestBody(mediaType)).build()
+                requestBuilder
+                    .url(driverUrl)
+                    .put(payloadString.toRequestBody(mediaType))
+                    .build()
             } else {
-                requestBuilder.post(payloadString.toRequestBody(mediaType)).build()
+                requestBuilder
+                    .url(baseUrl)
+                    .post(payloadString.toRequestBody(mediaType))
+                    .build()
             }
 
             client.newCall(request).execute().use { response ->
@@ -36,13 +43,19 @@ class DriverApiService(
 
                 if (!alreadyExists && response.code == HTTP_CONFLICT) {
                     val updateRequest = Request.Builder()
-                        .url("$baseUrl/${driver.cpf}")
+                        .url(driverUrl)
                         .header("Content-Type", JSON_MEDIA_TYPE_STRING)
                         .put(payloadString.toRequestBody(mediaType))
                         .build()
 
                     client.newCall(updateRequest).execute().use { updateResponse ->
                         if (updateResponse.isSuccessful) return@withContext
+
+                        if (updateResponse.code == HTTP_NOT_FOUND) {
+                            createDriver(payloadString)
+                            return@withContext
+                        }
+
                         throw IOException("Falha ao sincronizar motorista: HTTP ${updateResponse.code}")
                     }
                 } else if (alreadyExists && response.code == HTTP_NOT_FOUND) {
@@ -59,6 +72,13 @@ class DriverApiService(
                 } else {
                     throw IOException("Falha ao sincronizar motorista: HTTP ${response.code}")
                 }
+
+                if (alreadyExists && response.code == HTTP_NOT_FOUND) {
+                    createDriver(payloadString)
+                    return@withContext
+                }
+
+                throw IOException("Falha ao sincronizar motorista: HTTP ${response.code}")
             }
         }
     }
