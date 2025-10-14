@@ -1,5 +1,6 @@
 package com.idealinspecao.perueiroapp.data.remote
 
+import com.idealinspecao.perueiroapp.model.UserRole
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -19,8 +20,14 @@ class SyncApiService(
     private val baseUrl: String = DEFAULT_BASE_URL
 ) {
 
-    suspend fun fetchFullSync(updatedSince: Date? = null): RemoteSyncPayload = withContext(Dispatchers.IO) {
+    suspend fun fetchFullSync(
+        userRole: UserRole? = null,
+        userCpf: String? = null,
+        updatedSince: Date? = null
+    ): RemoteSyncPayload = withContext(Dispatchers.IO) {
         val urlBuilder = "$baseUrl/sync/full".toHttpUrl().newBuilder()
+        userRole?.let { urlBuilder.addQueryParameter("role", it.name) }
+        userCpf?.let { urlBuilder.addQueryParameter("cpf", it) }
         updatedSince?.let { urlBuilder.addQueryParameter("updatedSince", formatUpdatedSince(it)) }
 
         val request = Request.Builder()

@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
@@ -9,37 +9,43 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   password  String
   name      String?
-  role      Role     @default(ADMIN)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      Role      @default(ADMIN)
+  driver    Driver?   @relation("DriverAccount")
+  guardian  Guardian? @relation("GuardianAccount")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 enum Role {
   ADMIN
+  DRIVER
+  GUARDIAN
 }
 
 model Guardian {
-  cpf          String   @id
-  name         String
-  kinship      String
-  birthDate    DateTime?
-  spouseName   String?
-  address      String
-  mobile       String
-  landline     String?
-  workAddress  String?
-  workPhone    String?
-  students     Student[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  cpf         String    @id
+  name        String
+  kinship     String
+  birthDate   DateTime?
+  spouseName  String?
+  address     String
+  mobile      String
+  landline    String?
+  workAddress String?
+  workPhone   String?
+  students    Student[]
+  user        User?     @relation("GuardianAccount", fields: [userId], references: [id])
+  userId      String?   @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model School {
-  id        BigInt   @id @default(autoincrement())
+  id        BigInt    @id @default(autoincrement())
   name      String
   address   String
   phone     String?
@@ -47,41 +53,43 @@ model School {
   principal String?
   doorman   String?
   students  Student[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Driver {
-  cpf        String   @id
-  name       String
-  cnh        String?
-  phone      String?
-  email      String?
-  address    String?
-  vans       Van[]
-  students   Student[] @relation("DriverStudents")
+  cpf       String    @id
+  name      String
+  cnh       String?
+  phone     String?
+  email     String?
+  address   String?
+  vans      Van[]
+  students  Student[] @relation("DriverStudents")
+  user      User?     @relation("DriverAccount", fields: [userId], references: [id])
+  userId    String?   @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Van {
+  id         BigInt    @id @default(autoincrement())
+  model      String
+  color      String?
+  year       String?
+  plate      String    @unique
+  driverCpf  String?
+  driver     Driver?   @relation(fields: [driverCpf], references: [cpf])
+  billingDay Int       @default(10)
+  monthlyFee Decimal   @default(0) @db.Decimal(12, 2)
+  students   Student[]
+  payments   Payment[]
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }
 
-model Van {
-  id        BigInt  @id @default(autoincrement())
-  model     String
-  color     String?
-  year      String?
-  plate     String   @unique
-  driverCpf String?
-  driver    Driver?  @relation(fields: [driverCpf], references: [cpf])
-  billingDay Int     @default(10)
-  monthlyFee Decimal @db.Decimal(12, 2) @default(0)
-  students  Student[]
-  payments  Payment[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model Student {
-  id          BigInt   @id @default(autoincrement())
+  id          BigInt    @id @default(autoincrement())
   name        String
   birthDate   DateTime?
   grade       String?
@@ -101,19 +109,19 @@ model Student {
 }
 
 model Payment {
-  id          BigInt   @id @default(autoincrement())
-  studentId   BigInt
-  student     Student  @relation(fields: [studentId], references: [id])
-  vanId       BigInt?
-  van         Van?     @relation(fields: [vanId], references: [id])
-  dueDate     DateTime
-  paidAt      DateTime?
-  amount      Decimal  @db.Decimal(12,2)
-  discount    Decimal  @db.Decimal(12,2) @default(0)
-  status      PaymentStatus @default(PENDING)
-  boletoId    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        BigInt        @id @default(autoincrement())
+  studentId BigInt
+  student   Student       @relation(fields: [studentId], references: [id])
+  vanId     BigInt?
+  van       Van?          @relation(fields: [vanId], references: [id])
+  dueDate   DateTime
+  paidAt    DateTime?
+  amount    Decimal       @db.Decimal(12, 2)
+  discount  Decimal       @default(0) @db.Decimal(12, 2)
+  status    PaymentStatus @default(PENDING)
+  boletoId  String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   @@index([studentId, dueDate])
   @@index([vanId, dueDate])

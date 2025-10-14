@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { ensureDriverUser } from "@/lib/user-accounts";
 
 const formatDriver = (driver: {
   cpf: string;
@@ -62,7 +63,21 @@ export async function PUT(
         phone: sanitizeOptionalString(body.phone),
         email: sanitizeOptionalString(body.email),
       },
-      select: { cpf: true, name: true, cnh: true, phone: true, email: true },
+      select: {
+        cpf: true,
+        name: true,
+        cnh: true,
+        phone: true,
+        email: true,
+        userId: true,
+      },
+    });
+
+    await ensureDriverUser({
+      cpf: driver.cpf,
+      name: driver.name,
+      email: driver.email,
+      userId: driver.userId,
     });
 
     return NextResponse.json({ driver: formatDriver(driver) });
