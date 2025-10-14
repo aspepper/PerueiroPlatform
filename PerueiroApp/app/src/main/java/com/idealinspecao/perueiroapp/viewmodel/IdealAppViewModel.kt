@@ -109,24 +109,48 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { repository.saveGuardian(guardian) }
     }
 
+    fun deleteGuardian(cpf: String) {
+        viewModelScope.launch { repository.deleteGuardian(cpf) }
+    }
+
     fun saveSchool(school: SchoolEntity) {
         viewModelScope.launch { repository.saveSchool(school) }
+    }
+
+    fun deleteSchool(id: Long) {
+        viewModelScope.launch { repository.deleteSchool(id) }
     }
 
     fun saveVan(van: VanEntity) {
         viewModelScope.launch { repository.saveVan(van) }
     }
 
+    fun deleteVan(id: Long) {
+        viewModelScope.launch { repository.deleteVan(id) }
+    }
+
     fun saveDriver(driver: DriverEntity) {
         viewModelScope.launch { repository.saveDriver(driver) }
+    }
+
+    fun deleteDriver(cpf: String) {
+        viewModelScope.launch { repository.deleteDriver(cpf) }
     }
 
     fun saveStudent(student: StudentEntity) {
         viewModelScope.launch { repository.saveStudent(student) }
     }
 
+    fun deleteStudent(id: Long) {
+        viewModelScope.launch { repository.deleteStudent(id) }
+    }
+
     fun savePayment(payment: PaymentEntity) {
         viewModelScope.launch { repository.savePayment(payment) }
+    }
+
+    fun deletePayment(id: Long) {
+        viewModelScope.launch { repository.deletePayment(id) }
     }
 
     fun changeGuardianPassword(cpf: String, newPassword: String) {
