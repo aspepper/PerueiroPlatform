@@ -19,6 +19,9 @@ interface IdealDao {
     @Query("SELECT * FROM guardians WHERE cpf = :cpf LIMIT 1")
     suspend fun getGuardian(cpf: String): GuardianEntity?
 
+    @Query("SELECT * FROM guardians WHERE cpf IN (:cpfs) LIMIT 1")
+    suspend fun getGuardianByCpfs(cpfs: List<String>): GuardianEntity?
+
     @Query("SELECT * FROM guardians")
     suspend fun getAllGuardians(): List<GuardianEntity>
 
@@ -84,6 +87,9 @@ interface IdealDao {
 
     @Query("SELECT * FROM drivers WHERE cpf = :cpf LIMIT 1")
     suspend fun getDriver(cpf: String): DriverEntity?
+
+    @Query("SELECT * FROM drivers WHERE cpf IN (:cpfs) LIMIT 1")
+    suspend fun getDriverByCpfs(cpfs: List<String>): DriverEntity?
 
     @Query("SELECT * FROM drivers")
     suspend fun getAllDrivers(): List<DriverEntity>
