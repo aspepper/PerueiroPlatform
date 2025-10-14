@@ -2,7 +2,10 @@
 const nextConfig = {
   output: "standalone",
   experimental: {
-    optimizePackageImports: ["next-auth"]
+    optimizePackageImports: ["next-auth"],
+    outputFileTracingExcludes: {
+      "**/*": ["**/export-detail.json", "**/export/**"]
+    }
   }
 };
 module.exports = nextConfig;
