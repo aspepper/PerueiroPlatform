@@ -2,77 +2,197 @@ package com.idealinspecao.perueiroapp.data.remote
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class SyncApiService(
     private val client: OkHttpClient = OkHttpClient(),
     private val baseUrl: String = DEFAULT_BASE_URL
 ) {
 
-    suspend fun fetchSchools(): List<RemoteSchool> = withContext(Dispatchers.IO) {
+    suspend fun fetchFullSync(updatedSince: Date? = null): RemoteSyncPayload = withContext(Dispatchers.IO) {
+        val urlBuilder = "$baseUrl/sync/full".toHttpUrl().newBuilder()
+        updatedSince?.let { urlBuilder.addQueryParameter("updatedSince", formatUpdatedSince(it)) }
+
         val request = Request.Builder()
-            .url("$baseUrl/schools")
+            .url(urlBuilder.build())
             .get()
             .build()
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                throw IOException("Falha ao carregar escolas: HTTP ${response.code}")
+                throw IOException("Falha ao carregar sincronização: HTTP ${response.code}")
             }
 
-            val body = response.body?.string() ?: throw IOException("Resposta vazia ao carregar escolas")
+            val body = response.body?.string() ?: throw IOException("Resposta vazia ao carregar sincronização")
             val json = JSONObject(body)
-            val schoolsArray = json.optJSONArray("schools") ?: JSONArray()
 
-            buildList {
-                for (index in 0 until schoolsArray.length()) {
-                    val item = schoolsArray.optJSONObject(index) ?: continue
-                    add(
-                        RemoteSchool(
-                            id = item.optNullableString("id")?.toLongOrNull(),
-                            name = item.optNullableString("name") ?: continue,
-                            address = item.optNullableString("address"),
-                            phone = item.optNullableString("phone"),
-                            contact = item.optNullableString("contact"),
-                            principal = item.optNullableString("principal"),
-                            doorman = item.optNullableString("doorman")
-                        )
-                    )
-                }
-            }
+            val guardians = parseGuardians(json.optJSONArray("guardians") ?: JSONArray())
+            val schools = parseSchools(json.optJSONArray("schools") ?: JSONArray())
+            val drivers = parseDrivers(json.optJSONArray("drivers") ?: JSONArray())
+            val vans = parseVans(json.optJSONArray("vans") ?: JSONArray())
+            val students = parseStudents(json.optJSONArray("students") ?: JSONArray())
+            val payments = parsePayments(json.optJSONArray("payments") ?: JSONArray())
+
+            RemoteSyncPayload(
+                guardians = guardians,
+                schools = schools,
+                drivers = drivers,
+                vans = vans,
+                students = students,
+                payments = payments
+            )
         }
     }
 
-    suspend fun fetchBlacklistedGuardians(): List<String> = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url("$baseUrl/students")
-            .get()
-            .build()
+    private fun parseGuardians(array: JSONArray): List<RemoteGuardian> = buildList {
+        for (index in 0 until array.length()) {
+            val item = array.optJSONObject(index) ?: continue
+            val cpf = item.optNullableString("cpf") ?: continue
+            val name = item.optNullableString("name") ?: continue
 
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw IOException("Falha ao carregar lista negra: HTTP ${response.code}")
-            }
-
-            val body = response.body?.string() ?: throw IOException("Resposta vazia ao carregar lista negra")
-            val json = JSONObject(body)
-            val studentsArray = json.optJSONArray("students") ?: JSONArray()
-
-            buildSet {
-                for (index in 0 until studentsArray.length()) {
-                    val item = studentsArray.optJSONObject(index) ?: continue
-                    if (!item.optBoolean("blacklist", false)) continue
-
-                    val guardianCpf = item.optNullableString("guardianCpf") ?: continue
-                    add(guardianCpf)
-                }
-            }.toList()
+            add(
+                RemoteGuardian(
+                    cpf = cpf,
+                    name = name,
+                    kinship = item.optNullableString("kinship"),
+                    birthDate = item.optNullableString("birthDate")?.toDateOrNull(),
+                    spouseName = item.optNullableString("spouseName"),
+                    address = item.optNullableString("address"),
+                    mobile = item.optNullableString("mobile"),
+                    landline = item.optNullableString("landline"),
+                    workAddress = item.optNullableString("workAddress"),
+                    workPhone = item.optNullableString("workPhone")
+                )
+            )
         }
     }
+
+    private fun parseSchools(array: JSONArray): List<RemoteSchool> = buildList {
+        for (index in 0 until array.length()) {
+            val item = array.optJSONObject(index) ?: continue
+            val name = item.optNullableString("name") ?: continue
+            add(
+                RemoteSchool(
+                    id = item.optLongFromAny("id"),
+                    name = name,
+                    address = item.optNullableString("address"),
+                    phone = item.optNullableString("phone"),
+                    contact = item.optNullableString("contact"),
+                    principal = item.optNullableString("principal"),
+                    doorman = item.optNullableString("doorman")
+                )
+            )
+        }
+    }
+
+    private fun parseDrivers(array: JSONArray): List<RemoteDriver> = buildList {
+        for (index in 0 until array.length()) {
+            val item = array.optJSONObject(index) ?: continue
+            val cpf = item.optNullableString("cpf") ?: continue
+            val name = item.optNullableString("name") ?: continue
+            add(
+                RemoteDriver(
+                    cpf = cpf,
+                    name = name,
+                    phone = item.optNullableString("phone"),
+                    email = item.optNullableString("email"),
+                    address = item.optNullableString("address")
+                )
+            )
+        }
+    }
+
+    private fun parseVans(array: JSONArray): List<RemoteVan> = buildList {
+        for (index in 0 until array.length()) {
+            val item = array.optJSONObject(index) ?: continue
+            val model = item.optNullableString("model") ?: continue
+            val plate = item.optNullableString("plate") ?: continue
+            add(
+                RemoteVan(
+                    id = item.optLongFromAny("id"),
+                    model = model,
+                    color = item.optNullableString("color"),
+                    year = item.optNullableString("year"),
+                    plate = plate,
+                    driverCpf = item.optNullableString("driverCpf"),
+                    billingDay = item.optLongFromAny("billingDay")?.toInt(),
+                    monthlyFee = item.optDoubleFromAny("monthlyFee")
+                )
+            )
+        }
+    }
+
+    private fun parseStudents(array: JSONArray): List<RemoteStudent> = buildList {
+        for (index in 0 until array.length()) {
+            val item = array.optJSONObject(index) ?: continue
+            val name = item.optNullableString("name") ?: continue
+            add(
+                RemoteStudent(
+                    id = item.optLongFromAny("id"),
+                    name = name,
+                    birthDate = item.optNullableString("birthDate")?.toDateOrNull(),
+                    grade = item.optNullableString("grade"),
+                    guardianCpf = item.optNullableString("guardianCpf"),
+                    schoolId = item.optLongFromAny("schoolId"),
+                    vanId = item.optLongFromAny("vanId"),
+                    driverCpf = item.optNullableString("driverCpf"),
+                    mobile = item.optNullableString("mobile"),
+                    blacklist = item.optBoolean("blacklist", false)
+                )
+            )
+        }
+    }
+
+    private fun parsePayments(array: JSONArray): List<RemotePayment> = buildList {
+        for (index in 0 until array.length()) {
+            val item = array.optJSONObject(index) ?: continue
+            val studentId = item.optLongFromAny("studentId") ?: continue
+            add(
+                RemotePayment(
+                    id = item.optLongFromAny("id"),
+                    studentId = studentId,
+                    vanId = item.optLongFromAny("vanId"),
+                    dueDate = item.optNullableString("dueDate")?.toDateOrNull(),
+                    paidAt = item.optNullableString("paidAt")?.toDateOrNull(),
+                    amount = item.optDoubleFromAny("amount"),
+                    discount = item.optDoubleFromAny("discount"),
+                    status = item.optNullableString("status") ?: "PENDING"
+                )
+            )
+        }
+    }
+
+    data class RemoteSyncPayload(
+        val guardians: List<RemoteGuardian>,
+        val schools: List<RemoteSchool>,
+        val drivers: List<RemoteDriver>,
+        val vans: List<RemoteVan>,
+        val students: List<RemoteStudent>,
+        val payments: List<RemotePayment>
+    )
+
+    data class RemoteGuardian(
+        val cpf: String,
+        val name: String,
+        val kinship: String?,
+        val birthDate: Date?,
+        val spouseName: String?,
+        val address: String?,
+        val mobile: String?,
+        val landline: String?,
+        val workAddress: String?,
+        val workPhone: String?
+    )
 
     data class RemoteSchool(
         val id: Long?,
@@ -84,6 +204,49 @@ class SyncApiService(
         val doorman: String?
     )
 
+    data class RemoteDriver(
+        val cpf: String,
+        val name: String,
+        val phone: String?,
+        val email: String?,
+        val address: String?
+    )
+
+    data class RemoteVan(
+        val id: Long?,
+        val model: String,
+        val color: String?,
+        val year: String?,
+        val plate: String,
+        val driverCpf: String?,
+        val billingDay: Int?,
+        val monthlyFee: Double?
+    )
+
+    data class RemoteStudent(
+        val id: Long?,
+        val name: String,
+        val birthDate: Date?,
+        val grade: String?,
+        val guardianCpf: String?,
+        val schoolId: Long?,
+        val vanId: Long?,
+        val driverCpf: String?,
+        val mobile: String?,
+        val blacklist: Boolean
+    )
+
+    data class RemotePayment(
+        val id: Long?,
+        val studentId: Long,
+        val vanId: Long?,
+        val dueDate: Date?,
+        val paidAt: Date?,
+        val amount: Double?,
+        val discount: Double?,
+        val status: String
+    )
+
     private fun JSONObject.optNullableString(key: String): String? {
         if (isNull(key)) return null
         val value = optString(key, "").trim()
@@ -91,7 +254,51 @@ class SyncApiService(
         return value
     }
 
+    private fun JSONObject.optLongFromAny(key: String): Long? {
+        if (isNull(key)) return null
+        val value = opt(key)
+        return when (value) {
+            is Number -> value.toLong()
+            is String -> value.trim().takeIf { it.isNotEmpty() }?.toLongOrNull()
+            else -> null
+        }
+    }
+
+    private fun JSONObject.optDoubleFromAny(key: String): Double? {
+        if (isNull(key)) return null
+        val value = opt(key)
+        return when (value) {
+            is Number -> value.toDouble()
+            is String -> value.trim().takeIf { it.isNotEmpty() }?.replace(',', '.')?.toDoubleOrNull()
+            else -> null
+        }
+    }
+
+    private fun String.toDateOrNull(): Date? {
+        for (pattern in DATE_PATTERNS) {
+            try {
+                val formatter = SimpleDateFormat(pattern, Locale.US)
+                formatter.timeZone = TimeZone.getTimeZone("UTC")
+                return formatter.parse(this)
+            } catch (_: ParseException) {
+                // continue
+            }
+        }
+        return null
+    }
+
+    private fun formatUpdatedSince(date: Date): String {
+        val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+        formatter.timeZone = TimeZone.getTimeZone("UTC")
+        return formatter.format(date)
+    }
+
     companion object {
         private const val DEFAULT_BASE_URL = "https://icy-water-08508ba0f.2.azurestaticapps.net/api"
+        private val DATE_PATTERNS = listOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd"
+        )
     }
 }

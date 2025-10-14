@@ -13,6 +13,7 @@ import com.idealinspecao.perueiroapp.data.local.StudentEntity
 import com.idealinspecao.perueiroapp.data.local.UserSessionDataSource
 import com.idealinspecao.perueiroapp.data.local.UserSession
 import com.idealinspecao.perueiroapp.data.local.VanEntity
+import com.idealinspecao.perueiroapp.model.UserRole
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -170,6 +171,10 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
 
     suspend fun getGuardian(cpf: String): GuardianEntity? = repository.getGuardian(cpf)
 
+    suspend fun syncFromServer(loggedUser: LoggedUser?) {
+        repository.syncFromServer(loggedUser?.role, loggedUser?.cpf)
+    }
+
     fun studentsForGuardian(cpf: String): StateFlow<List<StudentEntity>> {
         return repository.observeStudentsByGuardian(cpf)
             .stateIn(
@@ -214,8 +219,6 @@ data class LoggedUser(val cpf: String, val role: UserRole)
 
 private fun UserSession.toLoggedUser(): LoggedUser? =
     runCatching { UserRole.valueOf(role) }.getOrNull()?.let { LoggedUser(cpf = cpf, role = it) }
-
-enum class UserRole { DRIVER, GUARDIAN }
 
 sealed interface LoginOutcome {
     data class Driver(val driver: DriverEntity) : LoginOutcome

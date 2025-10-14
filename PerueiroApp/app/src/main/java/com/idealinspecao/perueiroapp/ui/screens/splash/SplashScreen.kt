@@ -30,8 +30,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.util.Log
 import com.idealinspecao.perueiroapp.viewmodel.LoggedUser
-import com.idealinspecao.perueiroapp.viewmodel.UserRole
+import com.idealinspecao.perueiroapp.model.UserRole
 import kotlinx.coroutines.delay
 
 private val SplashBackground = Color(0xFF101731)
@@ -43,6 +44,7 @@ private val GlowGradient = Brush.radialGradient(
 @Composable
 fun SplashScreen(
     loggedUser: LoggedUser?,
+    onSync: suspend (LoggedUser?) -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToDriver: (String) -> Unit,
     onNavigateToParent: (String) -> Unit,
@@ -59,6 +61,12 @@ fun SplashScreen(
     }
 
     LaunchedEffect(loggedUser) {
+        try {
+            onSync(loggedUser)
+        } catch (exception: Exception) {
+            Log.e("SplashScreen", "Erro ao sincronizar dados", exception)
+        }
+
         delay(1600)
         when (loggedUser?.role) {
             UserRole.DRIVER -> onNavigateToDriver(loggedUser.cpf)
