@@ -156,6 +156,18 @@
    }
    ```
 
+### Integração futura com boletos
+
+- O módulo `src/lib/payments/boleto-gateway.ts` concentra os contratos para
+  emissão e verificação de boletos.
+- Quando a integração com a instituição financeira estiver pronta, registre a
+  implementação concreta com `registerBoletoGateway`.
+- Utilize `generatePaymentBoleto` para solicitar um boleto vinculado a um
+  pagamento existente e `verifyPaymentBoleto` para consultar a situação de
+  boletos previamente emitidos (pago, pendente, cancelado etc.).
+- Enquanto nenhum gateway estiver registrado, essas funções lançarão
+  `MissingBoletoGatewayError`, evitando chamadas silenciosas.
+
 5. **Executar as migrações**
    ```bash
    npx prisma migrate dev --name init
