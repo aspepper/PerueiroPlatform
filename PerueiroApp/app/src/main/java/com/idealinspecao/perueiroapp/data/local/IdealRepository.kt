@@ -248,7 +248,9 @@ private fun SyncApiService.RemoteSyncPayload.filterPayments(
             val relevantPayments = paymentsSorted.filter { guardianStudents.contains(it.studentId) }
             if (relevantPayments.isEmpty()) return emptyList()
 
-            val earliestDue = relevantPayments.minOfOrNull { it.dueDate }
+            val earliestDue = relevantPayments
+                .mapNotNull { it.dueDate }
+                .minOrNull()
             val now = Calendar.getInstance()
             val currentYear = now.get(Calendar.YEAR)
             val currentMonth = now.get(Calendar.MONTH)
