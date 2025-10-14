@@ -10,14 +10,23 @@ interface IdealDao {
     @Upsert
     suspend fun upsertGuardian(guardian: GuardianEntity)
 
+    @Upsert
+    suspend fun upsertGuardians(guardians: List<GuardianEntity>)
+
     @Query("SELECT * FROM guardians ORDER BY name")
     fun observeGuardians(): Flow<List<GuardianEntity>>
 
     @Query("SELECT * FROM guardians WHERE cpf = :cpf LIMIT 1")
     suspend fun getGuardian(cpf: String): GuardianEntity?
 
+    @Query("SELECT * FROM guardians")
+    suspend fun getAllGuardians(): List<GuardianEntity>
+
     @Query("DELETE FROM guardians WHERE cpf = :cpf")
     suspend fun deleteGuardian(cpf: String)
+
+    @Query("DELETE FROM guardians")
+    suspend fun clearGuardians()
 
     @Query("UPDATE guardians SET isBlacklisted = 0")
     suspend fun clearGuardianBlacklist()
@@ -46,6 +55,9 @@ interface IdealDao {
     @Upsert
     suspend fun upsertVan(van: VanEntity)
 
+    @Upsert
+    suspend fun upsertVans(vans: List<VanEntity>)
+
     @Query("SELECT * FROM vans ORDER BY model")
     fun observeVans(): Flow<List<VanEntity>>
 
@@ -55,8 +67,14 @@ interface IdealDao {
     @Query("DELETE FROM vans WHERE id = :id")
     suspend fun deleteVan(id: Long)
 
+    @Query("DELETE FROM vans")
+    suspend fun clearVans()
+
     @Upsert
     suspend fun upsertDriver(driver: DriverEntity)
+
+    @Upsert
+    suspend fun upsertDrivers(drivers: List<DriverEntity>)
 
     @Query("SELECT * FROM drivers ORDER BY name")
     fun observeDrivers(): Flow<List<DriverEntity>>
@@ -64,11 +82,20 @@ interface IdealDao {
     @Query("SELECT * FROM drivers WHERE cpf = :cpf LIMIT 1")
     suspend fun getDriver(cpf: String): DriverEntity?
 
+    @Query("SELECT * FROM drivers")
+    suspend fun getAllDrivers(): List<DriverEntity>
+
     @Query("DELETE FROM drivers WHERE cpf = :cpf")
     suspend fun deleteDriver(cpf: String)
 
+    @Query("DELETE FROM drivers")
+    suspend fun clearDrivers()
+
     @Upsert
     suspend fun upsertStudent(student: StudentEntity)
+
+    @Upsert
+    suspend fun upsertStudents(students: List<StudentEntity>)
 
     @Query("SELECT * FROM students ORDER BY name")
     fun observeStudents(): Flow<List<StudentEntity>>
@@ -82,8 +109,14 @@ interface IdealDao {
     @Query("DELETE FROM students WHERE id = :id")
     suspend fun deleteStudent(id: Long)
 
+    @Query("DELETE FROM students")
+    suspend fun clearStudents()
+
     @Upsert
     suspend fun upsertPayment(payment: PaymentEntity)
+
+    @Upsert
+    suspend fun upsertPayments(payments: List<PaymentEntity>)
 
     @Query("SELECT * FROM payments ORDER BY paymentDate DESC")
     fun observePayments(): Flow<List<PaymentEntity>>
@@ -93,4 +126,7 @@ interface IdealDao {
 
     @Query("DELETE FROM payments WHERE id = :id")
     suspend fun deletePayment(id: Long)
+
+    @Query("DELETE FROM payments")
+    suspend fun clearPayments()
 }

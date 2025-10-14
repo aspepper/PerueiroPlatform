@@ -49,7 +49,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.idealinspecao.perueiroapp.viewmodel.LoginOutcome
-import com.idealinspecao.perueiroapp.viewmodel.UserRole
+import com.idealinspecao.perueiroapp.model.UserRole
 import kotlinx.coroutines.launch
 
 private val LoginBackground = Brush.verticalGradient(

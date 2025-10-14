@@ -50,6 +50,7 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
         composable(AppDestination.Splash.route) {
             SplashScreen(
                 loggedUser = loggedUser,
+                onSync = { user -> viewModel.syncFromServer(user) },
                 onNavigateToLogin = {
                     navController.navigate(AppDestination.Login.route) {
                         popUpTo(AppDestination.Splash.route) { inclusive = true }

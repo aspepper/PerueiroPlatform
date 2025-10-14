@@ -42,6 +42,25 @@ const EMPTY_FORM_STATE: ClientFormState = {
   workPhone: "",
 };
 
+const KINSHIP_OPTIONS = [
+  "Mãe",
+  "Pai",
+  "Responsável Legal",
+  "Avó",
+  "Avô",
+] as const;
+
+const normalizeKinship = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  const match = KINSHIP_OPTIONS.find(
+    (option) => option.localeCompare(trimmed, "pt-BR", { sensitivity: "base" }) === 0,
+  );
+
+  return match ?? trimmed;
+};
+
 const normalizeOptionalValue = (value: string) => {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
@@ -108,7 +127,7 @@ export default function ClientsRegistry() {
           (client: ClientRecord) => ({
             cpf: client.cpf,
             name: client.name,
-            kinship: client.kinship,
+            kinship: normalizeKinship(client.kinship),
             birthDate: client.birthDate ?? null,
             spouseName: client.spouseName ?? null,
             address: client.address,
@@ -184,7 +203,7 @@ export default function ClientsRegistry() {
     setFormState({
       cpf: client.cpf,
       name: client.name,
-      kinship: client.kinship,
+      kinship: normalizeKinship(client.kinship),
       birthDate: formatDateForInput(client.birthDate),
       spouseName: client.spouseName ?? "",
       address: client.address,
@@ -241,7 +260,7 @@ export default function ClientsRegistry() {
 
     const trimmedName = formState.name.trim();
     const trimmedCpf = formState.cpf.trim();
-    const trimmedKinship = formState.kinship.trim();
+    const trimmedKinship = normalizeKinship(formState.kinship);
     const trimmedAddress = formState.address.trim();
     const trimmedMobile = formState.mobile.trim();
 
@@ -588,15 +607,23 @@ export default function ClientsRegistry() {
                   <label htmlFor="client-kinship" className="block text-sm font-medium text-[#374151]">
                     Vínculo com o aluno
                   </label>
-                  <input
+                  <select
                     id="client-kinship"
                     name="kinship"
                     value={formState.kinship}
                     onChange={handleFormChange}
                     className="mt-1 w-full rounded-xl border border-[#CBD5F5] bg-[#F8FAFF] px-4 py-2 text-sm text-[#1F2937] outline-none transition focus:border-[#4338CA] focus:ring-2 focus:ring-[#4338CA]/20"
-                    placeholder="Ex.: Mãe, Pai, Responsável legal"
                     required
-                  />
+                  >
+                    <option value="" disabled>
+                      Selecione o vínculo
+                    </option>
+                    {KINSHIP_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label htmlFor="client-cpf" className="block text-sm font-medium text-[#374151]">

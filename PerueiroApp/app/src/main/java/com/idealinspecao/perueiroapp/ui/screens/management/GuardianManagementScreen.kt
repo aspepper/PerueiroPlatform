@@ -42,7 +42,21 @@ import com.idealinspecao.perueiroapp.ui.components.ScreenScaffold
 import com.idealinspecao.perueiroapp.ui.components.SelectionDialog
 import com.idealinspecao.perueiroapp.viewmodel.GuardianPendencies
 import kotlinx.coroutines.launch
+import java.util.Locale
 import java.util.UUID
+
+private val KINSHIP_OPTIONS = listOf("Mãe", "Pai", "Responsável Legal", "Avó", "Avô")
+
+private fun normalizeKinship(value: String?): String {
+    val trimmed = value?.trim().orEmpty()
+    if (trimmed.isEmpty()) return KINSHIP_OPTIONS.first()
+
+    val match = KINSHIP_OPTIONS.firstOrNull {
+        it.lowercase(Locale.getDefault()) == trimmed.lowercase(Locale.getDefault())
+    }
+
+    return match ?: trimmed
+}
 
 @Composable
 fun GuardianListScreen(
@@ -130,7 +144,7 @@ fun GuardianFormScreen(
     ) { padding, snackbar ->
         var cpf by remember { mutableStateOf(guardian?.cpf ?: "") }
         var name by remember { mutableStateOf(guardian?.name ?: "") }
-        var kinship by remember { mutableStateOf(guardian?.kinship ?: "Pai") }
+        var kinship by remember { mutableStateOf(normalizeKinship(guardian?.kinship)) }
         var birthDate by remember { mutableStateOf(guardian?.birthDate ?: "") }
         var spouse by remember { mutableStateOf(guardian?.spouseName ?: "") }
         var address by remember { mutableStateOf(guardian?.address ?: "") }
@@ -248,7 +262,7 @@ fun GuardianFormScreen(
         if (showKinshipDialog) {
             SelectionDialog(
                 title = "Grau de parentesco",
-                items = listOf("Pai", "Mãe", "Avô", "Avó", "Responsável legal"),
+                items = KINSHIP_OPTIONS,
                 itemLabel = { it },
                 onItemSelected = { kinship = it },
                 onDismiss = { showKinshipDialog = false }
