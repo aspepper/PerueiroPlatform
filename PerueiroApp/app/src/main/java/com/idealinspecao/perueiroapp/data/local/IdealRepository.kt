@@ -1,6 +1,7 @@
 package com.idealinspecao.perueiroapp.data.local
 
 import android.util.Log
+import com.idealinspecao.perueiroapp.BuildConfig
 import com.idealinspecao.perueiroapp.data.remote.DriverApiService
 import com.idealinspecao.perueiroapp.data.remote.SyncApiService
 import com.idealinspecao.perueiroapp.model.UserRole
@@ -11,7 +12,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.util.UUID
 
 class IdealRepository(
     private val dao: IdealDao,
@@ -26,7 +26,12 @@ class IdealRepository(
     val payments: Flow<List<PaymentEntity>> = dao.observePayments()
 
     suspend fun saveGuardian(guardian: GuardianEntity) = dao.upsertGuardian(guardian)
-    suspend fun getGuardian(cpf: String) = dao.getGuardian(cpf)
+
+    suspend fun getGuardian(cpf: String): GuardianEntity? {
+        val cpfs = possibleCpfs(cpf)
+        if (cpfs.isEmpty()) return null
+        return dao.getGuardianByCpfs(cpfs)
+    }
     suspend fun deleteGuardian(cpf: String) = dao.deleteGuardian(cpf)
 
     suspend fun saveSchool(school: SchoolEntity) = dao.upsertSchool(school)
@@ -38,24 +43,40 @@ class IdealRepository(
     suspend fun deleteVan(id: Long) = dao.deleteVan(id)
 
     suspend fun saveDriver(driver: DriverEntity) {
-        val alreadyExists = dao.getDriver(driver.cpf) != null
-        dao.upsertDriver(driver)
+        val normalizedDriver = driver.copy(cpf = normalizeCpfValue(driver.cpf))
+        val cpfs = possibleCpfs(normalizedDriver.cpf)
+        val alreadyExists = if (cpfs.isEmpty()) {
+            false
+        } else {
+            dao.getDriverByCpfs(cpfs) != null
+        }
+        dao.upsertDriver(normalizedDriver)
 
         try {
-            driverApiService.syncDriver(driver, alreadyExists)
+            driverApiService.syncDriver(normalizedDriver, alreadyExists)
         } catch (exception: Exception) {
-            Log.e(TAG, "Erro ao sincronizar motorista ${driver.cpf}", exception)
+            Log.e(TAG, "Erro ao sincronizar motorista ${normalizedDriver.cpf}", exception)
         }
     }
 
     suspend fun registerDriver(driver: DriverEntity) {
-        val alreadyExists = dao.getDriver(driver.cpf) != null
-        dao.upsertDriver(driver)
+        val normalizedDriver = driver.copy(cpf = normalizeCpfValue(driver.cpf))
+        val cpfs = possibleCpfs(normalizedDriver.cpf)
+        val alreadyExists = if (cpfs.isEmpty()) {
+            false
+        } else {
+            dao.getDriverByCpfs(cpfs) != null
+        }
+        dao.upsertDriver(normalizedDriver)
 
-        driverApiService.syncDriver(driver, alreadyExists)
-        syncFromServer(UserRole.DRIVER, driver.cpf)
+        driverApiService.syncDriver(normalizedDriver, alreadyExists)
+        syncFromServer(UserRole.DRIVER, normalizedDriver.cpf)
     }
-    suspend fun getDriver(cpf: String) = dao.getDriver(cpf)
+    suspend fun getDriver(cpf: String): DriverEntity? {
+        val cpfs = possibleCpfs(cpf)
+        if (cpfs.isEmpty()) return null
+        return dao.getDriverByCpfs(cpfs)
+    }
     suspend fun deleteDriver(cpf: String) = dao.deleteDriver(cpf)
 
     suspend fun saveStudent(student: StudentEntity) = dao.upsertStudent(student)
@@ -69,16 +90,23 @@ class IdealRepository(
     suspend fun syncFromServer(userRole: UserRole?, userCpf: String?) {
         withContext(Dispatchers.IO) {
             try {
-                val payload = syncApiService.fetchFullSync(userRole, userCpf)
+                val normalizedUserCpf = userCpf?.let { normalizeCpfValue(it) }
+                val payload = syncApiService.fetchFullSync(userRole, normalizedUserCpf)
 
-                val existingGuardians = dao.getAllGuardians().associateBy { it.cpf }
-                val guardiansToPersist = payload.guardians.map { it.toEntity(existingGuardians[it.cpf]) }
+                val existingGuardians = dao.getAllGuardians().associateBy { normalizeCpfValue(it.cpf) }
+                val guardiansToPersist = payload.guardians.map { remote ->
+                    val normalizedCpf = normalizeCpfValue(remote.cpf)
+                    remote.toEntity(normalizedCpf, existingGuardians[normalizedCpf])
+                }
                 if (guardiansToPersist.isNotEmpty()) {
                     dao.upsertGuardians(guardiansToPersist)
                 }
 
-                val existingDrivers = dao.getAllDrivers().associateBy { it.cpf }
-                val driversToPersist = payload.drivers.map { it.toEntity(existingDrivers[it.cpf]) }
+                val existingDrivers = dao.getAllDrivers().associateBy { normalizeCpfValue(it.cpf) }
+                val driversToPersist = payload.drivers.map { remote ->
+                    val normalizedCpf = normalizeCpfValue(remote.cpf)
+                    remote.toEntity(normalizedCpf, existingDrivers[normalizedCpf])
+                }
                 if (driversToPersist.isNotEmpty()) {
                     dao.upsertDrivers(driversToPersist)
                 }
@@ -96,17 +124,17 @@ class IdealRepository(
                     dao.upsertStudents(studentsToPersist)
                 }
 
-                val filteredPayments = payload.filterPayments(userRole, userCpf)
+                val filteredPayments = payload.filterPayments(userRole, normalizedUserCpf)
                 if (filteredPayments.isNotEmpty()) {
                     dao.upsertPayments(filteredPayments.map { it.toEntity() })
                 }
 
                 val blacklistedGuardians = payload.students
                     .filter { it.blacklist }
-                    .mapNotNull { it.guardianCpf }
+                    .mapNotNull { normalizeOptionalCpf(it.guardianCpf) }
                     .distinct()
 
-                val guardianCpfs = payload.guardians.map { it.cpf }
+                val guardianCpfs = payload.guardians.map { normalizeCpfValue(it.cpf) }
                 if (userRole == null) {
                     dao.clearGuardianBlacklist()
                 } else if (guardianCpfs.isNotEmpty()) {
@@ -123,12 +151,15 @@ class IdealRepository(
     }
 }
 
-private fun SyncApiService.RemoteGuardian.toEntity(existing: GuardianEntity?): GuardianEntity {
-    val basePassword = existing?.password ?: UUID.randomUUID().toString().take(8)
+private fun SyncApiService.RemoteGuardian.toEntity(
+    normalizedCpf: String,
+    existing: GuardianEntity?,
+): GuardianEntity {
+    val basePassword = existing?.password ?: BuildConfig.DEFAULT_REMOTE_PASSWORD
     val baseMustChange = existing?.mustChangePassword ?: true
 
     return GuardianEntity(
-        cpf = cpf,
+        cpf = normalizedCpf,
         name = name,
         kinship = kinship ?: existing?.kinship ?: "",
         birthDate = formatDate(birthDate) ?: (existing?.birthDate ?: ""),
@@ -148,10 +179,13 @@ private fun SyncApiService.RemoteGuardian.toEntity(existing: GuardianEntity?): G
     )
 }
 
-private fun SyncApiService.RemoteDriver.toEntity(existing: DriverEntity?): DriverEntity {
-    val password = existing?.password ?: UUID.randomUUID().toString().take(8)
+private fun SyncApiService.RemoteDriver.toEntity(
+    normalizedCpf: String,
+    existing: DriverEntity?,
+): DriverEntity {
+    val password = existing?.password ?: BuildConfig.DEFAULT_REMOTE_PASSWORD
     return DriverEntity(
-        cpf = cpf,
+        cpf = normalizedCpf,
         name = name,
         birthDate = existing?.birthDate ?: "",
         address = address ?: existing?.address ?: "",
@@ -182,7 +216,7 @@ private fun SyncApiService.RemoteVan.toEntity(): VanEntity {
         color = color ?: "",
         year = year ?: "",
         plate = plate,
-        driverCpfs = driverCpf ?: ""
+        driverCpfs = driverCpf?.let { normalizeCpfValue(it) } ?: ""
     )
 }
 
@@ -191,12 +225,12 @@ private fun SyncApiService.RemoteStudent.toEntity(): StudentEntity {
         id = id ?: 0,
         name = name,
         birthDate = formatDate(birthDate) ?: "",
-        fatherCpf = guardianCpf,
+        fatherCpf = normalizeOptionalCpf(guardianCpf),
         motherCpf = null,
         schoolId = schoolId,
         mobile = mobile,
         vanId = vanId,
-        driverCpf = driverCpf
+        driverCpf = normalizeOptionalCpf(driverCpf)
     )
 }
 
@@ -222,13 +256,17 @@ private fun SyncApiService.RemoteSyncPayload.filterPayments(
         return paymentsSorted
     }
 
+    val normalizedUserCpf = normalizeOptionalCpf(userCpf) ?: return emptyList()
+
     return when (userRole) {
         UserRole.DRIVER -> {
-            val driverVans = vans.filter { it.driverCpf.equals(userCpf, ignoreCase = true) }
+            val driverVans = vans.filter {
+                normalizeOptionalCpf(it.driverCpf) == normalizedUserCpf
+            }
                 .mapNotNull { it.id }
                 .toSet()
             val driverStudents = students.filter {
-                it.driverCpf.equals(userCpf, ignoreCase = true)
+                normalizeOptionalCpf(it.driverCpf) == normalizedUserCpf
             }.mapNotNull { it.id }.toSet()
 
             paymentsSorted.filter { payment ->
@@ -240,7 +278,7 @@ private fun SyncApiService.RemoteSyncPayload.filterPayments(
 
         UserRole.GUARDIAN -> {
             val guardianStudents = students.filter {
-                it.guardianCpf.equals(userCpf, ignoreCase = true)
+                normalizeOptionalCpf(it.guardianCpf) == normalizedUserCpf
             }.mapNotNull { it.id }.toSet()
 
             if (guardianStudents.isEmpty()) return emptyList()
@@ -266,6 +304,25 @@ private fun SyncApiService.RemoteSyncPayload.filterPayments(
             }
         }
     }
+}
+
+private fun normalizeCpfValue(raw: String): String {
+    val digits = raw.filter { it.isDigit() }
+    if (digits.isNotEmpty()) return digits
+    return raw.trim()
+}
+
+private fun normalizeOptionalCpf(raw: String?): String? {
+    if (raw == null) return null
+    val normalized = normalizeCpfValue(raw)
+    return normalized.ifBlank { null }
+}
+
+private fun possibleCpfs(raw: String): List<String> {
+    val trimmed = raw.trim()
+    if (trimmed.isEmpty()) return emptyList()
+    val normalized = normalizeCpfValue(trimmed)
+    return if (normalized == trimmed) listOf(trimmed) else listOf(trimmed, normalized)
 }
 
 private fun formatDate(date: Date?): String? {
