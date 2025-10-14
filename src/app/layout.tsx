@@ -9,6 +9,17 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Perueiros Admin",
   description: "Painel administrativo para Perueiros",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },                // compat
+      { url: "/favicon.svg", type: "image/svg+xml" },       // moderno
+      { url: "/favicon-32x32.png", sizes: "32x32" },
+      { url: "/favicon-16x16.png", sizes: "16x16" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
+  themeColor: "#000000",
 };
 
 export const viewport: Viewport = {
