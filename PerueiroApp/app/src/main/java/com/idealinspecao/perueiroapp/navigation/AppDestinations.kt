@@ -20,6 +20,7 @@ sealed class AppDestination(val route: String) {
     data object Vans : AppDestination("vans")
     data object Drivers : AppDestination("drivers")
     data object DriverRegistration : AppDestination("driverRegistration")
+    data object DriverRegistrationSuccess : AppDestination("driverRegistrationSuccess")
     data object Students : AppDestination("students")
     data object Payments : AppDestination("payments")
     data object PaymentNotifications : AppDestination("paymentNotifications")

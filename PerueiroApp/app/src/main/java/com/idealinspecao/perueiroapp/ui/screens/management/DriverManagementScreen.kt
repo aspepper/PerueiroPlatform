@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,11 +15,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -111,7 +114,9 @@ fun DriverListScreen(
 fun DriverFormScreen(
     driver: DriverEntity?,
     onBack: () -> Unit,
-    onSave: (DriverEntity) -> Unit
+    onSave: (DriverEntity) -> Unit,
+    isSubmitting: Boolean = false,
+    submissionError: String? = null
 ) {
     ScreenScaffold(
         title = if (driver == null) "Novo motorista" else "Editar motorista",
@@ -129,6 +134,12 @@ fun DriverFormScreen(
 
         val scrollState = rememberScrollState()
 
+        LaunchedEffect(submissionError) {
+            submissionError?.takeIf { it.isNotBlank() }?.let { message ->
+                snackbar.showSnackbar(message)
+            }
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -137,14 +148,15 @@ fun DriverFormScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FormTextField(cpf, { cpf = it }, "CPF")
-            FormTextField(name, { name = it }, "Nome")
-            FormTextField(birthDate, { birthDate = it }, "Data de nascimento")
-            FormTextField(address, { address = it }, "Endereço")
-            FormTextField(phone, { phone = it }, "Telefone")
-            FormTextField(workPhone, { workPhone = it }, "Telefone trabalho")
-            FormTextField(email, { email = it }, "E-mail")
-            FormTextField(password, { password = it }, "Senha de acesso")
+            val fieldsEnabled = !isSubmitting
+            FormTextField(cpf, { cpf = it }, "CPF", enabled = fieldsEnabled)
+            FormTextField(name, { name = it }, "Nome", enabled = fieldsEnabled)
+            FormTextField(birthDate, { birthDate = it }, "Data de nascimento", enabled = fieldsEnabled)
+            FormTextField(address, { address = it }, "Endereço", enabled = fieldsEnabled)
+            FormTextField(phone, { phone = it }, "Telefone", enabled = fieldsEnabled)
+            FormTextField(workPhone, { workPhone = it }, "Telefone trabalho", enabled = fieldsEnabled)
+            FormTextField(email, { email = it }, "E-mail", enabled = fieldsEnabled)
+            FormTextField(password, { password = it }, "Senha de acesso", enabled = fieldsEnabled)
             Button(
                 onClick = {
                     val normalizedCpf = cpf.filter { it.isDigit() }
@@ -155,7 +167,7 @@ fun DriverFormScreen(
 
                     if (normalizedCpf.isEmpty() || trimmedName.isEmpty()) {
                         coroutineScope.launch { snackbar.showSnackbar("CPF e nome são obrigatórios") }
-                    } else {
+                    } else if (!isSubmitting) {
                         onSave(
                             DriverEntity(
                                 cpf = normalizedCpf,
@@ -168,12 +180,19 @@ fun DriverFormScreen(
                                 password = password
                             )
                         )
-                        onBack()
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isSubmitting
             ) {
-                Text("Salvar")
+                if (isSubmitting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Salvar")
+                }
             }
         }
     }

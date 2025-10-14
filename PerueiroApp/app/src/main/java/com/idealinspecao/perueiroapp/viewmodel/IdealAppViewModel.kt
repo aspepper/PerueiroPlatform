@@ -133,6 +133,10 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { repository.saveDriver(driver) }
     }
 
+    suspend fun registerDriver(driver: DriverEntity) {
+        repository.registerDriver(driver)
+    }
+
     fun deleteDriver(cpf: String) {
         viewModelScope.launch { repository.deleteDriver(cpf) }
     }
