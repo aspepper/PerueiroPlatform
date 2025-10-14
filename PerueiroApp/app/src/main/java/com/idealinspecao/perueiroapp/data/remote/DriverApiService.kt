@@ -45,6 +45,17 @@ class DriverApiService(
                         if (updateResponse.isSuccessful) return@withContext
                         throw IOException("Falha ao sincronizar motorista: HTTP ${updateResponse.code}")
                     }
+                } else if (alreadyExists && response.code == HTTP_NOT_FOUND) {
+                    val createRequest = Request.Builder()
+                        .url(baseUrl)
+                        .header("Content-Type", JSON_MEDIA_TYPE_STRING)
+                        .post(payloadString.toRequestBody(mediaType))
+                        .build()
+
+                    client.newCall(createRequest).execute().use { createResponse ->
+                        if (createResponse.isSuccessful) return@withContext
+                        throw IOException("Falha ao sincronizar motorista: HTTP ${createResponse.code}")
+                    }
                 } else {
                     throw IOException("Falha ao sincronizar motorista: HTTP ${response.code}")
                 }
@@ -75,5 +86,6 @@ class DriverApiService(
         private const val JSON_MEDIA_TYPE_STRING = "application/json; charset=utf-8"
         private val JSON_MEDIA_TYPE = JSON_MEDIA_TYPE_STRING.toMediaType()
         private const val HTTP_CONFLICT = 409
+        private const val HTTP_NOT_FOUND = 404
     }
 }
