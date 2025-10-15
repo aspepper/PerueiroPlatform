@@ -237,3 +237,23 @@ npx prisma migrate diff --from-url "postgresql://neondb_owner:npg_4c2uxJbNfnUE@e
 
 # 3) checar por script SQL (útil para revisar plano de mudança)
 npx prisma migrate diff --from-url "postgresql://neondb_owner:npg_4c2uxJbNfnUE@ep-lingering-smoke-a8btkicc-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require" --to-schema-datamodel ./prisma/schema.prisma --script
+
+## Gerando o keysore para o app kotlin
+
+# JKS (padrão Android). Validade ~27 anos (10.000 dias).
+keytool -genkeypair -v \
+  -keystore release.jks \
+  -storetype JKS \
+  -alias perueiros \
+  -keyalg RSA -keysize 2048 \
+  -sigalg SHA256withRSA \
+  -validity 10000
+
+# Migrar para p12
+keytool -importkeystore \
+  -srckeystore release.jks \
+  -destkeystore release.p12 \
+  -deststoretype pkcs12 \
+  -srcalias perueiros
+
+
