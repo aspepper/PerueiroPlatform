@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { resolvePasswordHash } from "@/lib/password";
 import { normalizeCpf } from "@/lib/cpf";
 
-const DEFAULT_PASSWORD = process.env.DEFAULT_USER_PASSWORD || "perueiro123";
+const DEFAULT_PASSWORD = process.env.DEFAULT_USER_PASSWORD || "senha123";
 const DEFAULT_DOMAIN = process.env.DEFAULT_USER_DOMAIN || "perueiro.local";
 
 function fallbackEmail(cpf: string, role: Role) {
