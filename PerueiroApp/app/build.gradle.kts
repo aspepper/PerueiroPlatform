@@ -21,7 +21,7 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "DEFAULT_REMOTE_PASSWORD", "\"perueiro123\"")
+        buildConfigField("String", "DEFAULT_REMOTE_PASSWORD", "\"senha123\"")
         val defaultApiBaseUrl = "https://icy-water-08508ba0f.2.azurestaticapps.net/api"
         val resolvedBaseUrl = (project.findProperty("perueiroApiBaseUrl") as? String)
             ?.takeIf { it.isNotBlank() }

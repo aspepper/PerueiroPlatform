@@ -5,7 +5,7 @@ import { ensureDriverUser, ensureGuardianUser } from "@/lib/user-accounts";
 import { normalizeCpf, normalizeCpfOrKeep } from "@/lib/cpf";
 import { verifyPassword } from "@/lib/password";
 
-const DEFAULT_PASSWORD = process.env.DEFAULT_USER_PASSWORD || "perueiro123";
+const DEFAULT_PASSWORD = process.env.DEFAULT_USER_PASSWORD || "senha123";
 
 function requireApiKey(request: Request) {
   const key = request.headers.get("x-api-key");
