@@ -1,10 +1,10 @@
 package com.idealinspecao.perueiroapp.data.remote
 
 import com.idealinspecao.perueiroapp.data.local.DriverEntity
+import com.idealinspecao.perueiroapp.data.remote.RemoteApiConfig.withApiKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -13,7 +13,7 @@ import java.io.IOException
 
 class DriverApiService(
     private val client: OkHttpClient = OkHttpClient(),
-    private val baseUrl: String = DEFAULT_BASE_URL
+    private val driversUrl: String = RemoteApiConfig.driversUrl
 ) {
 
     suspend fun syncDriver(driver: DriverEntity, alreadyExists: Boolean) {
@@ -30,11 +30,13 @@ class DriverApiService(
                 requestBuilder
                     .url(driverUrl)
                     .method("PUT", payloadString.toRequestBody(mediaType))
+                    .withApiKey()
                     .build()
             } else {
                 requestBuilder
-                    .url(baseUrl)
+                    .url(driversUrl)
                     .post(payloadString.toRequestBody(mediaType))
+                    .withApiKey()
                     .build()
             }
 
@@ -46,6 +48,7 @@ class DriverApiService(
                         .url(driverUrl)
                         .addHeader("Content-Type", JSON_MEDIA_TYPE_STRING)
                         .method("PUT", payloadString.toRequestBody(mediaType))
+                        .withApiKey()
                         .build()
 
                     client.newCall(updateRequest).execute().use { updateResponse ->
@@ -60,9 +63,10 @@ class DriverApiService(
                     }
                 } else if (alreadyExists && response.code == HTTP_NOT_FOUND) {
                     val createRequest = Request.Builder()
-                        .url(baseUrl)
+                        .url(driversUrl)
                         .addHeader("Content-Type", JSON_MEDIA_TYPE_STRING)
                         .post(payloadString.toRequestBody(mediaType))
+                        .withApiKey()
                         .build()
 
                     client.newCall(createRequest).execute().use { createResponse ->
@@ -90,6 +94,7 @@ class DriverApiService(
         json.put("cnh", JSONObject.NULL)
         json.putNullable("phone", driver.phone)
         json.putNullable("email", driver.email)
+        json.put("password", driver.password)
         return json
     }
 
@@ -102,7 +107,7 @@ class DriverApiService(
     }
 
     private fun buildDriverUrl(cpf: String): String {
-        return baseUrl
+        return driversUrl
             .toHttpUrl()
             .newBuilder()
             .addPathSegment(cpf.trim())
@@ -112,9 +117,10 @@ class DriverApiService(
 
     private fun createDriver(payloadString: String) {
         val request = Request.Builder()
-            .url(baseUrl)
+            .url(driversUrl)
             .addHeader("Content-Type", JSON_MEDIA_TYPE_STRING)
             .post(payloadString.toRequestBody(JSON_MEDIA_TYPE))
+            .withApiKey()
             .build()
 
         client.newCall(request).execute().use { response ->
@@ -125,9 +131,8 @@ class DriverApiService(
     }
 
     companion object {
-        private const val DEFAULT_BASE_URL = "https://icy-water-08508ba0f.2.azurestaticapps.net/api/drivers"
-        private const val JSON_MEDIA_TYPE_STRING = "application/json; charset=utf-8"
-        private val JSON_MEDIA_TYPE = JSON_MEDIA_TYPE_STRING.toMediaType()
+        private const val JSON_MEDIA_TYPE_STRING = RemoteApiConfig.jsonMediaTypeString
+        private val JSON_MEDIA_TYPE = RemoteApiConfig.jsonMediaType
         private const val HTTP_CONFLICT = 409
         private const val HTTP_NOT_FOUND = 404
     }

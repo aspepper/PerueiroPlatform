@@ -2,6 +2,7 @@ package com.idealinspecao.perueiroapp.data.local
 
 import android.util.Log
 import com.idealinspecao.perueiroapp.BuildConfig
+import com.idealinspecao.perueiroapp.data.remote.AuthApiService
 import com.idealinspecao.perueiroapp.data.remote.DriverApiService
 import com.idealinspecao.perueiroapp.data.remote.SyncApiService
 import com.idealinspecao.perueiroapp.model.UserRole
@@ -16,7 +17,8 @@ import java.util.Locale
 class IdealRepository(
     private val dao: IdealDao,
     private val driverApiService: DriverApiService = DriverApiService(),
-    private val syncApiService: SyncApiService = SyncApiService()
+    private val syncApiService: SyncApiService = SyncApiService(),
+    private val authApiService: AuthApiService = AuthApiService()
 ) {
     val guardians: Flow<List<GuardianEntity>> = dao.observeGuardians()
     val schools: Flow<List<SchoolEntity>> = dao.observeSchools()
@@ -24,6 +26,95 @@ class IdealRepository(
     val drivers: Flow<List<DriverEntity>> = dao.observeDrivers()
     val students: Flow<List<StudentEntity>> = dao.observeStudents()
     val payments: Flow<List<PaymentEntity>> = dao.observePayments()
+
+    suspend fun authenticateDriver(cpf: String, password: String): AuthenticationResult<DriverEntity> {
+        val trimmedCpf = cpf.trim()
+        val cpfs = possibleCpfs(trimmedCpf)
+        val localDriver = if (cpfs.isEmpty()) null else dao.getDriverByCpfs(cpfs)
+
+        if (localDriver != null && localDriver.password == password) {
+            syncFromServer(UserRole.DRIVER, localDriver.cpf)
+            val refreshed = dao.getDriverByCpfs(cpfs) ?: localDriver
+            return AuthenticationResult.Success(refreshed)
+        }
+
+        return try {
+            val remote = authApiService.login(trimmedCpf, password, UserRole.DRIVER)
+            val remoteDriver = remote.driver?.toEntity(password, localDriver)
+                ?: localDriver?.copy(password = password)
+                ?: DriverEntity(
+                    cpf = normalizeCpfValue(trimmedCpf),
+                    name = trimmedCpf,
+                    birthDate = "",
+                    address = "",
+                    phone = "",
+                    workPhone = null,
+                    email = "",
+                    password = password
+                )
+
+            dao.upsertDriver(remoteDriver)
+            syncFromServer(UserRole.DRIVER, remoteDriver.cpf)
+            val refreshed = dao.getDriverByCpfs(possibleCpfs(remoteDriver.cpf)) ?: remoteDriver
+            AuthenticationResult.Success(refreshed)
+        } catch (exception: AuthApiService.InvalidCredentialsException) {
+            AuthenticationResult.InvalidCredentials
+        } catch (exception: AuthApiService.NotFoundException) {
+            AuthenticationResult.NotFound
+        } catch (exception: Exception) {
+            Log.e(TAG, "Erro ao autenticar motorista ${trimmedCpf}", exception)
+            AuthenticationResult.Failure("Não foi possível autenticar o motorista.", exception)
+        }
+    }
+
+    suspend fun authenticateGuardian(cpf: String, password: String): AuthenticationResult<GuardianEntity> {
+        val trimmedCpf = cpf.trim()
+        val cpfs = possibleCpfs(trimmedCpf)
+        val localGuardian = if (cpfs.isEmpty()) null else dao.getGuardianByCpfs(cpfs)
+
+        if (localGuardian != null && localGuardian.password == password) {
+            syncFromServer(UserRole.GUARDIAN, localGuardian.cpf)
+            val refreshed = dao.getGuardianByCpfs(cpfs) ?: localGuardian
+            return AuthenticationResult.Success(refreshed)
+        }
+
+        return try {
+            val remote = authApiService.login(trimmedCpf, password, UserRole.GUARDIAN)
+            val remoteGuardian = remote.guardian?.toEntity(password, localGuardian)
+                ?: localGuardian?.copy(password = password, mustChangePassword = false)
+                ?: GuardianEntity(
+                    cpf = normalizeCpfValue(trimmedCpf),
+                    name = trimmedCpf,
+                    kinship = localGuardian?.kinship ?: "",
+                    birthDate = localGuardian?.birthDate ?: "",
+                    spouseName = localGuardian?.spouseName ?: "",
+                    address = localGuardian?.address ?: "",
+                    mobile = localGuardian?.mobile ?: "",
+                    landline = localGuardian?.landline,
+                    workAddress = localGuardian?.workAddress ?: "",
+                    workPhone = localGuardian?.workPhone,
+                    email = localGuardian?.email ?: "",
+                    password = password,
+                    mustChangePassword = false,
+                    pendingStatus = localGuardian?.pendingStatus ?: "Desconhecido",
+                    pendingReasons = localGuardian?.pendingReasons ?: "",
+                    pendingVans = localGuardian?.pendingVans ?: "",
+                    isBlacklisted = localGuardian?.isBlacklisted ?: false
+                )
+
+            dao.upsertGuardian(remoteGuardian)
+            syncFromServer(UserRole.GUARDIAN, remoteGuardian.cpf)
+            val refreshed = dao.getGuardianByCpfs(possibleCpfs(remoteGuardian.cpf)) ?: remoteGuardian
+            AuthenticationResult.Success(refreshed)
+        } catch (exception: AuthApiService.InvalidCredentialsException) {
+            AuthenticationResult.InvalidCredentials
+        } catch (exception: AuthApiService.NotFoundException) {
+            AuthenticationResult.NotFound
+        } catch (exception: Exception) {
+            Log.e(TAG, "Erro ao autenticar responsável ${trimmedCpf}", exception)
+            AuthenticationResult.Failure("Não foi possível autenticar o responsável.", exception)
+        }
+    }
 
     suspend fun saveGuardian(guardian: GuardianEntity) = dao.upsertGuardian(guardian)
 
@@ -91,7 +182,8 @@ class IdealRepository(
         withContext(Dispatchers.IO) {
             try {
                 val normalizedUserCpf = userCpf?.let { normalizeCpfValue(it) }
-                val payload = syncApiService.fetchFullSync(userRole, normalizedUserCpf)
+                val updatedSince = loadLastSyncAt(userRole, normalizedUserCpf)
+                val payload = syncApiService.fetchFullSync(userRole, normalizedUserCpf, updatedSince)
 
                 val existingGuardians = dao.getAllGuardians().associateBy { normalizeCpfValue(it.cpf) }
                 val guardiansToPersist = payload.guardians.map { remote ->
@@ -144,11 +236,38 @@ class IdealRepository(
                 if (blacklistedGuardians.isNotEmpty()) {
                     dao.setGuardiansBlacklisted(blacklistedGuardians)
                 }
+
+                val syncTimestamp = payload.syncedAt ?: Date()
+                recordSuccessfulSync(userRole, normalizedUserCpf, syncTimestamp)
             } catch (exception: Exception) {
                 Log.e(TAG, "Erro ao sincronizar base local", exception)
             }
         }
     }
+
+    private suspend fun loadLastSyncAt(userRole: UserRole?, userCpf: String?): Date? {
+        val statusId = syncStatusId(userRole, userCpf)
+        val status = dao.getSyncStatus(statusId) ?: return null
+        return status.lastSyncedAt.takeIf { it > 0 }?.let { Date(it) }
+    }
+
+    private suspend fun recordSuccessfulSync(userRole: UserRole?, userCpf: String?, syncedAt: Date) {
+        val statusId = syncStatusId(userRole, userCpf)
+        dao.upsertSyncStatus(SyncStatusEntity(id = statusId, lastSyncedAt = syncedAt.time))
+    }
+
+    private fun syncStatusId(userRole: UserRole?, userCpf: String?): String {
+        val rolePart = userRole?.name ?: "GLOBAL"
+        val cpfPart = userCpf?.takeIf { it.isNotBlank() }?.let { normalizeCpfValue(it) } ?: "-"
+        return "$rolePart:$cpfPart"
+    }
+}
+
+sealed class AuthenticationResult<out T> {
+    data class Success<T>(val user: T) : AuthenticationResult<T>()
+    data object NotFound : AuthenticationResult<Nothing>()
+    data object InvalidCredentials : AuthenticationResult<Nothing>()
+    data class Failure(val message: String, val throwable: Throwable? = null) : AuthenticationResult<Nothing>()
 }
 
 private fun SyncApiService.RemoteGuardian.toEntity(
@@ -193,6 +312,49 @@ private fun SyncApiService.RemoteDriver.toEntity(
         workPhone = existing?.workPhone,
         email = email ?: existing?.email ?: "",
         password = password
+    )
+}
+
+private fun AuthApiService.RemoteDriver.toEntity(
+    password: String,
+    existing: DriverEntity?,
+): DriverEntity {
+    val normalizedCpf = normalizeCpfValue(cpf)
+    return DriverEntity(
+        cpf = normalizedCpf,
+        name = name,
+        birthDate = existing?.birthDate ?: "",
+        address = address ?: existing?.address ?: "",
+        phone = phone ?: existing?.phone ?: "",
+        workPhone = existing?.workPhone,
+        email = email ?: existing?.email ?: "",
+        password = password
+    )
+}
+
+private fun AuthApiService.RemoteGuardian.toEntity(
+    password: String,
+    existing: GuardianEntity?,
+): GuardianEntity {
+    val normalizedCpf = normalizeCpfValue(cpf)
+    return GuardianEntity(
+        cpf = normalizedCpf,
+        name = name,
+        kinship = kinship ?: existing?.kinship ?: "",
+        birthDate = formatDate(birthDate) ?: (existing?.birthDate ?: ""),
+        spouseName = spouseName ?: existing?.spouseName ?: "",
+        address = address ?: existing?.address ?: "",
+        mobile = mobile ?: existing?.mobile ?: "",
+        landline = landline ?: existing?.landline,
+        workAddress = workAddress ?: existing?.workAddress ?: "",
+        workPhone = workPhone ?: existing?.workPhone,
+        email = existing?.email ?: "",
+        password = password,
+        mustChangePassword = false,
+        pendingStatus = existing?.pendingStatus ?: "Desconhecido",
+        pendingReasons = existing?.pendingReasons ?: "",
+        pendingVans = existing?.pendingVans ?: "",
+        isBlacklisted = existing?.isBlacklisted ?: false
     )
 }
 

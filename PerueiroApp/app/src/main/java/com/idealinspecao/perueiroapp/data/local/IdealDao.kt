@@ -138,4 +138,10 @@ interface IdealDao {
 
     @Query("DELETE FROM payments")
     suspend fun clearPayments()
+
+    @Upsert
+    suspend fun upsertSyncStatus(status: SyncStatusEntity)
+
+    @Query("SELECT * FROM sync_status WHERE id = :id LIMIT 1")
+    suspend fun getSyncStatus(id: String): SyncStatusEntity?
 }

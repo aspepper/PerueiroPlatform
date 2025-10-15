@@ -40,6 +40,10 @@ export async function PUT(
 
     const body = await request.json();
     const name = typeof body.name === "string" ? body.name.trim() : "";
+    const password =
+      typeof body.password === "string" && body.password.trim().length > 0
+        ? body.password.trim()
+        : undefined;
 
     if (!name) {
       return NextResponse.json(
@@ -73,12 +77,15 @@ export async function PUT(
       },
     });
 
-    await ensureDriverUser({
-      cpf: driver.cpf,
-      name: driver.name,
-      email: driver.email,
-      userId: driver.userId,
-    });
+    await ensureDriverUser(
+      {
+        cpf: driver.cpf,
+        name: driver.name,
+        email: driver.email,
+        userId: driver.userId,
+      },
+      { password },
+    );
 
     return NextResponse.json({ driver: formatDriver(driver) });
   } catch (error) {

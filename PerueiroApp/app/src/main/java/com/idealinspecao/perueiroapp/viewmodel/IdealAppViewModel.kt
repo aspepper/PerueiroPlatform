@@ -3,6 +3,7 @@ package com.idealinspecao.perueiroapp.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.idealinspecao.perueiroapp.data.local.AuthenticationResult
 import com.idealinspecao.perueiroapp.data.local.DriverEntity
 import com.idealinspecao.perueiroapp.data.local.GuardianEntity
 import com.idealinspecao.perueiroapp.data.local.IdealDatabase
@@ -73,47 +74,39 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
     suspend fun login(cpf: String, password: String, userRole: UserRole): LoginOutcome {
         return when (userRole) {
             UserRole.DRIVER -> {
-                val driver = ensureDriverLoaded(cpf)
-                when {
-                    driver == null -> LoginOutcome.Error("Motorista não encontrado")
-                    driver.password != password -> LoginOutcome.Error("Senha inválida")
-                    else -> {
+                when (val result = repository.authenticateDriver(cpf, password)) {
+                    is AuthenticationResult.Success -> {
+                        val driver = result.user
                         sessionDataSource.setSession(driver.cpf, UserRole.DRIVER.name)
                         LoginOutcome.Driver(driver)
                     }
+
+                    AuthenticationResult.NotFound -> LoginOutcome.Error("Motorista não encontrado")
+                    AuthenticationResult.InvalidCredentials -> LoginOutcome.Error("Senha inválida")
+                    is AuthenticationResult.Failure -> LoginOutcome.Error(result.message)
                 }
             }
 
             UserRole.GUARDIAN -> {
-                val guardian = ensureGuardianLoaded(cpf)
-                when {
-                    guardian == null -> LoginOutcome.Error("Responsável não encontrado")
-                    guardian.password != password -> LoginOutcome.Error("Senha inválida")
-                    guardian.mustChangePassword -> LoginOutcome.MustChangePassword(guardian.cpf)
-                    guardian.isBlacklisted -> LoginOutcome.Error("Responsável bloqueado devido a pendências")
-                    else -> {
-                        sessionDataSource.setSession(guardian.cpf, UserRole.GUARDIAN.name)
-                        LoginOutcome.Guardian(guardian)
+                when (val result = repository.authenticateGuardian(cpf, password)) {
+                    is AuthenticationResult.Success -> {
+                        val guardian = result.user
+                        when {
+                            guardian.mustChangePassword -> LoginOutcome.MustChangePassword(guardian.cpf)
+                            guardian.isBlacklisted -> LoginOutcome.Error("Responsável bloqueado devido a pendências")
+                            else -> {
+                                sessionDataSource.setSession(guardian.cpf, UserRole.GUARDIAN.name)
+                                LoginOutcome.Guardian(guardian)
+                            }
+                        }
                     }
+
+                    AuthenticationResult.NotFound -> LoginOutcome.Error("Responsável não encontrado")
+                    AuthenticationResult.InvalidCredentials -> LoginOutcome.Error("Senha inválida")
+                    is AuthenticationResult.Failure -> LoginOutcome.Error(result.message)
                 }
             }
         }
-    }
-
-    private suspend fun ensureDriverLoaded(cpf: String): DriverEntity? {
-        val localDriver = repository.getDriver(cpf)
-        if (localDriver != null) return localDriver
-
-        repository.syncFromServer(UserRole.DRIVER, cpf)
-        return repository.getDriver(cpf)
-    }
-
-    private suspend fun ensureGuardianLoaded(cpf: String): GuardianEntity? {
-        val localGuardian = repository.getGuardian(cpf)
-        if (localGuardian != null) return localGuardian
-
-        repository.syncFromServer(UserRole.GUARDIAN, cpf)
-        return repository.getGuardian(cpf)
     }
 
     fun logout() {

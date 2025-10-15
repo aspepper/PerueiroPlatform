@@ -1,5 +1,7 @@
 package com.idealinspecao.perueiroapp.data.remote
 
+import com.idealinspecao.perueiroapp.data.remote.RemoteApiConfig
+import com.idealinspecao.perueiroapp.data.remote.RemoteApiConfig.withApiKey
 import com.idealinspecao.perueiroapp.model.UserRole
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,7 +19,7 @@ import java.util.TimeZone
 
 class SyncApiService(
     private val client: OkHttpClient = OkHttpClient(),
-    private val baseUrl: String = DEFAULT_BASE_URL
+    private val pullUrl: String = RemoteApiConfig.syncPullUrl
 ) {
 
     suspend fun fetchFullSync(
@@ -25,7 +27,10 @@ class SyncApiService(
         userCpf: String? = null,
         updatedSince: Date? = null
     ): RemoteSyncPayload = withContext(Dispatchers.IO) {
-        val urlBuilder = "$baseUrl/sync/full".toHttpUrl().newBuilder()
+        val urlBuilder = pullUrl
+            .toHttpUrl()
+            .newBuilder()
+            .withApiKey()
         userRole?.let { urlBuilder.addQueryParameter("role", it.name) }
         userCpf?.let { urlBuilder.addQueryParameter("cpf", it) }
         updatedSince?.let { urlBuilder.addQueryParameter("updatedSince", formatUpdatedSince(it)) }
@@ -33,6 +38,7 @@ class SyncApiService(
         val request = Request.Builder()
             .url(urlBuilder.build())
             .get()
+            .withApiKey()
             .build()
 
         client.newCall(request).execute().use { response ->
@@ -56,7 +62,8 @@ class SyncApiService(
                 drivers = drivers,
                 vans = vans,
                 students = students,
-                payments = payments
+                payments = payments,
+                syncedAt = json.optNullableString("syncedAt")?.toDateOrNull()
             )
         }
     }
@@ -185,7 +192,8 @@ class SyncApiService(
         val drivers: List<RemoteDriver>,
         val vans: List<RemoteVan>,
         val students: List<RemoteStudent>,
-        val payments: List<RemotePayment>
+        val payments: List<RemotePayment>,
+        val syncedAt: Date?
     )
 
     data class RemoteGuardian(
@@ -301,7 +309,6 @@ class SyncApiService(
     }
 
     companion object {
-        private const val DEFAULT_BASE_URL = "https://icy-water-08508ba0f.2.azurestaticapps.net/api"
         private val DATE_PATTERNS = listOf(
             "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
             "yyyy-MM-dd'T'HH:mm:ss'Z'",
