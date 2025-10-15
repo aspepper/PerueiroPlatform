@@ -1,23 +1,26 @@
 [INFO] Iniciando build (variant=debug, task=:app:assembleDebug)
+Starting a Gradle Daemon, 1 incompatible Daemon could not be reused, use --status for details
 > Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDebugBuildConfig UP-TO-DATE
 > Task :app:checkDebugAarMetadata
 > Task :app:checkDebugAarMetadata UP-TO-DATE
-> Task :app:processDebugNavigationResources
+> Task :app:processDebugNavigationResources UP-TO-DATE
 > Task :app:compileDebugNavigationResources UP-TO-DATE
 > Task :app:generateDebugResValues UP-TO-DATE
-> Task :app:mapDebugSourceSetPaths
-> Task :app:generateDebugResources
-> Task :app:packageDebugResources
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
 > Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
 > Task :app:extractDeepLinksDebug UP-TO-DATE
 > Task :app:processDebugMainManifest UP-TO-DATE
 > Task :app:processDebugManifest UP-TO-DATE
 > Task :app:processDebugManifestForPackage UP-TO-DATE
-> Task :app:parseDebugLocalResources
-> Task :app:mergeDebugResources
+> Task :app:processDebugResources UP-TO-DATE
 > Task :app:javaPreCompileDebug UP-TO-DATE
 > Task :app:mergeDebugShaders UP-TO-DATE
 > Task :app:compileDebugShaders NO-SOURCE
@@ -34,12 +37,11 @@
 > Task :app:validateSigningDebug UP-TO-DATE
 > Task :app:writeDebugAppMetadata UP-TO-DATE
 > Task :app:writeDebugSigningConfigVersions UP-TO-DATE
-> Task :app:processDebugResources
 
 > Task :app:kaptGenerateStubsDebugKotlin
 w: Kapt currently doesn't support language version 2.0+. Falling back to 1.9.
 
-> Task :app:kaptDebugKotlin UP-TO-DATE
+> Task :app:kaptDebugKotlin
 > Task :app:compileDebugKotlin
 
 > Task :app:compileDebugJavaWithJavac
@@ -55,9 +57,9 @@ warning: [options] target value 8 is obsolete and will be removed in a future re
 warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
 3 warnings
 
-> Task :app:processDebugJavaRes
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
 > Task :app:dexBuilderDebug
-> Task :app:mergeDebugJavaResource
 > Task :app:mergeProjectDexDebug
 > Task :app:packageDebug
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
@@ -65,11 +67,12 @@ warning: [options] To suppress warnings about obsolete options, use -Xlint:-opti
 
 [Incubating] Problems report is available at: file:///Users/alexpimenta/Projects/PerueiroPlatform/PerueiroApp/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 1m 35s
-39 actionable tasks: 15 executed, 24 up-to-date
+BUILD SUCCESSFUL in 1m 46s
+40 actionable tasks: 7 executed, 33 up-to-date
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
 > Task :app:checkDebugAarMetadata UP-TO-DATE
 > Task :app:processDebugNavigationResources UP-TO-DATE
 > Task :app:compileDebugNavigationResources UP-TO-DATE
@@ -116,11 +119,11 @@ BUILD SUCCESSFUL in 1m 35s
 Installing APK 'app-debug.apk' on 'Redmi 8 - 10' for :app:debug
 Installed on 1 device.
 
-BUILD SUCCESSFUL in 9s
-40 actionable tasks: 1 executed, 39 up-to-date
+BUILD SUCCESSFUL in 10s
+41 actionable tasks: 1 executed, 40 up-to-date
 [INFO] Limpando logcat...
 [INFO] Resolvendo PID para 'com.idealinspecao.perueiroapp'...
-[INFO] PID: 20795
-[INFO] Gravando logcat em: ./logs/run-debug-20251014-063909.log
-[INFO] Filtro: --pid 20795
-[INFO] Logcat PID: 36746
+[INFO] PID: 9678
+[INFO] Gravando logcat em: ./logs/run-debug-20251014-193008.log
+[INFO] Filtro: --pid 9678
+[INFO] Logcat PID: 84434
