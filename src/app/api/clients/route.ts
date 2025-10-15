@@ -81,6 +81,10 @@ export async function POST(request: Request) {
     const kinship = sanitizeRequiredString(body.kinship);
     const address = sanitizeRequiredString(body.address);
     const mobile = sanitizeRequiredString(body.mobile);
+    const password =
+      typeof body.password === "string" && body.password.trim().length > 0
+        ? body.password.trim()
+        : undefined;
 
     if (!cpf || !name || !kinship || !address || !mobile) {
       return NextResponse.json(
@@ -117,11 +121,14 @@ export async function POST(request: Request) {
       },
     });
 
-    await ensureGuardianUser({
-      cpf: client.cpf,
-      name: client.name,
-      userId: client.userId,
-    });
+    await ensureGuardianUser(
+      {
+        cpf: client.cpf,
+        name: client.name,
+        userId: client.userId,
+      },
+      { password },
+    );
 
     return NextResponse.json({ client: formatClient(client) }, { status: 201 });
   } catch (error) {

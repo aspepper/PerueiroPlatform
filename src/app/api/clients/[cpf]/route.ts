@@ -62,6 +62,10 @@ export async function PUT(
     const kinship = typeof body.kinship === "string" ? body.kinship.trim() : "";
     const address = typeof body.address === "string" ? body.address.trim() : "";
     const mobile = typeof body.mobile === "string" ? body.mobile.trim() : "";
+    const password =
+      typeof body.password === "string" && body.password.trim().length > 0
+        ? body.password.trim()
+        : undefined;
 
     if (!name || !kinship || !address || !mobile) {
       return NextResponse.json(
@@ -105,11 +109,14 @@ export async function PUT(
       },
     });
 
-    await ensureGuardianUser({
-      cpf: client.cpf,
-      name: client.name,
-      userId: client.userId,
-    });
+    await ensureGuardianUser(
+      {
+        cpf: client.cpf,
+        name: client.name,
+        userId: client.userId,
+      },
+      { password },
+    );
 
     return NextResponse.json({ client: formatClient(client) });
   } catch (error) {
