@@ -17,6 +17,7 @@ type DriverFormState = {
   cnh: string;
   phone: string;
   email: string;
+  password: string;
 };
 
 const EMPTY_FORM_STATE: DriverFormState = {
@@ -25,6 +26,7 @@ const EMPTY_FORM_STATE: DriverFormState = {
   cnh: "",
   phone: "",
   email: "",
+  password: "",
 };
 
 const normalizeOptionalValue = (value: string) => {
@@ -146,6 +148,7 @@ export default function DriversRegistry() {
       cnh: driver.cnh ?? "",
       phone: driver.phone ?? "",
       email: driver.email ?? "",
+      password: "",
     });
     setFormError(null);
     setEditingCpf(driver.cpf);
@@ -206,13 +209,25 @@ export default function DriversRegistry() {
       setFormError(null);
       setError(null);
 
-      const payload = {
+      const trimmedPassword = formState.password.trim();
+      const payload: {
+        name: string;
+        cpf: string;
+        cnh: string | null;
+        phone: string | null;
+        email: string | null;
+        password?: string;
+      } = {
         name: trimmedName,
         cpf: trimmedCpf,
         cnh: normalizeOptionalValue(formState.cnh),
         phone: normalizeOptionalValue(formState.phone),
         email: normalizeOptionalValue(formState.email),
       };
+
+      if (trimmedPassword) {
+        payload.password = trimmedPassword;
+      }
 
       const response = await fetch(
         dialogMode === "create"
@@ -570,6 +585,24 @@ export default function DriversRegistry() {
                     onChange={handleFormChange}
                     className="mt-1 w-full rounded-xl border border-[#CBD5F5] bg-[#F8FAFF] px-4 py-2 text-sm text-[#1F2937] outline-none transition focus:border-[#4338CA] focus:ring-2 focus:ring-[#4338CA]/20"
                     placeholder="exemplo@email.com"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="driver-password" className="block text-sm font-medium text-[#374151]">
+                    {dialogMode === "create" ? "Senha inicial" : "Nova senha"}
+                  </label>
+                  <input
+                    id="driver-password"
+                    name="password"
+                    type="password"
+                    value={formState.password}
+                    onChange={handleFormChange}
+                    className="mt-1 w-full rounded-xl border border-[#CBD5F5] bg-[#F8FAFF] px-4 py-2 text-sm text-[#1F2937] outline-none transition focus:border-[#4338CA] focus:ring-2 focus:ring-[#4338CA]/20"
+                    placeholder={
+                      dialogMode === "create"
+                        ? "Deixe em branco para usar a senha padrão"
+                        : "Deixe em branco para manter a senha atual"
+                    }
                   />
                 </div>
               </div>

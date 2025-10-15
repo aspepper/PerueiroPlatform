@@ -27,6 +27,7 @@ type ClientFormState = {
   landline: string;
   workAddress: string;
   workPhone: string;
+  password: string;
 };
 
 const EMPTY_FORM_STATE: ClientFormState = {
@@ -40,6 +41,7 @@ const EMPTY_FORM_STATE: ClientFormState = {
   landline: "",
   workAddress: "",
   workPhone: "",
+  password: "",
 };
 
 const KINSHIP_OPTIONS = [
@@ -211,6 +213,7 @@ export default function ClientsRegistry() {
       landline: client.landline ?? "",
       workAddress: client.workAddress ?? "",
       workPhone: client.workPhone ?? "",
+      password: "",
     });
     setFormError(null);
     setEditingCpf(client.cpf);
@@ -274,7 +277,20 @@ export default function ClientsRegistry() {
       setFormError(null);
       setError(null);
 
-      const payload = {
+      const trimmedPassword = formState.password.trim();
+      const payload: {
+        cpf: string;
+        name: string;
+        kinship: string;
+        address: string;
+        mobile: string;
+        birthDate: string | null;
+        spouseName: string | null;
+        landline: string | null;
+        workAddress: string | null;
+        workPhone: string | null;
+        password?: string;
+      } = {
         cpf: trimmedCpf,
         name: trimmedName,
         kinship: trimmedKinship,
@@ -286,6 +302,10 @@ export default function ClientsRegistry() {
         workAddress: normalizeOptionalValue(formState.workAddress),
         workPhone: normalizeOptionalValue(formState.workPhone),
       };
+
+      if (trimmedPassword) {
+        payload.password = trimmedPassword;
+      }
 
       const response = await fetch(
         dialogMode === "create"
@@ -731,6 +751,24 @@ export default function ClientsRegistry() {
                     onChange={handleFormChange}
                     className="mt-1 w-full rounded-xl border border-[#CBD5F5] bg-[#F8FAFF] px-4 py-2 text-sm text-[#1F2937] outline-none transition focus:border-[#4338CA] focus:ring-2 focus:ring-[#4338CA]/20"
                     placeholder="Local de trabalho ou referência"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="client-password" className="block text-sm font-medium text-[#374151]">
+                    {dialogMode === "create" ? "Senha inicial" : "Nova senha"}
+                  </label>
+                  <input
+                    id="client-password"
+                    name="password"
+                    type="password"
+                    value={formState.password}
+                    onChange={handleFormChange}
+                    className="mt-1 w-full rounded-xl border border-[#CBD5F5] bg-[#F8FAFF] px-4 py-2 text-sm text-[#1F2937] outline-none transition focus:border-[#4338CA] focus:ring-2 focus:ring-[#4338CA]/20"
+                    placeholder={
+                      dialogMode === "create"
+                        ? "Deixe em branco para usar a senha padrão"
+                        : "Deixe em branco para manter a senha atual"
+                    }
                   />
                 </div>
               </div>
