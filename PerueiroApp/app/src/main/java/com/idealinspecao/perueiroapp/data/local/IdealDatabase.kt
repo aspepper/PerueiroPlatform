@@ -16,9 +16,10 @@ import kotlinx.coroutines.launch
         VanEntity::class,
         DriverEntity::class,
         StudentEntity::class,
-        PaymentEntity::class
+        PaymentEntity::class,
+        SyncStatusEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class IdealDatabase : RoomDatabase() {

@@ -98,6 +98,7 @@ export async function GET(request: Request) {
   ]);
 
   return NextResponse.json({
+    syncedAt: new Date().toISOString(),
     guardians: guardians.map(withNormalizedCpf),
     schools,
     drivers: drivers.map(withNormalizedCpf),
@@ -199,6 +200,7 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
   }
 
   return {
+    syncedAt: new Date().toISOString(),
     guardians: Array.from(guardiansMap.values()).map(({ record }) => record),
     schools: Array.from(schoolsMap.values()),
     drivers,
@@ -299,6 +301,7 @@ async function pullForGuardian(cpf: string, updatedSince: Date | null) {
   }
 
   return {
+    syncedAt: new Date().toISOString(),
     guardians,
     schools: Array.from(schoolsMap.values()),
     drivers: Array.from(driversMap.values()).map(({ record }) => record),

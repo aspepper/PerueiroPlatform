@@ -80,3 +80,9 @@ data class PaymentEntity(
     val discount: Double,
     val status: String
 )
+
+@Entity(tableName = "sync_status")
+data class SyncStatusEntity(
+    @PrimaryKey val id: String,
+    val lastSyncedAt: Long
+)

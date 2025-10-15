@@ -48,6 +48,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const cpf = sanitizeRequiredString(body.cpf);
     const name = sanitizeRequiredString(body.name);
+    const password =
+      typeof body.password === "string" && body.password.trim().length > 0
+        ? body.password.trim()
+        : undefined;
 
     if (!cpf || !name) {
       return NextResponse.json(
@@ -74,12 +78,15 @@ export async function POST(request: Request) {
       },
     });
 
-    await ensureDriverUser({
-      cpf: driver.cpf,
-      name: driver.name,
-      email: driver.email,
-      userId: driver.userId,
-    });
+    await ensureDriverUser(
+      {
+        cpf: driver.cpf,
+        name: driver.name,
+        email: driver.email,
+        userId: driver.userId,
+      },
+      { password },
+    );
 
     return NextResponse.json({ driver: formatDriver(driver) }, { status: 201 });
   } catch (error) {

@@ -22,6 +22,16 @@ android {
         }
 
         buildConfigField("String", "DEFAULT_REMOTE_PASSWORD", "\"perueiro123\"")
+        val defaultApiBaseUrl = "https://icy-water-08508ba0f.2.azurestaticapps.net/api"
+        val resolvedBaseUrl = (project.findProperty("perueiroApiBaseUrl") as? String)
+            ?.takeIf { it.isNotBlank() }
+            ?: defaultApiBaseUrl
+        val escapedBaseUrl = resolvedBaseUrl.replace("\"", "\\\"")
+        buildConfigField("String", "REMOTE_API_BASE_URL", "\"$escapedBaseUrl\"")
+
+        val resolvedApiKey = (project.findProperty("perueiroApiKey") as? String)?.trim().orEmpty()
+        val escapedApiKey = resolvedApiKey.replace("\"", "\\\"")
+        buildConfigField("String", "REMOTE_API_KEY", "\"$escapedApiKey\"")
     }
 
     buildTypes {

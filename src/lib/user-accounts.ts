@@ -21,6 +21,10 @@ function sanitizeEmail(input: unknown, fallback: string) {
   return trimmed;
 }
 
+type EnsureUserOptions = {
+  password?: string;
+};
+
 async function ensureUserAssociation(
   params: {
     existingUserId: string | null;
@@ -30,14 +34,21 @@ async function ensureUserAssociation(
     role: Role;
     linkUser: (userId: string) => Promise<void>;
   },
+  options: EnsureUserOptions = {},
 ) {
+  const desiredPassword =
+    typeof options.password === "string" && options.password.trim().length > 0
+      ? options.password.trim()
+      : undefined;
   const email = sanitizeEmail(params.email, fallbackEmail(params.cpf, params.role));
   const existingUser = params.existingUserId
     ? await prisma.user.findUnique({ where: { id: params.existingUserId } })
     : await prisma.user.findUnique({ where: { email } });
 
   if (!existingUser) {
-    const passwordHash = await resolvePasswordHash(DEFAULT_PASSWORD);
+    const passwordHash = await resolvePasswordHash(
+      desiredPassword ?? DEFAULT_PASSWORD,
+    );
     const created = await prisma.user.create({
       data: {
         email,
@@ -54,6 +65,7 @@ async function ensureUserAssociation(
     email?: string;
     name?: string;
     role?: Role;
+    password?: string;
   } = {};
 
   if (existingUser.email !== email) {
@@ -68,6 +80,16 @@ async function ensureUserAssociation(
     updates.role = params.role;
   }
 
+  if (desiredPassword) {
+    const passwordHash = await resolvePasswordHash(
+      desiredPassword,
+      existingUser.password,
+    );
+    if (passwordHash !== existingUser.password) {
+      updates.password = passwordHash;
+    }
+  }
+
   const user =
     Object.keys(updates).length > 0
       ? await prisma.user.update({ where: { id: existingUser.id }, data: updates })
@@ -80,37 +102,49 @@ async function ensureUserAssociation(
   return user;
 }
 
-export async function ensureDriverUser(driver: {
-  cpf: string;
-  name: string;
-  email: string | null;
-  userId: string | null;
-}) {
-  await ensureUserAssociation({
-    existingUserId: driver.userId,
-    cpf: driver.cpf,
-    name: driver.name,
-    email: driver.email,
-    role: "DRIVER",
-    linkUser: async (userId) => {
-      await prisma.driver.update({ where: { cpf: driver.cpf }, data: { userId } });
+export async function ensureDriverUser(
+  driver: {
+    cpf: string;
+    name: string;
+    email: string | null;
+    userId: string | null;
+  },
+  options: EnsureUserOptions = {},
+) {
+  await ensureUserAssociation(
+    {
+      existingUserId: driver.userId,
+      cpf: driver.cpf,
+      name: driver.name,
+      email: driver.email,
+      role: "DRIVER",
+      linkUser: async (userId) => {
+        await prisma.driver.update({ where: { cpf: driver.cpf }, data: { userId } });
+      },
     },
-  });
+    options,
+  );
 }
 
-export async function ensureGuardianUser(guardian: {
-  cpf: string;
-  name: string;
-  userId: string | null;
-}) {
-  await ensureUserAssociation({
-    existingUserId: guardian.userId,
-    cpf: guardian.cpf,
-    name: guardian.name,
-    email: null,
-    role: "GUARDIAN",
-    linkUser: async (userId) => {
-      await prisma.guardian.update({ where: { cpf: guardian.cpf }, data: { userId } });
+export async function ensureGuardianUser(
+  guardian: {
+    cpf: string;
+    name: string;
+    userId: string | null;
+  },
+  options: EnsureUserOptions = {},
+) {
+  await ensureUserAssociation(
+    {
+      existingUserId: guardian.userId,
+      cpf: guardian.cpf,
+      name: guardian.name,
+      email: null,
+      role: "GUARDIAN",
+      linkUser: async (userId) => {
+        await prisma.guardian.update({ where: { cpf: guardian.cpf }, data: { userId } });
+      },
     },
-  });
+    options,
+  );
 }
