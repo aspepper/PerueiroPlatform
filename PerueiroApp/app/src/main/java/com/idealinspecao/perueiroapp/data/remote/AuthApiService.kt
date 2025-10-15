@@ -17,7 +17,8 @@ import java.util.TimeZone
 
 class AuthApiService(
     private val client: OkHttpClient = OkHttpClient(),
-    private val loginUrl: String = RemoteApiConfig.mobileLoginUrl
+    private val loginUrl: String = RemoteApiConfig.mobileLoginUrl,
+    private val forgotPasswordUrl: String = RemoteApiConfig.forgotPasswordUrl
 ) {
 
     suspend fun login(cpf: String, password: String, role: UserRole): RemoteLoginPayload = withContext(Dispatchers.IO) {
@@ -45,6 +46,28 @@ class AuthApiService(
                 401 -> throw InvalidCredentialsException()
                 404 -> throw NotFoundException()
                 else -> throw IOException("Falha ao autenticar: HTTP ${response.code}")
+            }
+        }
+    }
+
+    suspend fun requestPasswordReset(cpf: String, email: String) = withContext(Dispatchers.IO) {
+        val payload = JSONObject().apply {
+            put("cpf", cpf)
+            put("email", email)
+        }
+
+        val request = Request.Builder()
+            .url(forgotPasswordUrl)
+            .addHeader("Content-Type", RemoteApiConfig.jsonMediaTypeString)
+            .withApiKey()
+            .post(payload.toString().toRequestBody(RemoteApiConfig.jsonMediaType))
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            when (response.code) {
+                200, 202, 204 -> Unit
+                404 -> throw PasswordResetNotFoundException()
+                else -> throw IOException("Falha ao solicitar redefinição de senha: HTTP ${response.code}")
             }
         }
     }
@@ -131,6 +154,7 @@ class AuthApiService(
 
     class InvalidCredentialsException : Exception()
     class NotFoundException : Exception()
+    class PasswordResetNotFoundException : Exception()
 
     companion object {
         private val DATE_PATTERNS = listOf(

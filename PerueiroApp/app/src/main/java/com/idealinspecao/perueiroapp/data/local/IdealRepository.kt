@@ -4,6 +4,7 @@ import android.util.Log
 import com.idealinspecao.perueiroapp.BuildConfig
 import com.idealinspecao.perueiroapp.data.remote.AuthApiService
 import com.idealinspecao.perueiroapp.data.remote.DriverApiService
+import com.idealinspecao.perueiroapp.data.remote.PasswordResetResult
 import com.idealinspecao.perueiroapp.data.remote.SyncApiService
 import com.idealinspecao.perueiroapp.model.UserRole
 import kotlinx.coroutines.Dispatchers
@@ -113,6 +114,25 @@ class IdealRepository(
         } catch (exception: Exception) {
             Log.e(TAG, "Erro ao autenticar responsável ${trimmedCpf}", exception)
             AuthenticationResult.Failure("Não foi possível autenticar o responsável.", exception)
+        }
+    }
+
+    suspend fun requestPasswordReset(cpf: String, email: String): PasswordResetResult {
+        val trimmedCpf = cpf.trim()
+        val trimmedEmail = email.trim()
+
+        if (trimmedCpf.isEmpty() || trimmedEmail.isEmpty()) {
+            return PasswordResetResult.Failure("CPF e e-mail são obrigatórios.")
+        }
+
+        return try {
+            authApiService.requestPasswordReset(trimmedCpf, trimmedEmail)
+            PasswordResetResult.Success
+        } catch (exception: AuthApiService.PasswordResetNotFoundException) {
+            PasswordResetResult.NotFound
+        } catch (exception: Exception) {
+            Log.e(TAG, "Erro ao solicitar redefinição de senha para $trimmedCpf", exception)
+            PasswordResetResult.Failure("Não foi possível solicitar a redefinição de senha. Tente novamente mais tarde.")
         }
     }
 
