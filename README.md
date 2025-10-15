@@ -29,6 +29,15 @@
      NEXTAUTH_SECRET="troque-por-um-valor-seguro"
      ADMIN_EMAIL="admin@perueiros.local"
      ADMIN_PASSWORD="admin123"
+     PERUEIRO_APP_URL="http://localhost:3000"
+     NEXT_PUBLIC_PERUEIROS_LANDING_URL="https://perueiros.com.br"
+
+     # Configurações opcionais de SMTP para envio de e-mails de redefinição de senha
+     SMTP_HOST="smtp.mailtrap.io"
+     SMTP_PORT="2525"
+     SMTP_USER="seu-usuario"
+     SMTP_PASSWORD="sua-senha"
+     SMTP_FROM="no-reply@perueiros.com"
      ```
      > Gere o `NEXTAUTH_SECRET` com `openssl rand -base64 32` ou outra ferramenta segura e reutilize-o como `x-api-key` ao sincronizar com o app Kotlin.
 
