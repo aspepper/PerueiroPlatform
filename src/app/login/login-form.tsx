@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -93,7 +94,9 @@ export default function LoginForm() {
       </button>
       <hr className="my-2 border-[#E2E8F0]" />
       <div className="flex items-center justify-between text-[12px] font-extrabold text-[#0F1730]">
-        <a href="#">Esqueci minha senha</a>
+        <Link href="/forgot-password" className="hover:underline">
+          Esqueci minha senha
+        </Link>
         <a href="#">Precisa de ajuda?</a>
       </div>
     </form>
