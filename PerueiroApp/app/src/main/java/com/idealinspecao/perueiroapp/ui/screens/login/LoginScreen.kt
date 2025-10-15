@@ -64,6 +64,7 @@ fun LoginScreen(
     onParentLogged: (String) -> Unit,
     onChangePasswordRequired: (String) -> Unit,
     onRegisterDriver: () -> Unit,
+    onForgotPassword: () -> Unit,
     login: suspend (String, String, UserRole) -> LoginOutcome
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -167,6 +168,10 @@ fun LoginScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = AccentYellow, contentColor = Color(0xFF1F2F5A))
                     ) {
                         Text("Entrar", fontWeight = FontWeight.SemiBold)
+                    }
+
+                    TextButton(onClick = onForgotPassword, modifier = Modifier.align(Alignment.End)) {
+                        Text("Esqueci minha senha", color = Color(0xFF1F2F5A))
                     }
 
                     if (role == UserRole.DRIVER) {

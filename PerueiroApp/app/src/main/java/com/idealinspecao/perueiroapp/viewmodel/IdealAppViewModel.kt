@@ -11,9 +11,10 @@ import com.idealinspecao.perueiroapp.data.local.IdealRepository
 import com.idealinspecao.perueiroapp.data.local.PaymentEntity
 import com.idealinspecao.perueiroapp.data.local.SchoolEntity
 import com.idealinspecao.perueiroapp.data.local.StudentEntity
-import com.idealinspecao.perueiroapp.data.local.UserSessionDataSource
 import com.idealinspecao.perueiroapp.data.local.UserSession
+import com.idealinspecao.perueiroapp.data.local.UserSessionDataSource
 import com.idealinspecao.perueiroapp.data.local.VanEntity
+import com.idealinspecao.perueiroapp.data.remote.PasswordResetResult
 import com.idealinspecao.perueiroapp.model.UserRole
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -107,6 +108,10 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
                 }
             }
         }
+    }
+
+    suspend fun requestPasswordReset(cpf: String, email: String): PasswordResetResult {
+        return repository.requestPasswordReset(cpf, email)
     }
 
     fun logout() {

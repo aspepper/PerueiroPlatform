@@ -21,6 +21,7 @@ fun NavGraph() {
                 onParentLogged = { navController.navigate("parent_dashboard") },
                 onChangePasswordRequired = { navController.navigate("change_password") },
                 onRegisterDriver = { navController.navigate("driver_registration") },
+                onForgotPassword = { },
                 login = { _, _, _ -> LoginOutcome.Error("Funcionalidade não disponível") }
             )
         }
