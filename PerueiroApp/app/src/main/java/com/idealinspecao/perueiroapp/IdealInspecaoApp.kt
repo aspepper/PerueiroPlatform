@@ -16,6 +16,7 @@ import com.idealinspecao.perueiroapp.navigation.AppDestination
 import com.idealinspecao.perueiroapp.ui.screens.dashboard.DriverDashboardScreen
 import com.idealinspecao.perueiroapp.ui.screens.dashboard.ParentDashboardScreen
 import com.idealinspecao.perueiroapp.ui.screens.login.ChangePasswordScreen
+import com.idealinspecao.perueiroapp.ui.screens.login.ForgotPasswordScreen
 import com.idealinspecao.perueiroapp.ui.screens.login.LoginScreen
 import com.idealinspecao.perueiroapp.ui.screens.DriverRegistrationSuccessScreen
 import com.idealinspecao.perueiroapp.ui.screens.management.DriverFormScreen
@@ -87,7 +88,17 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                 onRegisterDriver = {
                     navController.navigate(AppDestination.DriverRegistration.route)
                 },
+                onForgotPassword = {
+                    navController.navigate(AppDestination.ForgotPassword.route)
+                },
                 login = { cpf, password, role -> viewModel.login(cpf, password, role) }
+            )
+        }
+
+        composable(AppDestination.ForgotPassword.route) {
+            ForgotPasswordScreen(
+                onBack = { navController.popBackStack() },
+                requestPasswordReset = { cpf, email -> viewModel.requestPasswordReset(cpf, email) }
             )
         }
 

@@ -3,6 +3,7 @@ package com.idealinspecao.perueiroapp.navigation
 sealed class AppDestination(val route: String) {
     data object Splash : AppDestination("splash")
     data object Login : AppDestination("login")
+    data object ForgotPassword : AppDestination("forgotPassword")
     data object ChangePassword : AppDestination("changePassword/{cpf}") {
         fun buildRoute(cpf: String) = "changePassword/$cpf"
     }

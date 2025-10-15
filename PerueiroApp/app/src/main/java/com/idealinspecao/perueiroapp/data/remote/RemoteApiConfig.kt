@@ -14,6 +14,7 @@ object RemoteApiConfig {
     val syncPullUrl: String = "$baseUrl/sync/pull"
     val syncPushUrl: String = "$baseUrl/sync/push"
     val mobileLoginUrl: String = "$baseUrl/mobile/login"
+    val forgotPasswordUrl: String = "$baseUrl/mobile/forgot-password"
 
     const val jsonMediaTypeString: String = DEFAULT_JSON_MEDIA_TYPE
     val jsonMediaType = DEFAULT_JSON_MEDIA_TYPE.toMediaType()
