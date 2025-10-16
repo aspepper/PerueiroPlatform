@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560">
+  <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+    <stop offset="0" stop-color="#e2f3ff"/><stop offset="1" stop-color="#f6fbff"/>
+  </linearGradient></defs>
+  <rect width="900" height="560" fill="url(#g)"/>
+  <g opacity="0.2">
+    <path d="M0 300 Q 180 260 300 320 T 600 300 T 900 330 L 900 560 L 0 560 Z" fill="#7dd3fc"/>
+    <path d="M0 340 Q 160 300 300 360 T 600 340 T 900 370 L 900 560 L 0 560 Z" fill="#93c5fd"/>
+  </g>
+  <g fill="none" stroke="#94a3b8" stroke-width="2" opacity="0.5">
+    <path d="M80 120 L 820 120 M80 240 L 820 240 M80 360 L 820 360"/>
+    <path d="M150 60 L 150 480 M350 60 L 350 480 M550 60 L 550 480 M750 60 L 750 480"/>
+  </g>
+  <g><circle cx="180" cy="150" r="7" fill="#10b981"/>
+     <circle cx="460" cy="210" r="7" fill="#f97316"/>
+     <circle cx="690" cy="330" r="7" fill="#ef4444"/>
+     <circle cx="320" cy="420" r="7" fill="#0ea5e9"/></g>
+  <g>
+    <rect x="520" y="60" rx="10" ry="10" width="270" height="140" fill="#ffffff" stroke="#e5e7eb"/>
+    <text x="535" y="94" font-size="20" fill="#0f172a" font-family="Inter, ui-sans-serif, system-ui">Van Escolar - João</text>
+    <text x="535" y="124" font-size="14" fill="#475569" font-family="Inter, ui-sans-serif, system-ui">Rota Jardim das Flores → Colégio Central</text>
+    <text x="535" y="150" font-size="13" fill="#0ea5e9" font-family="Inter, ui-sans-serif, system-ui">Localização em tempo real</text>
+    <circle cx="760" cy="130" r="14" fill="#22c55e"/>
+    <text x="752" y="136" font-size="12" fill="#ffffff" font-family="Inter, ui-sans-serif, system-ui">●</text>
+  </g>
+</svg>
