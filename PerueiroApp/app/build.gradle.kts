@@ -23,13 +23,22 @@ android {
 
         buildConfigField("String", "DEFAULT_REMOTE_PASSWORD", "\"senha123\"")
         val defaultApiBaseUrl = "https://icy-water-08508ba0f.2.azurestaticapps.net/api"
-        val resolvedBaseUrl = (project.findProperty("perueiroApiBaseUrl") as? String)
-            ?.takeIf { it.isNotBlank() }
-            ?: defaultApiBaseUrl
+
+        fun candidate(value: String?): String? = value?.trim()?.takeIf { it.isNotEmpty() }
+
+        val resolvedBaseUrl =
+            candidate(project.findProperty("perueiroApiBaseUrl") as? String)
+                ?: candidate(System.getenv("PERUEIRO_API_BASE_URL"))
+                ?: candidate(System.getenv("NEXTAUTH_URL"))
+                ?: defaultApiBaseUrl
         val escapedBaseUrl = resolvedBaseUrl.replace("\"", "\\\"")
         buildConfigField("String", "REMOTE_API_BASE_URL", "\"$escapedBaseUrl\"")
 
-        val resolvedApiKey = (project.findProperty("perueiroApiKey") as? String)?.trim().orEmpty()
+        val resolvedApiKey =
+            candidate(project.findProperty("perueiroApiKey") as? String)
+                ?: candidate(System.getenv("PERUEIRO_API_KEY"))
+                ?: candidate(System.getenv("NEXTAUTH_SECRET"))
+                ?: ""
         val escapedApiKey = resolvedApiKey.replace("\"", "\\\"")
         buildConfigField("String", "REMOTE_API_KEY", "\"$escapedApiKey\"")
     }

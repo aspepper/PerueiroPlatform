@@ -2,41 +2,20 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { ensureDriverUser, ensureGuardianUser } from "@/lib/user-accounts";
-import { normalizeCpf, normalizeCpfOrKeep } from "@/lib/cpf";
+import { normalizeCpfOrKeep } from "@/lib/cpf";
 import { isBcryptHash, verifyPassword } from "@/lib/password";
 import { logTelemetryEvent } from "@/lib/telemetry";
 import { maskCpf } from "@/lib/sanitizers";
+import {
+  cpfSearchConditions,
+  requireMobileApiKey,
+  sanitizeRole,
+} from "../shared";
 
 const DEFAULT_PASSWORD = process.env.DEFAULT_USER_PASSWORD || "senha123";
 
-function requireApiKey(request: Request) {
-  const key = request.headers.get("x-api-key");
-  if (!key || key !== process.env.NEXTAUTH_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  return null;
-}
-
-function cpfSearchConditions(rawCpf: string) {
-  const trimmed = rawCpf.trim();
-  if (!trimmed) return [] as { cpf: string }[];
-
-  const normalized = normalizeCpf(trimmed);
-  const conditions = [{ cpf: trimmed }];
-  if (normalized !== trimmed) {
-    conditions.push({ cpf: normalized });
-  }
-  return conditions;
-}
-
-function sanitizeRole(role: unknown): "DRIVER" | "GUARDIAN" | null {
-  if (typeof role !== "string") return null;
-  const upper = role.trim().toUpperCase();
-  return upper === "DRIVER" || upper === "GUARDIAN" ? upper : null;
-}
-
 export async function POST(request: Request) {
-  const unauthorized = requireApiKey(request);
+  const unauthorized = requireMobileApiKey(request, "login");
   if (unauthorized) return unauthorized;
 
   let body: any;
