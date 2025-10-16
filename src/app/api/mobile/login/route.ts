@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ensureDriverUser, ensureGuardianUser } from "@/lib/user-accounts";
 import { normalizeCpf, normalizeCpfOrKeep } from "@/lib/cpf";
-import { verifyPassword } from "@/lib/password";
+import { isBcryptHash, verifyPassword } from "@/lib/password";
+import { logTelemetryEvent } from "@/lib/telemetry";
+import { maskCpf } from "@/lib/sanitizers";
 
 const DEFAULT_PASSWORD = process.env.DEFAULT_USER_PASSWORD || "senha123";
 
@@ -50,8 +52,18 @@ export async function POST(request: Request) {
   const cpfInput = typeof body.cpf === "string" ? body.cpf.trim() : "";
   const password = typeof body.password === "string" ? body.password : "";
   const role = sanitizeRole(body.role);
+  const maskedCpf = maskCpf(cpfInput);
+  const roleStatus = role ? "valid" : body.role ? "invalid" : "missing";
 
   if (!cpfInput || !password || !role) {
+    logTelemetryEvent("MobileLoginFailure", {
+      cpfMasked: maskedCpf,
+      role: role ?? "UNKNOWN",
+      reason: "missing_fields",
+      hasCpf: Boolean(cpfInput),
+      hasPassword: Boolean(password),
+      roleStatus,
+    });
     return NextResponse.json(
       { error: "CPF, senha e perfil são obrigatórios." },
       { status: 400 },
@@ -59,15 +71,29 @@ export async function POST(request: Request) {
   }
 
   if (role === "DRIVER") {
-    return authenticateDriver(cpfInput, password);
+    return authenticateDriver(cpfInput, password, maskedCpf);
   }
 
-  return authenticateGuardian(cpfInput, password);
+  return authenticateGuardian(cpfInput, password, maskedCpf);
 }
 
-async function authenticateDriver(cpfInput: string, password: string) {
+function describePasswordHash(hash?: string | null) {
+  if (!hash) return "missing";
+  return isBcryptHash(hash) ? "bcrypt" : "legacy";
+}
+
+async function authenticateDriver(
+  cpfInput: string,
+  password: string,
+  maskedCpf: string,
+) {
   const conditions = cpfSearchConditions(cpfInput);
   if (conditions.length === 0) {
+    logTelemetryEvent("MobileLoginFailure", {
+      cpfMasked: maskedCpf,
+      role: "DRIVER",
+      reason: "cpf_not_searchable",
+    });
     return NextResponse.json({ error: "Motorista não encontrado." }, { status: 404 });
   }
 
@@ -77,11 +103,24 @@ async function authenticateDriver(cpfInput: string, password: string) {
   });
 
   if (!driver) {
+    logTelemetryEvent("MobileLoginFailure", {
+      cpfMasked: maskedCpf,
+      role: "DRIVER",
+      reason: "driver_not_found",
+    });
     return NextResponse.json({ error: "Motorista não encontrado." }, { status: 404 });
   }
 
   const matches = await verifyPassword(password, driver.user?.password, DEFAULT_PASSWORD);
   if (!matches) {
+    logTelemetryEvent("MobileLoginFailure", {
+      cpfMasked: maskedCpf,
+      role: "DRIVER",
+      reason: "invalid_password",
+      hasUserAccount: Boolean(driver.userId),
+      passwordHashType: describePasswordHash(driver.user?.password),
+      hasEmail: Boolean(driver.email),
+    });
     return NextResponse.json({ error: "Senha inválida." }, { status: 401 });
   }
 
@@ -94,6 +133,15 @@ async function authenticateDriver(cpfInput: string, password: string) {
     },
     { password },
   );
+
+  logTelemetryEvent("MobileLoginSuccess", {
+    cpfMasked: maskedCpf,
+    role: "DRIVER",
+    hasUserAccount: Boolean(driver.userId),
+    passwordHashType: describePasswordHash(driver.user?.password),
+    usedDefaultPassword: password === DEFAULT_PASSWORD,
+    hasEmail: Boolean(driver.email),
+  });
 
   return NextResponse.json({
     role: "DRIVER",
@@ -109,9 +157,18 @@ async function authenticateDriver(cpfInput: string, password: string) {
   });
 }
 
-async function authenticateGuardian(cpfInput: string, password: string) {
+async function authenticateGuardian(
+  cpfInput: string,
+  password: string,
+  maskedCpf: string,
+) {
   const conditions = cpfSearchConditions(cpfInput);
   if (conditions.length === 0) {
+    logTelemetryEvent("MobileLoginFailure", {
+      cpfMasked: maskedCpf,
+      role: "GUARDIAN",
+      reason: "cpf_not_searchable",
+    });
     return NextResponse.json(
       { error: "Responsável não encontrado." },
       { status: 404 },
@@ -124,6 +181,11 @@ async function authenticateGuardian(cpfInput: string, password: string) {
   });
 
   if (!guardian) {
+    logTelemetryEvent("MobileLoginFailure", {
+      cpfMasked: maskedCpf,
+      role: "GUARDIAN",
+      reason: "guardian_not_found",
+    });
     return NextResponse.json(
       { error: "Responsável não encontrado." },
       { status: 404 },
@@ -132,6 +194,13 @@ async function authenticateGuardian(cpfInput: string, password: string) {
 
   const matches = await verifyPassword(password, guardian.user?.password, DEFAULT_PASSWORD);
   if (!matches) {
+    logTelemetryEvent("MobileLoginFailure", {
+      cpfMasked: maskedCpf,
+      role: "GUARDIAN",
+      reason: "invalid_password",
+      hasUserAccount: Boolean(guardian.userId),
+      passwordHashType: describePasswordHash(guardian.user?.password),
+    });
     return NextResponse.json({ error: "Senha inválida." }, { status: 401 });
   }
 
@@ -143,6 +212,14 @@ async function authenticateGuardian(cpfInput: string, password: string) {
     },
     { password },
   );
+
+  logTelemetryEvent("MobileLoginSuccess", {
+    cpfMasked: maskedCpf,
+    role: "GUARDIAN",
+    hasUserAccount: Boolean(guardian.userId),
+    passwordHashType: describePasswordHash(guardian.user?.password),
+    usedDefaultPassword: password === DEFAULT_PASSWORD,
+  });
 
   return NextResponse.json({
     role: "GUARDIAN",

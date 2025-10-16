@@ -1,5 +1,8 @@
 import nodemailer, { Transporter } from "nodemailer";
 
+import { logTelemetryEvent } from "./telemetry";
+import { maskEmail } from "./sanitizers";
+
 const SMTP_HOST = process.env.SMTP_HOST;
 const SMTP_PORT = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
 const SMTP_USER = process.env.SMTP_USER;
@@ -56,17 +59,48 @@ export async function sendPasswordResetEmail(to: string, token: string) {
   `;
 
   const transporter = getTransporter();
+  const maskedRecipient = maskEmail(to);
+
+  logTelemetryEvent("PasswordResetEmailPrepared", {
+    emailMasked: maskedRecipient,
+    hasTransporter: Boolean(transporter),
+  });
 
   if (!transporter) {
     console.info("[mailer] Envio de e-mail simulado:", { to, subject, text });
+    logTelemetryEvent("PasswordResetEmailSimulated", {
+      emailMasked: maskedRecipient,
+    });
     return;
   }
 
-  await transporter.sendMail({
-    to,
-    from: SMTP_FROM,
-    subject,
-    text,
-    html,
-  });
+  const transportOptions = transporter.options as {
+    host?: string;
+    port?: number;
+    auth?: unknown;
+  };
+
+  try {
+    await transporter.sendMail({
+      to,
+      from: SMTP_FROM,
+      subject,
+      text,
+      html,
+    });
+    logTelemetryEvent("PasswordResetEmailSent", {
+      emailMasked: maskedRecipient,
+      smtpHost: transportOptions.host,
+      smtpPort: transportOptions.port,
+      hasAuth: Boolean(transportOptions.auth),
+    });
+  } catch (error) {
+    logTelemetryEvent("PasswordResetEmailFailed", {
+      emailMasked: maskedRecipient,
+      smtpHost: transportOptions.host,
+      smtpPort: transportOptions.port,
+      errorName: error instanceof Error ? error.name : typeof error,
+    });
+    throw error;
+  }
 }

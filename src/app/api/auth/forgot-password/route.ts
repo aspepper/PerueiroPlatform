@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/mailer";
+import { logTelemetryEvent } from "@/lib/telemetry";
+import { maskEmail } from "@/lib/sanitizers";
+import { logApiError } from "@/lib/error";
 import { z } from "zod";
 import crypto from "crypto";
 
@@ -13,6 +16,9 @@ export async function POST(request: Request) {
 
   const parsed = forgotPasswordSchema.safeParse(json);
   if (!parsed.success) {
+    logTelemetryEvent("ForgotPasswordFailure", {
+      reason: "invalid_payload",
+    });
     return NextResponse.json(
       { message: "Dados inválidos" },
       { status: 400 },
@@ -20,10 +26,19 @@ export async function POST(request: Request) {
   }
 
   const { email } = parsed.data;
+  const maskedEmail = maskEmail(email);
+
+  logTelemetryEvent("ForgotPasswordRequested", {
+    emailMasked: maskedEmail,
+  });
 
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (user) {
+    logTelemetryEvent("ForgotPasswordUserLocated", {
+      emailMasked: maskedEmail,
+      userId: user.id,
+    });
     await prisma.passwordResetToken.deleteMany({
       where: { userId: user.id },
     });
@@ -41,9 +56,20 @@ export async function POST(request: Request) {
 
     try {
       await sendPasswordResetEmail(email, resetToken.token);
+      logTelemetryEvent("ForgotPasswordEmailQueued", {
+        emailMasked: maskedEmail,
+        tokenExpiresAt: resetToken.expiresAt,
+      });
     } catch (error) {
-      console.error("Erro ao enviar o e-mail de redefinição de senha", error);
+      await logApiError(request, error, "forgot-password:send-email", {
+        emailMasked: maskedEmail,
+        userId: user.id,
+      });
     }
+  } else {
+    logTelemetryEvent("ForgotPasswordUserNotFound", {
+      emailMasked: maskedEmail,
+    });
   }
 
   return NextResponse.json({ message: "Se o e-mail existir, enviaremos instruções para redefinir a senha." });
