@@ -1,5 +1,4 @@
 [INFO] Iniciando build (variant=debug, task=:app:assembleDebug)
-Starting a Gradle Daemon (subsequent builds will be faster)
 > Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
@@ -49,7 +48,7 @@ Starting a Gradle Daemon (subsequent builds will be faster)
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug UP-TO-DATE
 
-BUILD SUCCESSFUL in 1m 46s
+BUILD SUCCESSFUL in 1m 35s
 40 actionable tasks: 40 up-to-date
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :app:preBuild UP-TO-DATE
@@ -105,7 +104,7 @@ BUILD SUCCESSFUL in 11s
 41 actionable tasks: 1 executed, 40 up-to-date
 [INFO] Limpando logcat...
 [INFO] Resolvendo PID para 'com.idealinspecao.perueiroapp'...
-[INFO] PID: 14844
-[INFO] Gravando logcat em: ./logs/run-debug-20251016-122053.log
-[INFO] Filtro: --pid 14844
-[INFO] Logcat PID: 50821
+[INFO] PID: 14436
+[INFO] Gravando logcat em: ./logs/run-debug-20251016-170318.log
+[INFO] Filtro: --pid 14436
+[INFO] Logcat PID: 76780
