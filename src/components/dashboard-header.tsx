@@ -92,15 +92,6 @@ export default function DashboardHeader() {
               </span>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-3 text-sm">
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white/15 px-5 py-3 font-semibold text-white transition hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg" aria-hidden>
-                  ↻
-                </span>
-                Sincronizar agora
-              </button>
               <LogoutButton />
             </div>
           </div>

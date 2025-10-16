@@ -307,9 +307,6 @@ export default async function Page() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <button className="h-10 rounded-[12px] bg-[#0F1730] px-4 text-[14px] font-semibold text-white hover:brightness-110">
-                Sincronizar agora
-              </button>
               <LogoutButton variant="solid" />
             </div>
           </div>
