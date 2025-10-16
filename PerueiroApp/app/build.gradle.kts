@@ -26,10 +26,37 @@ android {
 
         fun candidate(value: String?): String? = value?.trim()?.takeIf { it.isNotEmpty() }
 
+        fun dotenvValue(key: String): String? {
+            return runCatching {
+                val envFiles = listOf(
+                    project.rootDir.resolve("../.env"),
+                    project.rootDir.resolve("../.env.example")
+                )
+
+                val envFile = envFiles.firstOrNull { it.exists() }
+                if (envFile == null) {
+                    return@runCatching null
+                }
+
+                envFile.readLines()
+                    .asSequence()
+                    .map { it.trim() }
+                    .firstOrNull { line ->
+                        !line.startsWith("#") && line.contains('=') && line.substringBefore('=') == key
+                    }
+                    ?.substringAfter('=')
+                    ?.trim()
+                    ?.removeSurrounding("\"", "\"")
+                    ?.takeIf { it.isNotEmpty() }
+            }.getOrNull()
+        }
+
         val resolvedBaseUrl =
             candidate(project.findProperty("perueiroApiBaseUrl") as? String)
                 ?: candidate(System.getenv("PERUEIRO_API_BASE_URL"))
                 ?: candidate(System.getenv("NEXTAUTH_URL"))
+                ?: candidate(dotenvValue("PERUEIRO_API_BASE_URL"))
+                ?: candidate(dotenvValue("NEXTAUTH_URL"))
                 ?: defaultApiBaseUrl
         val escapedBaseUrl = resolvedBaseUrl.replace("\"", "\\\"")
         buildConfigField("String", "REMOTE_API_BASE_URL", "\"$escapedBaseUrl\"")
@@ -38,6 +65,8 @@ android {
             candidate(project.findProperty("perueiroApiKey") as? String)
                 ?: candidate(System.getenv("PERUEIRO_API_KEY"))
                 ?: candidate(System.getenv("NEXTAUTH_SECRET"))
+                ?: candidate(dotenvValue("PERUEIRO_API_KEY"))
+                ?: candidate(dotenvValue("NEXTAUTH_SECRET"))
                 ?: ""
         val escapedApiKey = resolvedApiKey.replace("\"", "\\\"")
         buildConfigField("String", "REMOTE_API_KEY", "\"$escapedApiKey\"")

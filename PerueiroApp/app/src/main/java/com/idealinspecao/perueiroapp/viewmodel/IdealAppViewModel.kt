@@ -82,7 +82,7 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
                         LoginOutcome.Driver(driver)
                     }
 
-                    AuthenticationResult.NotFound -> LoginOutcome.Error("Motorista não encontrado")
+                    AuthenticationResult.NotFound -> LoginOutcome.Error("Usuário não cadastrado.")
                     AuthenticationResult.InvalidCredentials -> LoginOutcome.Error("Senha inválida")
                     is AuthenticationResult.Failure -> LoginOutcome.Error(result.message)
                 }
@@ -102,7 +102,7 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
                         }
                     }
 
-                    AuthenticationResult.NotFound -> LoginOutcome.Error("Responsável não encontrado")
+                    AuthenticationResult.NotFound -> LoginOutcome.Error("Usuário não cadastrado.")
                     AuthenticationResult.InvalidCredentials -> LoginOutcome.Error("Senha inválida")
                     is AuthenticationResult.Failure -> LoginOutcome.Error(result.message)
                 }
