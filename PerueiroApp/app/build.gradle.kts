@@ -1,3 +1,5 @@
+import org.gradle.api.GradleException
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -68,6 +70,12 @@ android {
                 ?: candidate(dotenvValue("PERUEIRO_API_KEY"))
                 ?: candidate(dotenvValue("NEXTAUTH_SECRET"))
                 ?: ""
+        if (resolvedApiKey.isEmpty()) {
+            throw GradleException(
+                "REMOTE_API_KEY não encontrado. Defina perueiroApiKey, PERUEIRO_API_KEY ou NEXTAUTH_SECRET " +
+                    "antes do build, ou mantenha um arquivo .env/.env.example na raiz do monorepo com NEXTAUTH_SECRET="
+            )
+        }
         val escapedApiKey = resolvedApiKey.replace("\"", "\\\"")
         buildConfigField("String", "REMOTE_API_KEY", "\"$escapedApiKey\"")
     }
