@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import LogoPerueiro from "@/components/logo-perueiro";
 import LoginForm from "./login-form";
 export const metadata = { title: "Login • Perueiro Admin" };
@@ -40,9 +42,28 @@ export default function Page() {
         </section>
 
         <section className="rounded-[24px] border border-[#E5E7EB] bg-white p-8 shadow-[0_8px_24px_rgba(11,16,32,0.12)]">
-          <h2 className="mb-1 text-[32px] font-extrabold text-[#0F1730]">Bem-vindo de volta</h2>
-          <p className="mb-6 text-[16px] text-[#6B7280]">Acesso reservado aos administradores.</p>
-
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-[32px] font-extrabold text-[#0F1730]">Bem-vindo de volta</h2>
+              <p className="text-[16px] text-[#6B7280]">Acesso reservado aos administradores.</p>
+            </div>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1 text-[14px] font-semibold text-[#0F1730] transition hover:text-[#0B1120] hover:underline"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Voltar para o site
+            </Link>
+          </div>
           <LoginForm />
         </section>
       </div>
