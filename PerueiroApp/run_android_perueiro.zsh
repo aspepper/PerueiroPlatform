@@ -48,6 +48,9 @@ Opções:
 EOF
 }
 
+export NEXTAUTH_URL="https://icy-water-08508ba0f.2.azurestaticapps.net/"
+export NEXTAUTH_SECRET="7U1KKRvRVe1mBW4Old0Q"
+
 INSTALL_ONLY=0
 BUILD_ONLY=0
 NO_RUN=0
