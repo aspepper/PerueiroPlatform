@@ -317,7 +317,7 @@ export default async function RootPage() {
           <div>
             <div className="flex items-center gap-3">
               <Image
-                src="/landing/logo.png"
+                src="/landing/logo.svg"
                 alt="Perueiros"
                 width={32}
                 height={32}

@@ -19,7 +19,7 @@ function getVariantClasses(variant: LogoutButtonVariant) {
 
 export default function LogoutButton({ variant = "glass", className }: LogoutButtonProps) {
   const handleLogout = () => {
-    void signOut({ callbackUrl: "/login" });
+    void signOut({ callbackUrl: "/" });
   };
 
   const variantClasses = getVariantClasses(variant);
