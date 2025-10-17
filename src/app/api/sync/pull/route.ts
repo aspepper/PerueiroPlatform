@@ -59,6 +59,13 @@ function withNormalizedCpfReferences<
   return { ...record, guardianCpf, driverCpf };
 }
 
+const studentInclude = {
+  guardian: true,
+  school: true,
+  van: true,
+  payments: true,
+} as const;
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const key = url.searchParams.get("apiKey");
@@ -107,12 +114,7 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
     include: {
       vans: true,
       students: {
-        include: {
-          guardian: true,
-          school: true,
-          van: true,
-          payments: true,
-        },
+        include: studentInclude,
       },
     },
   });
@@ -126,7 +128,23 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
     userId: driver.userId,
   });
 
-  const { vans: driverVans, students: driverStudents, ...driverRecord } = driver;
+  const { vans: driverVans, students: directStudents, ...driverRecord } = driver;
+
+  const additionalStudents = driverVans.length
+    ? await prisma.student.findMany({
+        where: { vanId: { in: driverVans.map((van) => van.id) } },
+        include: studentInclude,
+      })
+    : [];
+
+  const studentMap = new Map<string, (typeof directStudents)[number]>();
+  for (const student of directStudents) {
+    studentMap.set(student.id.toString(), student);
+  }
+  for (const student of additionalStudents) {
+    studentMap.set(student.id.toString(), student as (typeof directStudents)[number]);
+  }
+  const driverStudents = Array.from(studentMap.values());
 
   const drivers = shouldInclude(driver.updatedAt, updatedSince)
     ? [withNormalizedCpf(driverRecord)]
