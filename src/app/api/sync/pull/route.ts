@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ensureDriverUser, ensureGuardianUser } from "@/lib/user-accounts";
 import {
-  normalizeCpf,
+  cpfSearchValues,
   normalizeCpfOrKeep,
   normalizeOptionalCpf,
 } from "@/lib/cpf";
@@ -37,17 +37,7 @@ function shouldInclude(updatedAt: Date, updatedSince: Date | null) {
 type CpfCondition = { cpf: string };
 
 function cpfSearchConditions(rawCpf: string): CpfCondition[] {
-  const trimmed = rawCpf.trim();
-  if (!trimmed) return [];
-
-  const normalized = normalizeCpf(trimmed);
-  const conditions: CpfCondition[] = [{ cpf: trimmed }];
-
-  if (normalized && normalized !== trimmed) {
-    conditions.push({ cpf: normalized });
-  }
-
-  return conditions;
+  return cpfSearchValues(rawCpf).map((cpf) => ({ cpf }));
 }
 
 function withNormalizedCpf<T extends { cpf: string }>(record: T): T {

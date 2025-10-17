@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { normalizeCpf } from "@/lib/cpf";
+import { cpfSearchValues } from "@/lib/cpf";
 import { logTelemetryEvent } from "@/lib/telemetry";
 
 export type MobileRole = "DRIVER" | "GUARDIAN";
@@ -19,15 +19,7 @@ export function requireMobileApiKey(request: Request, context: string) {
 }
 
 export function cpfSearchConditions(rawCpf: string) {
-  const trimmed = rawCpf.trim();
-  if (!trimmed) return [] as { cpf: string }[];
-
-  const normalized = normalizeCpf(trimmed);
-  const conditions = [{ cpf: trimmed }];
-  if (normalized !== trimmed) {
-    conditions.push({ cpf: normalized });
-  }
-  return conditions;
+  return cpfSearchValues(rawCpf).map((cpf) => ({ cpf }));
 }
 
 export function sanitizeRole(role: unknown): MobileRole | null {
