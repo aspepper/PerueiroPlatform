@@ -48,8 +48,10 @@ Opções:
 EOF
 }
 
-export NEXTAUTH_URL="https://icy-water-08508ba0f.2.azurestaticapps.net/"
+export NEXTAUTH_URL="https://icy-water-08508ba0f.2.azurestaticapps.net/api"
 export NEXTAUTH_SECRET="7U1KKRvRVe1mBW4Old0Q"
+export PERUEIRO_API_BASE_URL="https://icy-water-08508ba0f.2.azurestaticapps.net/api"
+export PERUEIRO_API_KEY="7U1KKRvRVe1mBW4Old0Q"
 
 INSTALL_ONLY=0
 BUILD_ONLY=0
