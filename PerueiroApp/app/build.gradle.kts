@@ -1,8 +1,17 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.kapt")
     id("org.jetbrains.kotlin.plugin.compose")
+}
+
+val keystoreProgression = Properties().apply {
+    val file = project.rootProject.file("keystore.properties")
+    if (file.exists()) {
+        load(file.inputStream())
+    }
 }
 
 android {
@@ -70,17 +79,40 @@ android {
                 ?: ""
         val escapedApiKey = resolvedApiKey.replace("\"", "\\\"")
         buildConfigField("String", "REMOTE_API_KEY", "\"$escapedApiKey\"")
+
+        signingConfigs {
+            val storeFilePath = keystoreProgression.getProperty("storeFilePath")
+            if (storeFilePath != null) {
+                create("release") {
+                    storeFile = project.file(storeFilePath)
+                    storePassword = keystoreProgression.getProperty("storePassword")
+                    keyAlias = keystoreProgression.getProperty("keyAlias")
+                    keyPassword = keystoreProgression.getProperty("keyPassword")
+                }
+            }
+        }
     }
 
     buildTypes {
-        release {
+        debug {
             isMinifyEnabled = false
+            isDebuggable = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+        release {
+            isMinifyEnabled = false
+            isDebuggable = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfigs.findByName("release")?.let { signingConfig = it }
+        }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -121,7 +153,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.okhttp)
     kapt(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
