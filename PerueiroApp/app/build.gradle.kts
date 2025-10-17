@@ -79,16 +79,19 @@ android {
                 ?: ""
         val escapedApiKey = resolvedApiKey.replace("\"", "\\\"")
         buildConfigField("String", "REMOTE_API_KEY", "\"$escapedApiKey\"")
+    }
 
-        signingConfigs {
-            val storeFilePath = keystoreProgression.getProperty("storeFilePath")
-            if (storeFilePath != null) {
-                create("release") {
-                    storeFile = project.file(storeFilePath)
-                    storePassword = keystoreProgression.getProperty("storePassword")
-                    keyAlias = keystoreProgression.getProperty("keyAlias")
-                    keyPassword = keystoreProgression.getProperty("keyPassword")
-                }
+    signingConfigs {
+        val storeFilePath =
+            keystoreProgression.getProperty("storeFile")
+                ?: keystoreProgression.getProperty("storeFilePath")
+
+        if (!storeFilePath.isNullOrBlank()) {
+            create("release") {
+                storeFile = project.file(storeFilePath)
+                storePassword = keystoreProgression.getProperty("storePassword")
+                keyAlias = keystoreProgression.getProperty("keyAlias")
+                keyPassword = keystoreProgression.getProperty("keyPassword")
             }
         }
     }
