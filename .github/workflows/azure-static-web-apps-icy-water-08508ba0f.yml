@@ -36,7 +36,30 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      # Nota: este workflow trata apenas do app web Next.js; o app_mobile é construído em pipeline separado.
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 35
+          build-tools: '35.0.0'
+
+      - name: Build Android release APK
+        working-directory: PerueiroApp
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon clean assembleRelease
+
+      - name: Include Android release APK in public assets
+        run: |
+          mkdir -p public/downloads
+          cp PerueiroApp/app/build/outputs/apk/release/app-release.apk public/downloads/perueiros-app-release.apk
+
+      # Build do app web Next.js (após gerar o APK em modo release).
       - name: Install dependencies
         run: npm ci
 
