@@ -1,0 +1,16 @@
+﻿2025-10-17T00:43:02.5802929Z ##[group]Run mkdir -p public/downloads
+2025-10-17T00:43:02.5803519Z [36;1mmkdir -p public/downloads[0m
+2025-10-17T00:43:02.5804159Z [36;1mcp PerueiroApp/app/build/outputs/apk/release/app-release.apk public/downloads/perueiros-app-release.apk[0m
+2025-10-17T00:43:02.5882682Z shell: /usr/bin/bash -e {0}
+2025-10-17T00:43:02.5883019Z env:
+2025-10-17T00:43:02.5884115Z   DATABASE_URL: ***
+2025-10-17T00:43:02.5884555Z   NEXTAUTH_URL: ***
+2025-10-17T00:43:02.5884950Z   NEXTAUTH_SECRET: ***
+2025-10-17T00:43:02.5885302Z   AUTH_TRUST_HOST: true
+2025-10-17T00:43:02.5885705Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-10-17T00:43:02.5886382Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-10-17T00:43:02.5886859Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2025-10-17T00:43:02.5887275Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2025-10-17T00:43:02.5887685Z ##[endgroup]
+2025-10-17T00:43:02.5987056Z cp: cannot stat 'PerueiroApp/app/build/outputs/apk/release/app-release.apk': No such file or directory
+2025-10-17T00:43:02.5993593Z ##[error]Process completed with exit code 1.
