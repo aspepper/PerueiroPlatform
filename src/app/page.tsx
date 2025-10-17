@@ -297,17 +297,19 @@ export default async function RootPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <a
-              href="#"
+              href="/downloads/perueiros-app-release.apk"
+              download
               className="rounded-xl border border-slate-300 px-5 py-3 text-slate-700 transition-colors hover:bg-slate-100"
             >
               Baixar para Android
             </a>
-            <a
-              href="#"
-              className="rounded-xl border border-slate-300 px-5 py-3 text-slate-700 transition-colors hover:bg-slate-100"
+            <button
+              type="button"
+              disabled
+              className="rounded-xl border border-slate-200 px-5 py-3 text-slate-400 cursor-not-allowed"
             >
-              Baixar para iOS
-            </a>
+              iOS (em breve)
+            </button>
           </div>
         </div>
       </section>
