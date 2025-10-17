@@ -57,7 +57,14 @@ jobs:
       - name: Include Android release APK in public assets
         run: |
           mkdir -p public/downloads
-          cp PerueiroApp/app/build/outputs/apk/release/app-release.apk public/downloads/perueiros-app-release.apk
+          APK_SRC=$(find PerueiroApp/app/build/outputs/apk/release -maxdepth 1 -type f -name "app-release*.apk" | head -n 1)
+          if [ -z "$APK_SRC" ]; then
+            echo "Release APK not found in PerueiroApp/app/build/outputs/apk/release" >&2
+            echo "Available files:" >&2
+            ls -R PerueiroApp/app/build/outputs/apk >&2 || true
+            exit 1
+          fi
+          cp "$APK_SRC" public/downloads/perueiros-app-release.apk
 
       # Build do app web Next.js (após gerar o APK em modo release).
       - name: Install dependencies
