@@ -48,7 +48,7 @@
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug UP-TO-DATE
 
-BUILD SUCCESSFUL in 1m 26s
+BUILD SUCCESSFUL in 1m 32s
 40 actionable tasks: 40 up-to-date
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :app:preBuild UP-TO-DATE
@@ -104,7 +104,7 @@ BUILD SUCCESSFUL in 9s
 41 actionable tasks: 1 executed, 40 up-to-date
 [INFO] Limpando logcat...
 [INFO] Resolvendo PID para 'com.idealinspecao.perueiroapp'...
-[INFO] PID: 26459
-[INFO] Gravando logcat em: ./logs/run-debug-20251017-083458.log
-[INFO] Filtro: --pid 26459
-[INFO] Logcat PID: 19128
+[INFO] PID: 23821
+[INFO] Gravando logcat em: ./logs/run-debug-20251017-134558.log
+[INFO] Filtro: --pid 23821
+[INFO] Logcat PID: 78042
