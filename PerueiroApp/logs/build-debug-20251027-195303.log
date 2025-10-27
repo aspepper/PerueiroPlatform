@@ -41,7 +41,10 @@
 w: Kapt currently doesn't support language version 2.0+. Falling back to 1.9.
 
 > Task :app:kaptDebugKotlin
+
 > Task :app:compileDebugKotlin
+w: file:///Users/alexpimenta/Projects/PerueiroPlatform/PerueiroApp/app/src/main/java/com/idealinspecao/perueiroapp/ui/screens/management/VanManagementScreen.kt:189:43 Condition is always 'true'.
+w: file:///Users/alexpimenta/Projects/PerueiroPlatform/PerueiroApp/app/src/main/java/com/idealinspecao/perueiroapp/ui/screens/management/VanManagementScreen.kt:211:43 Condition is always 'true'.
 
 > Task :app:compileDebugJavaWithJavac
 Java compiler version 21 has deprecated support for compiling with source/target version 8.
@@ -51,8 +54,11 @@ Try one of the following options:
     3. Use a lower version of the JDK running the build (if you're not using Java toolchain)
 For more details on how to configure these settings, see https://developer.android.com/build/jdks.
 To suppress this warning, set android.javaCompile.suppressSourceTargetDeprecationWarning=true in gradle.properties.
+warning: [options] source value 8 is obsolete and will be removed in a future release
+warning: [options] target value 8 is obsolete and will be removed in a future release
+warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
+3 warnings
 
-> Task :app:compileDebugJavaWithJavac UP-TO-DATE
 > Task :app:processDebugJavaRes UP-TO-DATE
 > Task :app:mergeDebugJavaResource UP-TO-DATE
 > Task :app:dexBuilderDebug
@@ -61,8 +67,10 @@ To suppress this warning, set android.javaCompile.suppressSourceTargetDeprecatio
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug
 
-BUILD SUCCESSFUL in 2m 28s
-40 actionable tasks: 6 executed, 34 up-to-date
+[Incubating] Problems report is available at: file:///Users/alexpimenta/Projects/PerueiroPlatform/PerueiroApp/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 2m 24s
+40 actionable tasks: 7 executed, 33 up-to-date
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
@@ -113,11 +121,11 @@ BUILD SUCCESSFUL in 2m 28s
 Installing APK 'app-debug.apk' on 'Redmi 8 - 10' for :app:debug
 Installed on 1 device.
 
-BUILD SUCCESSFUL in 12s
+BUILD SUCCESSFUL in 8s
 41 actionable tasks: 1 executed, 40 up-to-date
 [INFO] Limpando logcat...
 [INFO] Resolvendo PID para 'com.idealinspecao.perueiroapp'...
-[INFO] PID: 11588
-[INFO] Gravando logcat em: ./logs/run-debug-20251027-182235.log
-[INFO] Filtro: --pid 11588
-[INFO] Logcat PID: 78861
+[INFO] PID: 22191
+[INFO] Gravando logcat em: ./logs/run-debug-20251027-195303.log
+[INFO] Filtro: --pid 22191
+[INFO] Logcat PID: 5223
