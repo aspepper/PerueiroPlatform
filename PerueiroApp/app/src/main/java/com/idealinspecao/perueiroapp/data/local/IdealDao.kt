@@ -70,11 +70,26 @@ interface IdealDao {
     @Query("SELECT * FROM vans WHERE id = :id")
     suspend fun getVan(id: Long): VanEntity?
 
+    @Query("SELECT * FROM vans WHERE plate = :plate LIMIT 1")
+    suspend fun getVanByPlate(plate: String): VanEntity?
+
     @Query("DELETE FROM vans WHERE id = :id")
     suspend fun deleteVan(id: Long)
 
     @Query("DELETE FROM vans")
     suspend fun clearVans()
+
+    @Upsert
+    suspend fun upsertPendingVan(pending: PendingVanEntity)
+
+    @Query("SELECT * FROM pending_vans")
+    suspend fun getPendingVans(): List<PendingVanEntity>
+
+    @Query("DELETE FROM pending_vans WHERE id = :id")
+    suspend fun deletePendingVan(id: Long)
+
+    @Query("DELETE FROM pending_vans WHERE localVanId = :localVanId")
+    suspend fun deletePendingVanByLocalId(localVanId: Long)
 
     @Upsert
     suspend fun upsertDriver(driver: DriverEntity)

@@ -18,8 +18,12 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -31,10 +35,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.idealinspecao.perueiroapp.data.local.DriverEntity
 import com.idealinspecao.perueiroapp.data.local.VanEntity
+import com.idealinspecao.perueiroapp.data.local.VanLookupResult
+import com.idealinspecao.perueiroapp.data.local.VanSaveResult
+import com.idealinspecao.perueiroapp.model.UserRole
 import com.idealinspecao.perueiroapp.ui.components.ConfirmationDialog
 import com.idealinspecao.perueiroapp.ui.components.FormTextField
 import com.idealinspecao.perueiroapp.ui.components.InfoCard
 import com.idealinspecao.perueiroapp.ui.components.ScreenScaffold
+import com.idealinspecao.perueiroapp.viewmodel.LoggedUser
 import kotlinx.coroutines.launch
 
 @Composable
@@ -113,22 +121,124 @@ fun VanListScreen(
 fun VanFormScreen(
     van: VanEntity?,
     drivers: List<DriverEntity>,
+    loggedUser: LoggedUser?,
     onBack: () -> Unit,
-    onSave: (VanEntity) -> Unit
+    onLookupVan: suspend (String) -> VanLookupResult,
+    onSave: suspend (VanEntity, String?, Boolean) -> VanSaveResult
 ) {
     ScreenScaffold(
         title = if (van == null) "Nova van" else "Editar van",
         onBack = onBack
     ) { padding, snackbar ->
-        var model by remember { mutableStateOf(van?.model ?: "") }
-        var color by remember { mutableStateOf(van?.color ?: "") }
-        var year by remember { mutableStateOf(van?.year ?: "") }
-        var plate by remember { mutableStateOf(van?.plate ?: "") }
-        val selectedDrivers = remember { mutableStateListOf<String>().apply {
-            if (van != null) addAll(van.driverCpfs.split(',').map { it.trim() }.filter { it.isNotEmpty() })
-        } }
-        var showDriverDialog by remember { mutableStateOf(false) }
         val coroutineScope = rememberCoroutineScope()
+        val isEditing = van != null
+        val loggedDriverCpf = loggedUser?.takeIf { it.role == UserRole.DRIVER }?.cpf
+        val isDriverLogged = loggedDriverCpf != null
+
+        var vanId by remember(van?.id) { mutableStateOf(van?.id ?: 0L) }
+        var model by remember(van?.id) { mutableStateOf(van?.model ?: "") }
+        var color by remember(van?.id) { mutableStateOf(van?.color ?: "") }
+        var year by remember(van?.id) { mutableStateOf(van?.year ?: "") }
+        var plate by remember(van?.id) { mutableStateOf(van?.plate ?: "") }
+        val selectedDrivers = remember(van?.id, loggedDriverCpf) {
+            mutableStateListOf<String>().apply {
+                val existing = van?.driverCpfs
+                    ?.split(',')
+                    ?.map { it.trim() }
+                    ?.filter { it.isNotEmpty() }
+                    ?.distinct()
+                    ?: emptyList()
+                if (loggedDriverCpf != null) {
+                    add(loggedDriverCpf)
+                } else {
+                    addAll(existing)
+                }
+            }
+        }
+        var showDriverDialog by remember { mutableStateOf(false) }
+        var isPlateValidated by remember { mutableStateOf(isEditing) }
+        var isExistingVan by remember { mutableStateOf(van?.id?.let { it > 0 } ?: false) }
+        var isLookupInProgress by remember { mutableStateOf(false) }
+        var lookupStatusMessage by remember { mutableStateOf<String?>(null) }
+        var lastSearchedPlate by remember(van?.id) { mutableStateOf(van?.plate?.trim()?.uppercase()) }
+        var isSaving by remember { mutableStateOf(false) }
+        var submissionError by remember { mutableStateOf<String?>(null) }
+
+        suspend fun performLookup(force: Boolean) {
+            val normalizedPlate = plate.trim().uppercase()
+            val plateDigits = normalizedPlate.filter { it.isLetterOrDigit() }
+            if (plateDigits.length < 7) return
+            if (!force && normalizedPlate == lastSearchedPlate) return
+
+            isLookupInProgress = true
+            lookupStatusMessage = null
+            submissionError = null
+
+            try {
+                val result = onLookupVan(normalizedPlate)
+                val fetched = result.van
+                if (fetched != null) {
+                    if (fetched.id != 0L) {
+                        vanId = fetched.id
+                    }
+                    model = fetched.model
+                    color = fetched.color
+                    year = fetched.year
+                    plate = fetched.plate
+                    selectedDrivers.clear()
+                    if (isDriverLogged && loggedDriverCpf != null) {
+                        selectedDrivers.add(loggedDriverCpf)
+                    } else {
+                        selectedDrivers.addAll(
+                            fetched.driverCpfs.split(',')
+                                .map { it.trim() }
+                                .filter { it.isNotEmpty() }
+                                .distinct()
+                        )
+                    }
+                    lookupStatusMessage = "Van encontrada. Dados carregados."
+                    isExistingVan = true
+                } else {
+                    if (!isEditing) {
+                        vanId = 0
+                        if (!force) {
+                            model = ""
+                            color = ""
+                            year = ""
+                        }
+                    }
+                    selectedDrivers.clear()
+                    if (isDriverLogged && loggedDriverCpf != null) {
+                        selectedDrivers.add(loggedDriverCpf)
+                    }
+                    lookupStatusMessage = "Placa liberada para novo cadastro."
+                    isExistingVan = false
+                }
+                isPlateValidated = true
+                lastSearchedPlate = normalizedPlate
+            } catch (exception: Exception) {
+                isPlateValidated = false
+                lastSearchedPlate = null
+                lookupStatusMessage = null
+                snackbar.showSnackbar("Não foi possível consultar a placa. Tente novamente.")
+            } finally {
+                isLookupInProgress = false
+            }
+        }
+
+        val normalizedPlate = plate.trim().uppercase()
+        val plateDigits = normalizedPlate.filter { it.isLetterOrDigit() }
+
+        LaunchedEffect(normalizedPlate) {
+            if (!isEditing && plateDigits.length >= 7 && normalizedPlate != lastSearchedPlate && !isLookupInProgress) {
+                performLookup(force = false)
+            }
+        }
+
+        val fieldsEnabled = isEditing || isPlateValidated
+        val driverLabels = selectedDrivers.map { cpf ->
+            drivers.firstOrNull { it.cpf == cpf }?.let { "${it.name} (${it.cpf})" } ?: cpf
+        }
 
         Column(
             modifier = Modifier
@@ -136,40 +246,139 @@ fun VanFormScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FormTextField(model, { model = it }, "Modelo")
-            FormTextField(color, { color = it }, "Cor")
-            FormTextField(year, { year = it }, "Ano")
-            FormTextField(plate, { plate = it }, "Placa")
-            Button(onClick = { showDriverDialog = true }, modifier = Modifier.fillMaxWidth()) {
+            FormTextField(
+                value = plate,
+                onValueChange = {
+                    plate = it.uppercase()
+                    isPlateValidated = false
+                    lookupStatusMessage = null
+                    submissionError = null
+                },
+                label = "Placa",
+                enabled = !isSaving
+            )
+            OutlinedButton(
+                onClick = {
+                    coroutineScope.launch { performLookup(force = true) }
+                },
+                enabled = plateDigits.length >= 7 && !isLookupInProgress && !isSaving,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Consultar placa")
+            }
+            if (isLookupInProgress) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+            lookupStatusMessage?.let {
                 Text(
-                    if (selectedDrivers.isEmpty()) "Selecionar motoristas"
-                    else "Motoristas selecionados: ${selectedDrivers.size}"
+                    text = it,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
-            if (selectedDrivers.isNotEmpty()) {
-                Text(text = "Motoristas: ${selectedDrivers.joinToString(", ")}")
+            if (isExistingVan) {
+                Text(
+                    text = "Van já cadastrada. Você pode atualizar os dados.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            FormTextField(
+                value = model,
+                onValueChange = {
+                    model = it
+                    submissionError = null
+                },
+                label = "Modelo",
+                enabled = fieldsEnabled && !isSaving
+            )
+            FormTextField(
+                value = color,
+                onValueChange = { color = it },
+                label = "Cor",
+                enabled = fieldsEnabled && !isSaving
+            )
+            FormTextField(
+                value = year,
+                onValueChange = { year = it },
+                label = "Ano",
+                enabled = fieldsEnabled && !isSaving
+            )
+            if (isDriverLogged) {
+                val driverName = drivers.firstOrNull { it.cpf == loggedDriverCpf }?.name
+                Text(
+                    text = buildString {
+                        append("Motorista responsável: ")
+                        append(driverName ?: loggedDriverCpf ?: "")
+                    },
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            } else {
+                Button(
+                    onClick = { showDriverDialog = true },
+                    enabled = fieldsEnabled && !isSaving,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        if (selectedDrivers.isEmpty()) "Selecionar motoristas"
+                        else "Motoristas selecionados: ${selectedDrivers.size}"
+                    )
+                }
+            }
+            if (driverLabels.isNotEmpty()) {
+                Text(text = "Motoristas: ${driverLabels.joinToString(", ")}")
+            }
+            submissionError?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
             Button(
                 onClick = {
-                    if (model.isBlank() || plate.isBlank()) {
-                        coroutineScope.launch { snackbar.showSnackbar("Informe modelo e placa") }
-                    } else {
-                        onSave(
-                            VanEntity(
-                                id = van?.id ?: 0,
+                    coroutineScope.launch {
+                        if (model.isBlank() || plateDigits.length < 7) {
+                            snackbar.showSnackbar("Informe modelo e placa válidos")
+                            return@launch
+                        }
+                        isSaving = true
+                        submissionError = null
+                        try {
+                            val entity = VanEntity(
+                                id = if (vanId > 0) vanId else 0,
                                 model = model,
                                 color = color,
                                 year = year,
-                                plate = plate,
+                                plate = normalizedPlate,
                                 driverCpfs = selectedDrivers.joinToString(", ")
                             )
-                        )
-                        onBack()
+                            val result = onSave(
+                                entity,
+                                loggedDriverCpf,
+                                isDriverLogged
+                            )
+                            val message = when (result) {
+                                is VanSaveResult.Pending -> "Van salva offline. Sincronizaremos quando possível."
+                                is VanSaveResult.Synced -> if (isDriverLogged) {
+                                    "Van sincronizada com sucesso."
+                                } else {
+                                    "Van salva com sucesso."
+                                }
+                            }
+                            snackbar.showSnackbar(message)
+                            onBack()
+                        } catch (exception: Exception) {
+                            submissionError = exception.message
+                                ?: "Não foi possível salvar a van. Tente novamente."
+                        } finally {
+                            isSaving = false
+                        }
                     }
                 },
+                enabled = fieldsEnabled && !isLookupInProgress && !isSaving,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Salvar")
+                Text(if (isSaving) "Salvando..." else "Salvar")
             }
         }
 

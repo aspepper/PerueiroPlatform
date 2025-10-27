@@ -294,11 +294,15 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                 VanFormScreen(
                     van = if (creatingVan) null else editingVan,
                     drivers = drivers,
+                    loggedUser = loggedUser,
                     onBack = {
                         editingVan = null
                         creatingVan = false
                     },
-                    onSave = { viewModel.saveVan(it) }
+                    onLookupVan = { viewModel.lookupVan(it) },
+                    onSave = { vanEntity, driverCpf, shouldSync ->
+                        viewModel.saveVan(vanEntity, driverCpf, shouldSync)
+                    }
                 )
             }
         }
