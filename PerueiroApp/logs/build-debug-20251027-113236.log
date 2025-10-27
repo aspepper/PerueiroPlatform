@@ -1,4 +1,5 @@
 [INFO] Iniciando build (variant=debug, task=:app:assembleDebug)
+Starting a Gradle Daemon, 1 incompatible and 1 stopped Daemons could not be reused, use --status for details
 > Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
@@ -34,6 +35,7 @@
 > Task :app:mergeDebugJavaResource UP-TO-DATE
 > Task :app:checkDebugDuplicateClasses UP-TO-DATE
 > Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug
 > Task :app:mergeExtDexDebug UP-TO-DATE
 > Task :app:mergeLibDexDebug UP-TO-DATE
 > Task :app:dexBuilderDebug UP-TO-DATE
@@ -48,7 +50,7 @@
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug UP-TO-DATE
 
-BUILD SUCCESSFUL in 1m 32s
+BUILD SUCCESSFUL in 3m 25s
 40 actionable tasks: 40 up-to-date
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :app:preBuild UP-TO-DATE
@@ -100,11 +102,11 @@ BUILD SUCCESSFUL in 1m 32s
 Installing APK 'app-debug.apk' on 'Redmi 8 - 10' for :app:debug
 Installed on 1 device.
 
-BUILD SUCCESSFUL in 9s
+BUILD SUCCESSFUL in 11s
 41 actionable tasks: 1 executed, 40 up-to-date
 [INFO] Limpando logcat...
 [INFO] Resolvendo PID para 'com.idealinspecao.perueiroapp'...
-[INFO] PID: 23821
-[INFO] Gravando logcat em: ./logs/run-debug-20251017-134558.log
-[INFO] Filtro: --pid 23821
-[INFO] Logcat PID: 78042
+[INFO] PID: 8480
+[INFO] Gravando logcat em: ./logs/run-debug-20251027-113236.log
+[INFO] Filtro: --pid 8480
+[INFO] Logcat PID: 77603
