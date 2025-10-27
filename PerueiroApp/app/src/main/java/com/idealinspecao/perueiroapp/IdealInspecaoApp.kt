@@ -231,8 +231,11 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                         editingGuardian = null
                         creatingGuardian = false
                     },
-                    onSave = { viewModel.saveGuardian(it) },
-                    onCheckPendencies = { viewModel.refreshGuardianPendencies(it) }
+                    onSave = { guardian, preservePassword ->
+                        viewModel.saveGuardian(guardian, preservePassword)
+                    },
+                    onCheckPendencies = { viewModel.refreshGuardianPendencies(it) },
+                    onLookupGuardian = { viewModel.lookupGuardian(it) }
                 )
             }
         }
