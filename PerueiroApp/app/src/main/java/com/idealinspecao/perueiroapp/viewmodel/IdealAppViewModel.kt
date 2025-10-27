@@ -120,8 +120,20 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun saveGuardian(guardian: GuardianEntity) {
-        viewModelScope.launch { repository.saveGuardian(guardian) }
+    fun saveGuardian(guardian: GuardianEntity, preservePassword: Boolean) {
+        viewModelScope.launch {
+            val finalGuardian = if (preservePassword) {
+                val existing = repository.getGuardian(guardian.cpf)
+                val preservedPassword = existing?.password ?: guardian.password
+                guardian.copy(
+                    password = preservedPassword,
+                    mustChangePassword = existing?.mustChangePassword ?: guardian.mustChangePassword
+                )
+            } else {
+                guardian
+            }
+            repository.saveGuardian(finalGuardian)
+        }
     }
 
     fun deleteGuardian(cpf: String) {
@@ -185,6 +197,11 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
 
     suspend fun getGuardian(cpf: String): GuardianEntity? = repository.getGuardian(cpf)
 
+    suspend fun lookupGuardian(cpf: String): GuardianLookupResult {
+        val result = repository.lookupGuardian(cpf)
+        return GuardianLookupResult(result.guardian, result.alreadyExists)
+    }
+
     suspend fun syncFromServer(loggedUser: LoggedUser?) {
         repository.syncFromServer(loggedUser?.role, loggedUser?.cpf)
     }
@@ -227,6 +244,11 @@ data class GuardianPendencies(
     val status: String,
     val reasons: List<String>,
     val vans: List<String>
+)
+
+data class GuardianLookupResult(
+    val guardian: GuardianEntity?,
+    val alreadyExists: Boolean
 )
 
 data class LoggedUser(val cpf: String, val role: UserRole)
