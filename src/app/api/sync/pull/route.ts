@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 import { ensureDriverUser, ensureGuardianUser } from "@/lib/user-accounts";
 import {
@@ -62,47 +64,120 @@ function withNormalizedCpfReferences<
 const studentInclude = {
   guardian: true,
   school: true,
-  van: true,
+  van: {
+    select: {
+      id: true,
+      model: true,
+      color: true,
+      year: true,
+      plate: true,
+      driverCpf: true,
+      billingDay: true,
+      monthlyFee: true,
+      updatedAt: true,
+    },
+  },
   payments: true,
 } as const;
 
+const vanSelect = {
+  id: true,
+  model: true,
+  color: true,
+  year: true,
+  plate: true,
+  driverCpf: true,
+  billingDay: true,
+  monthlyFee: true,
+  updatedAt: true,
+} as const;
+
+type VanRecord = Prisma.VanGetPayload<{ select: typeof vanSelect }>;
+
+type VanSyncPayload = {
+  id: string;
+  model: string;
+  color: string | null;
+  year: string | null;
+  plate: string;
+  driverCpf: string | null;
+  billingDay: number;
+  monthlyFee: number;
+  updatedAt: string;
+};
+
+function formatVanForSync(van: VanRecord): VanSyncPayload {
+  return {
+    id: van.id.toString(),
+    model: van.model,
+    color: van.color,
+    year: van.year,
+    plate: van.plate,
+    driverCpf: van.driverCpf,
+    billingDay: van.billingDay,
+    monthlyFee: Number(van.monthlyFee),
+    updatedAt: van.updatedAt.toISOString(),
+  };
+}
+
+function collectVan(
+  map: Map<string, VanSyncPayload>,
+  van: VanRecord,
+  updatedSince: Date | null,
+  forceInclude = false,
+) {
+  if (!forceInclude && !shouldInclude(van.updatedAt, updatedSince)) {
+    return;
+  }
+
+  map.set(van.id.toString(), formatVanForSync(van));
+}
+
 export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const key = url.searchParams.get("apiKey");
-  if (!key || key !== process.env.NEXTAUTH_SECRET) return unauthorized();
+  try {
+    const url = new URL(request.url);
+    const key = url.searchParams.get("apiKey");
+    if (!key || key !== process.env.NEXTAUTH_SECRET) return unauthorized();
 
-  const updatedSince = toDateOrNull(url.searchParams.get("updatedSince"));
-  const role = url.searchParams.get("role")?.toUpperCase();
-  const cpf = url.searchParams.get("cpf")?.trim();
+    const updatedSince = toDateOrNull(url.searchParams.get("updatedSince"));
+    const role = url.searchParams.get("role")?.toUpperCase();
+    const cpf = url.searchParams.get("cpf")?.trim();
 
-  if (role === "DRIVER" && cpf) {
-    return NextResponse.json(await pullForDriver(cpf, updatedSince));
+    if (role === "DRIVER" && cpf) {
+      return NextResponse.json(await pullForDriver(cpf, updatedSince));
+    }
+
+    if (role === "GUARDIAN" && cpf) {
+      return NextResponse.json(await pullForGuardian(cpf, updatedSince));
+    }
+
+    const whereUpdated = updatedSince ? { updatedAt: { gt: updatedSince } } : {};
+
+    const [guardians, schools, drivers, vans, students, payments] = await Promise.all([
+      prisma.guardian.findMany({ where: whereUpdated }),
+      prisma.school.findMany({ where: whereUpdated }),
+      prisma.driver.findMany({ where: whereUpdated }),
+      prisma.van.findMany({ where: whereUpdated, select: vanSelect }),
+      prisma.student.findMany({ where: whereUpdated }),
+      prisma.payment.findMany({ where: whereUpdated }),
+    ]);
+
+    return NextResponse.json({
+      syncedAt: new Date().toISOString(),
+      guardians: guardians.map(withNormalizedCpf),
+      schools,
+      drivers: drivers.map(withNormalizedCpf),
+      vans: vans.map(formatVanForSync),
+      students: students.map(withNormalizedCpfReferences),
+      payments,
+    });
+  } catch (error) {
+    console.error("Falha ao executar sincronização", error);
+    return NextResponse.json(
+      { error: "Não foi possível carregar a sincronização." },
+      { status: 500 },
+    );
   }
-
-  if (role === "GUARDIAN" && cpf) {
-    return NextResponse.json(await pullForGuardian(cpf, updatedSince));
-  }
-
-  const whereUpdated = updatedSince ? { updatedAt: { gt: updatedSince } } : {};
-
-  const [guardians, schools, drivers, vans, students, payments] = await Promise.all([
-    prisma.guardian.findMany({ where: whereUpdated }),
-    prisma.school.findMany({ where: whereUpdated }),
-    prisma.driver.findMany({ where: whereUpdated }),
-    prisma.van.findMany({ where: whereUpdated }),
-    prisma.student.findMany({ where: whereUpdated }),
-    prisma.payment.findMany({ where: whereUpdated }),
-  ]);
-
-  return NextResponse.json({
-    syncedAt: new Date().toISOString(),
-    guardians: guardians.map(withNormalizedCpf),
-    schools,
-    drivers: drivers.map(withNormalizedCpf),
-    vans,
-    students: students.map(withNormalizedCpfReferences),
-    payments,
-  });
 }
 
 async function pullForDriver(cpf: string, updatedSince: Date | null) {
@@ -112,7 +187,7 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
   const driver = await prisma.driver.findFirst({
     where: { OR: cpfConditions },
     include: {
-      vans: true,
+      vans: { select: vanSelect },
       students: {
         include: studentInclude,
       },
@@ -157,7 +232,7 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
     }
   >();
   const schoolsMap = new Map<string, NonNullable<typeof driverStudents[number]["school"]>>();
-  const vansMap = new Map<string, typeof driverVans[number]>();
+  const vansMap = new Map<string, VanSyncPayload>();
   const students: Omit<
     (typeof driverStudents)[number],
     "guardian" | "school" | "van" | "payments"
@@ -165,14 +240,13 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
   const paymentsMap = new Map<string, (typeof driverStudents[number]["payments"])[number]>();
 
   for (const van of driverVans) {
-    if (shouldInclude(van.updatedAt, updatedSince)) {
-      vansMap.set(van.id.toString(), van);
-    }
+    collectVan(vansMap, van, updatedSince);
   }
 
   for (const student of driverStudents) {
     const { guardian, school, van, payments, ...studentRecord } = student;
-    if (shouldInclude(student.updatedAt, updatedSince)) {
+    const includeStudent = shouldInclude(student.updatedAt, updatedSince);
+    if (includeStudent) {
       students.push(withNormalizedCpfReferences(studentRecord));
     }
 
@@ -192,8 +266,8 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
       schoolsMap.set(school.id.toString(), school);
     }
 
-    if (van && shouldInclude(van.updatedAt, updatedSince)) {
-      vansMap.set(van.id.toString(), van);
+    if (van) {
+      collectVan(vansMap, van, updatedSince, includeStudent);
     }
 
     for (const payment of payments) {
@@ -228,7 +302,7 @@ async function pullForGuardian(cpf: string, updatedSince: Date | null) {
       students: {
         include: {
           school: true,
-          van: true,
+          van: { select: vanSelect },
           driver: true,
           payments: true,
         },
@@ -261,7 +335,7 @@ async function pullForGuardian(cpf: string, updatedSince: Date | null) {
       };
     }
   >();
-  const vansMap = new Map<string, NonNullable<typeof guardianStudents[number]["van"]>>();
+  const vansMap = new Map<string, VanSyncPayload>();
   const schoolsMap = new Map<string, NonNullable<typeof guardianStudents[number]["school"]>>();
   const students: Omit<
     (typeof guardianStudents)[number],
@@ -271,8 +345,9 @@ async function pullForGuardian(cpf: string, updatedSince: Date | null) {
 
   for (const student of guardianStudents) {
     const { school, van, driver, payments, ...studentRecord } = student;
+    const includeStudent = shouldInclude(student.updatedAt, updatedSince);
 
-    if (shouldInclude(student.updatedAt, updatedSince)) {
+    if (includeStudent) {
       students.push(withNormalizedCpfReferences(studentRecord));
     }
 
@@ -289,8 +364,8 @@ async function pullForGuardian(cpf: string, updatedSince: Date | null) {
       });
     }
 
-    if (van && shouldInclude(van.updatedAt, updatedSince)) {
-      vansMap.set(van.id.toString(), van);
+    if (van) {
+      collectVan(vansMap, van, updatedSince, includeStudent);
     }
 
     if (school && shouldInclude(school.updatedAt, updatedSince)) {
