@@ -7,10 +7,12 @@ import com.idealinspecao.perueiroapp.data.remote.DriverApiService
 import com.idealinspecao.perueiroapp.data.remote.GuardianApiService
 import com.idealinspecao.perueiroapp.data.remote.PasswordResetResult
 import com.idealinspecao.perueiroapp.data.remote.SyncApiService
+import com.idealinspecao.perueiroapp.data.remote.VanApiService
 import com.idealinspecao.perueiroapp.model.UserRole
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -21,7 +23,8 @@ class IdealRepository(
     private val driverApiService: DriverApiService = DriverApiService(),
     private val syncApiService: SyncApiService = SyncApiService(),
     private val authApiService: AuthApiService = AuthApiService(),
-    private val guardianApiService: GuardianApiService = GuardianApiService()
+    private val guardianApiService: GuardianApiService = GuardianApiService(),
+    private val vanApiService: VanApiService = VanApiService()
 ) {
     val guardians: Flow<List<GuardianEntity>> = dao.observeGuardians()
     val schools: Flow<List<SchoolEntity>> = dao.observeSchools()
@@ -181,11 +184,119 @@ class IdealRepository(
     }
     suspend fun deleteGuardian(cpf: String) = dao.deleteGuardian(cpf)
 
+    suspend fun lookupVan(plate: String): VanLookupResult {
+        val normalizedPlate = normalizePlate(plate)
+        if (normalizedPlate.isEmpty()) {
+            return VanLookupResult(null, false)
+        }
+
+        val localVan = dao.getVanByPlate(normalizedPlate)
+        if (localVan != null) {
+            return VanLookupResult(localVan, true)
+        }
+
+        return try {
+            val remoteVan = vanApiService.findVan(normalizedPlate)
+            if (remoteVan != null) {
+                val entity = remoteVan.toEntity().copy(plate = normalizedPlate)
+                dao.upsertVan(entity)
+                VanLookupResult(entity, true)
+            } else {
+                VanLookupResult(null, false)
+            }
+        } catch (exception: Exception) {
+            Log.e(TAG, "Erro ao buscar van $normalizedPlate", exception)
+            throw exception
+        }
+    }
+
     suspend fun saveSchool(school: SchoolEntity) = dao.upsertSchool(school)
     suspend fun getSchool(id: Long) = dao.getSchool(id)
     suspend fun deleteSchool(id: Long) = dao.deleteSchool(id)
 
-    suspend fun saveVan(van: VanEntity) = dao.upsertVan(van)
+    suspend fun saveVan(
+        van: VanEntity,
+        driverCpf: String?,
+        syncWithServer: Boolean
+    ): VanSaveResult {
+        val normalizedPlate = normalizePlate(van.plate)
+        if (normalizedPlate.isEmpty()) {
+            throw IllegalArgumentException("Placa da van é obrigatória")
+        }
+
+        val normalizedDriverCpf = driverCpf?.let { normalizeCpfValue(it) }
+        val sanitizedDrivers = when {
+            normalizedDriverCpf != null -> normalizedDriverCpf
+            van.driverCpfs.isBlank() -> ""
+            else -> van.driverCpfs.split(',')
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .map { normalizeCpfValue(it) }
+                .distinct()
+                .joinToString(", ")
+        }
+
+        val sanitizedVan = van.copy(
+            plate = normalizedPlate,
+            driverCpfs = sanitizedDrivers
+        )
+
+        dao.upsertVan(sanitizedVan)
+        val persisted = dao.getVanByPlate(normalizedPlate) ?: sanitizedVan
+
+        if (!syncWithServer || normalizedDriverCpf == null) {
+            return VanSaveResult.Synced(persisted)
+        }
+
+        dao.deletePendingVanByLocalId(persisted.id)
+
+        return try {
+            val remote = vanApiService.upsertVan(
+                VanApiService.VanPayload(
+                    id = persisted.id.takeIf { it > 0 },
+                    model = sanitizedVan.model,
+                    color = sanitizedVan.color.takeIf { it.isNotBlank() },
+                    year = sanitizedVan.year.takeIf { it.isNotBlank() },
+                    plate = normalizedPlate,
+                    driverCpf = normalizedDriverCpf
+                )
+            )
+            val targetId = remote.id ?: persisted.id
+            val remoteEntity = remote.toEntity().copy(
+                id = targetId,
+                model = remote.model.ifBlank { sanitizedVan.model },
+                color = remote.color.orEmpty().ifBlank { sanitizedVan.color },
+                year = remote.year.orEmpty().ifBlank { sanitizedVan.year },
+                plate = normalizedPlate,
+                driverCpfs = normalizedDriverCpf
+            )
+
+            if (persisted.id != 0L && targetId != persisted.id) {
+                dao.deleteVan(persisted.id)
+            }
+            dao.upsertVan(remoteEntity)
+            val refreshed = dao.getVanByPlate(normalizedPlate) ?: remoteEntity
+            VanSaveResult.Synced(refreshed)
+        } catch (exception: Exception) {
+            if (exception.isNetworkIssue()) {
+                dao.upsertPendingVan(
+                    PendingVanEntity(
+                        localVanId = persisted.id,
+                        remoteId = sanitizedVan.id.takeIf { it > 0 },
+                        model = sanitizedVan.model,
+                        color = sanitizedVan.color,
+                        year = sanitizedVan.year,
+                        plate = normalizedPlate,
+                        driverCpf = normalizedDriverCpf
+                    )
+                )
+                VanSaveResult.Pending(persisted)
+            } else {
+                Log.e(TAG, "Erro ao sincronizar van ${normalizedPlate}", exception)
+                throw exception
+            }
+        }
+    }
     suspend fun getVan(id: Long) = dao.getVan(id)
     suspend fun deleteVan(id: Long) = dao.deleteVan(id)
 
@@ -237,6 +348,12 @@ class IdealRepository(
     suspend fun syncFromServer(userRole: UserRole?, userCpf: String?) {
         withContext(Dispatchers.IO) {
             try {
+                try {
+                    pushPendingVans()
+                } catch (exception: Exception) {
+                    Log.e(TAG, "Erro ao sincronizar vans pendentes", exception)
+                }
+
                 val normalizedUserCpf = userCpf?.let { normalizeCpfValue(it) }
                 val updatedSince = loadLastSyncAt(userRole, normalizedUserCpf)
                 val payload = syncApiService.fetchFullSync(userRole, normalizedUserCpf, updatedSince)
@@ -297,6 +414,51 @@ class IdealRepository(
                 recordSuccessfulSync(userRole, normalizedUserCpf, syncTimestamp)
             } catch (exception: Exception) {
                 Log.e(TAG, "Erro ao sincronizar base local", exception)
+            }
+        }
+    }
+
+    private suspend fun pushPendingVans() {
+        val pendings = dao.getPendingVans()
+        if (pendings.isEmpty()) return
+
+        for (pending in pendings) {
+            try {
+                val remote = vanApiService.upsertVan(
+                    VanApiService.VanPayload(
+                        id = pending.remoteId,
+                        model = pending.model,
+                        color = pending.color.takeIf { it.isNotBlank() },
+                        year = pending.year.takeIf { it.isNotBlank() },
+                        plate = pending.plate,
+                        driverCpf = pending.driverCpf
+                    )
+                )
+
+                val targetId = remote.id ?: pending.remoteId ?: pending.localVanId
+                val existingLocal = dao.getVanByPlate(pending.plate)
+                val remoteEntity = remote.toEntity().copy(
+                    id = targetId,
+                    model = remote.model.ifBlank { pending.model },
+                    color = remote.color.orEmpty().ifBlank { pending.color },
+                    year = remote.year.orEmpty().ifBlank { pending.year },
+                    plate = pending.plate,
+                    driverCpfs = pending.driverCpf
+                )
+
+                if (existingLocal != null && existingLocal.id != targetId) {
+                    dao.deleteVan(existingLocal.id)
+                }
+
+                dao.upsertVan(remoteEntity)
+                dao.deletePendingVan(pending.id)
+            } catch (exception: Exception) {
+                if (exception.isNetworkIssue()) {
+                    break
+                } else {
+                    Log.e(TAG, "Erro ao sincronizar van pendente ${pending.plate}", exception)
+                    dao.deletePendingVan(pending.id)
+                }
             }
         }
     }
@@ -466,6 +628,17 @@ private fun SyncApiService.RemoteVan.toEntity(): VanEntity {
     )
 }
 
+private fun VanApiService.RemoteVan.toEntity(): VanEntity {
+    return VanEntity(
+        id = id ?: 0,
+        model = model,
+        color = color.orEmpty(),
+        year = year.orEmpty(),
+        plate = plate,
+        driverCpfs = driverCpf?.let { normalizeCpfValue(it) } ?: ""
+    )
+}
+
 private fun SyncApiService.RemoteStudent.toEntity(): StudentEntity {
     return StudentEntity(
         id = id ?: 0,
@@ -557,10 +730,30 @@ data class GuardianLookupResult(
     val alreadyExists: Boolean
 )
 
+data class VanLookupResult(
+    val van: VanEntity?,
+    val alreadyExists: Boolean
+)
+
+sealed class VanSaveResult {
+    data class Synced(val van: VanEntity) : VanSaveResult()
+    data class Pending(val van: VanEntity) : VanSaveResult()
+}
+
 private fun normalizeCpfValue(raw: String): String {
     val digits = raw.filter { it.isDigit() }
     if (digits.isNotEmpty()) return digits
     return raw.trim()
+}
+
+private fun Exception.isNetworkIssue(): Boolean {
+    if (this is IOException) return true
+    val rootCause = cause
+    return rootCause is IOException
+}
+
+private fun normalizePlate(raw: String): String {
+    return raw.trim().uppercase(Locale.ROOT)
 }
 
 private fun normalizeOptionalCpf(raw: String?): String? {

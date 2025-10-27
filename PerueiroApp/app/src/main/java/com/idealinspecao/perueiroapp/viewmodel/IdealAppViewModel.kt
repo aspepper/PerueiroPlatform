@@ -14,6 +14,8 @@ import com.idealinspecao.perueiroapp.data.local.StudentEntity
 import com.idealinspecao.perueiroapp.data.local.UserSession
 import com.idealinspecao.perueiroapp.data.local.UserSessionDataSource
 import com.idealinspecao.perueiroapp.data.local.VanEntity
+import com.idealinspecao.perueiroapp.data.local.VanLookupResult
+import com.idealinspecao.perueiroapp.data.local.VanSaveResult
 import com.idealinspecao.perueiroapp.data.remote.PasswordResetResult
 import com.idealinspecao.perueiroapp.model.UserRole
 import kotlinx.coroutines.flow.SharingStarted
@@ -148,8 +150,12 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { repository.deleteSchool(id) }
     }
 
-    fun saveVan(van: VanEntity) {
-        viewModelScope.launch { repository.saveVan(van) }
+    suspend fun saveVan(
+        van: VanEntity,
+        driverCpf: String?,
+        syncWithServer: Boolean
+    ): VanSaveResult {
+        return repository.saveVan(van, driverCpf, syncWithServer)
     }
 
     fun deleteVan(id: Long) {
@@ -200,6 +206,10 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
     suspend fun lookupGuardian(cpf: String): GuardianLookupResult {
         val result = repository.lookupGuardian(cpf)
         return GuardianLookupResult(result.guardian, result.alreadyExists)
+    }
+
+    suspend fun lookupVan(plate: String): VanLookupResult {
+        return repository.lookupVan(plate)
     }
 
     suspend fun syncFromServer(loggedUser: LoggedUser?) {

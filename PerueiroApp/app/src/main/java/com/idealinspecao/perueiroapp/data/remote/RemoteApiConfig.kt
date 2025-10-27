@@ -11,6 +11,7 @@ object RemoteApiConfig {
     val baseUrl: String = BuildConfig.REMOTE_API_BASE_URL.trimEnd('/')
 
     val driversUrl: String = "$baseUrl/drivers"
+    val vansUrl: String = "$baseUrl/vans"
     val guardiansUrl: String = "$baseUrl/clients"
     val syncPullUrl: String = "$baseUrl/sync/pull"
     val syncPushUrl: String = "$baseUrl/sync/push"

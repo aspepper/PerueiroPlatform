@@ -46,6 +46,18 @@ data class VanEntity(
     val driverCpfs: String
 )
 
+@Entity(tableName = "pending_vans")
+data class PendingVanEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val localVanId: Long,
+    val remoteId: Long?,
+    val model: String,
+    val color: String,
+    val year: String,
+    val plate: String,
+    val driverCpf: String
+)
+
 @Entity(tableName = "drivers")
 data class DriverEntity(
     @PrimaryKey val cpf: String,
