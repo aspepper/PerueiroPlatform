@@ -4,6 +4,7 @@ import android.util.Log
 import com.idealinspecao.perueiroapp.BuildConfig
 import com.idealinspecao.perueiroapp.data.remote.AuthApiService
 import com.idealinspecao.perueiroapp.data.remote.DriverApiService
+import com.idealinspecao.perueiroapp.data.remote.GuardianApiService
 import com.idealinspecao.perueiroapp.data.remote.PasswordResetResult
 import com.idealinspecao.perueiroapp.data.remote.SyncApiService
 import com.idealinspecao.perueiroapp.model.UserRole
@@ -19,7 +20,8 @@ class IdealRepository(
     private val dao: IdealDao,
     private val driverApiService: DriverApiService = DriverApiService(),
     private val syncApiService: SyncApiService = SyncApiService(),
-    private val authApiService: AuthApiService = AuthApiService()
+    private val authApiService: AuthApiService = AuthApiService(),
+    private val guardianApiService: GuardianApiService = GuardianApiService()
 ) {
     val guardians: Flow<List<GuardianEntity>> = dao.observeGuardians()
     val schools: Flow<List<SchoolEntity>> = dao.observeSchools()
@@ -142,6 +144,40 @@ class IdealRepository(
         val cpfs = possibleCpfs(cpf)
         if (cpfs.isEmpty()) return null
         return dao.getGuardianByCpfs(cpfs)
+    }
+
+    suspend fun lookupGuardian(cpf: String): GuardianLookupResult {
+        val trimmedCpf = cpf.trim()
+        if (trimmedCpf.isEmpty()) {
+            return GuardianLookupResult(null, false)
+        }
+
+        val cpfs = possibleCpfs(trimmedCpf)
+        if (cpfs.isNotEmpty()) {
+            val localGuardian = dao.getGuardianByCpfs(cpfs)
+            if (localGuardian != null) {
+                return GuardianLookupResult(localGuardian, true)
+            }
+        }
+
+        return try {
+            val remoteGuardian = guardianApiService.findGuardian(trimmedCpf)
+            if (remoteGuardian != null) {
+                val normalizedCpf = normalizeCpfValue(remoteGuardian.cpf)
+                GuardianLookupResult(
+                    guardian = remoteGuardian.toEntity(
+                        normalizedCpf,
+                        existing = null
+                    ),
+                    alreadyExists = true
+                )
+            } else {
+                GuardianLookupResult(null, false)
+            }
+        } catch (exception: Exception) {
+            Log.e(TAG, "Erro ao buscar responsável $trimmedCpf", exception)
+            throw exception
+        }
     }
     suspend fun deleteGuardian(cpf: String) = dao.deleteGuardian(cpf)
 
@@ -378,6 +414,34 @@ private fun AuthApiService.RemoteGuardian.toEntity(
     )
 }
 
+private fun GuardianApiService.RemoteGuardian.toEntity(
+    normalizedCpf: String,
+    existing: GuardianEntity?,
+): GuardianEntity {
+    val basePassword = existing?.password ?: BuildConfig.DEFAULT_REMOTE_PASSWORD
+    val baseMustChange = existing?.mustChangePassword ?: true
+
+    return GuardianEntity(
+        cpf = normalizedCpf,
+        name = name,
+        kinship = kinship ?: existing?.kinship ?: "",
+        birthDate = formatDate(birthDate) ?: (existing?.birthDate ?: ""),
+        spouseName = spouseName ?: existing?.spouseName ?: "",
+        address = address ?: existing?.address ?: "",
+        mobile = mobile ?: existing?.mobile ?: "",
+        landline = landline ?: existing?.landline,
+        workAddress = workAddress ?: existing?.workAddress ?: "",
+        workPhone = workPhone ?: existing?.workPhone,
+        email = existing?.email ?: "",
+        password = basePassword,
+        mustChangePassword = baseMustChange,
+        pendingStatus = existing?.pendingStatus ?: "Desconhecido",
+        pendingReasons = existing?.pendingReasons ?: "",
+        pendingVans = existing?.pendingVans ?: "",
+        isBlacklisted = existing?.isBlacklisted ?: false
+    )
+}
+
 private fun SyncApiService.RemoteSchool.toEntity(): SchoolEntity {
     return SchoolEntity(
         id = id ?: 0,
@@ -487,6 +551,11 @@ private fun SyncApiService.RemoteSyncPayload.filterPayments(
         }
     }
 }
+
+data class GuardianLookupResult(
+    val guardian: GuardianEntity?,
+    val alreadyExists: Boolean
+)
 
 private fun normalizeCpfValue(raw: String): String {
     val digits = raw.filter { it.isDigit() }

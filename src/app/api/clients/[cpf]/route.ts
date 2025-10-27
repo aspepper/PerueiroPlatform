@@ -43,6 +43,52 @@ const sanitizeOptionalDate = (value: unknown) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
+export async function GET(
+  _request: Request,
+  { params }: { params: { cpf: string } },
+) {
+  try {
+    const cpfParam = decodeURIComponent(params.cpf ?? "").trim();
+
+    if (!cpfParam) {
+      return NextResponse.json(
+        { error: "CPF inválido." },
+        { status: 400 },
+      );
+    }
+
+    const client = await prisma.guardian.findUnique({
+      where: { cpf: cpfParam },
+      select: {
+        cpf: true,
+        name: true,
+        kinship: true,
+        birthDate: true,
+        spouseName: true,
+        address: true,
+        mobile: true,
+        landline: true,
+        workAddress: true,
+        workPhone: true,
+      },
+    });
+
+    if (!client) {
+      return NextResponse.json(
+        { error: "Cliente não encontrado." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ client: formatClient(client) });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Não foi possível carregar o cliente." },
+      { status: 500 },
+    );
+  }
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: { cpf: string } },
