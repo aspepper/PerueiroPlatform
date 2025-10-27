@@ -1,5 +1,6 @@
 package com.idealinspecao.perueiroapp.data.remote
 
+import com.idealinspecao.perueiroapp.data.remote.RemoteApiConfig.withApiKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrl
