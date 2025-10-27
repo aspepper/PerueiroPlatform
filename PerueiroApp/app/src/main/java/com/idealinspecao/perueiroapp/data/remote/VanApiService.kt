@@ -17,34 +17,7 @@ class VanApiService(
 
     suspend fun findVan(plate: String): RemoteVan? {
         return withContext(Dispatchers.IO) {
-            val normalizedPlate = plate.trim().uppercase()
-            if (normalizedPlate.isEmpty()) return@withContext null
-
-            val requestUrl = vansUrl
-                .toHttpUrl()
-                .newBuilder()
-                .addPathSegment(normalizedPlate)
-                .build()
-                .toString()
-
-            val request = Request.Builder()
-                .url(requestUrl)
-                .withApiKey()
-                .get()
-                .build()
-
-            client.newCall(request).execute().use { response ->
-                when (response.code) {
-                    HTTP_OK -> {
-                        val body = response.body?.string()?.takeIf { it.isNotBlank() }
-                            ?: throw IOException("Resposta vazia ao buscar van")
-                        return@withContext parseVan(body)
-                    }
-
-                    HTTP_NOT_FOUND -> null
-                    else -> throw IOException("Falha ao buscar van: HTTP ${response.code}")
-                }
-            }
+            fetchVan(plate)
         }
     }
 
@@ -120,13 +93,13 @@ class VanApiService(
                     return if (body != null) {
                         parseVan(body)
                     } else {
-                        findVan(plate)
+                        fetchVan(plate)
                             ?: throw IOException("Não foi possível confirmar atualização da van")
                     }
                 }
 
                 HTTP_NO_CONTENT -> {
-                    return findVan(plate)
+                    return fetchVan(plate)
                         ?: RemoteVan(
                             id = remoteId,
                             model = "",
@@ -142,6 +115,37 @@ class VanApiService(
                 }
 
                 else -> throw IOException("Falha ao atualizar van: HTTP ${response.code}")
+            }
+        }
+    }
+
+    private fun fetchVan(plate: String): RemoteVan? {
+        val normalizedPlate = plate.trim().uppercase()
+        if (normalizedPlate.isEmpty()) return null
+
+        val requestUrl = vansUrl
+            .toHttpUrl()
+            .newBuilder()
+            .addPathSegment(normalizedPlate)
+            .build()
+            .toString()
+
+        val request = Request.Builder()
+            .url(requestUrl)
+            .withApiKey()
+            .get()
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            return when (response.code) {
+                HTTP_OK -> {
+                    val body = response.body?.string()?.takeIf { it.isNotBlank() }
+                        ?: throw IOException("Resposta vazia ao buscar van")
+                    parseVan(body)
+                }
+
+                HTTP_NOT_FOUND -> null
+                else -> throw IOException("Falha ao buscar van: HTTP ${response.code}")
             }
         }
     }
