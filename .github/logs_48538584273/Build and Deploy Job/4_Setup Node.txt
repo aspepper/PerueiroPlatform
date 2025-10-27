@@ -1,0 +1,28 @@
+﻿2025-10-27T22:14:57.8514831Z ##[group]Run actions/setup-node@v4
+2025-10-27T22:14:57.8515126Z with:
+2025-10-27T22:14:57.8515306Z   node-version: 20
+2025-10-27T22:14:57.8515499Z   cache: npm
+2025-10-27T22:14:57.8515685Z   always-auth: false
+2025-10-27T22:14:57.8515898Z   check-latest: false
+2025-10-27T22:14:57.8516210Z   token: ***
+2025-10-27T22:14:57.8516389Z env:
+2025-10-27T22:14:57.8517466Z   DATABASE_URL: ***
+2025-10-27T22:14:57.8517797Z   NEXTAUTH_URL: ***
+2025-10-27T22:14:57.8518015Z   NEXTAUTH_SECRET: ***
+2025-10-27T22:14:57.8518218Z   AUTH_TRUST_HOST: true
+2025-10-27T22:14:57.8518417Z ##[endgroup]
+2025-10-27T22:14:58.0346097Z Found in cache @ /opt/hostedtoolcache/node/20.19.5/x64
+2025-10-27T22:14:58.0352797Z ##[group]Environment details
+2025-10-27T22:14:58.4808446Z node: v20.19.5
+2025-10-27T22:14:58.4809406Z npm: 10.8.2
+2025-10-27T22:14:58.4810446Z yarn: 1.22.22
+2025-10-27T22:14:58.4812717Z ##[endgroup]
+2025-10-27T22:14:58.4813934Z [command]/opt/hostedtoolcache/node/20.19.5/x64/bin/npm config get cache
+2025-10-27T22:14:58.6137851Z /home/runner/.npm
+2025-10-27T22:14:58.8247356Z Cache hit for: node-cache-Linux-x64-npm-3d5c3cdf2049b230b327e905235ae57e2251bd652186d04bf09b1effa332a2b5
+2025-10-27T22:14:59.9390821Z Received 121634816 of 212090981 (57.4%), 115.9 MBs/sec
+2025-10-27T22:15:00.5737227Z Received 212090981 of 212090981 (100.0%), 123.6 MBs/sec
+2025-10-27T22:15:00.5741879Z Cache Size: ~202 MB (212090981 B)
+2025-10-27T22:15:00.5913292Z [command]/usr/bin/tar -xf /home/runner/work/_temp/43e67fa6-00ca-4522-9c38-b0efbd24a4e2/cache.tzst -P -C /home/runner/work/PerueiroPlatform/PerueiroPlatform --use-compress-program unzstd
+2025-10-27T22:15:01.0528991Z Cache restored successfully
+2025-10-27T22:15:01.0928020Z Cache restored from key: node-cache-Linux-x64-npm-3d5c3cdf2049b230b327e905235ae57e2251bd652186d04bf09b1effa332a2b5
