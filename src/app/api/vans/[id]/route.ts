@@ -25,6 +25,18 @@ const formatVan = (van: {
   monthlyFee: Number(van.monthlyFee),
 });
 
+const VAN_SELECT = {
+  id: true,
+  model: true,
+  color: true,
+  year: true,
+  plate: true,
+  driverCpf: true,
+  driver: { select: { name: true } },
+  billingDay: true,
+  monthlyFee: true,
+} satisfies Prisma.VanSelect;
+
 const sanitizeOptionalString = (value: unknown) => {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -82,6 +94,83 @@ const parseIdParam = (value: string | undefined) => {
   }
 };
 
+const parsePlateParam = (value: string | undefined) => {
+  const trimmed = (value ?? "").trim();
+  if (!trimmed) return null;
+
+  const normalized = trimmed.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!normalized) return null;
+
+  const hyphenated =
+    normalized.length === 7
+      ? `${normalized.slice(0, 3)}-${normalized.slice(3)}`
+      : null;
+
+  const variations = new Set<string>();
+  variations.add(trimmed);
+  variations.add(trimmed.toUpperCase());
+  variations.add(normalized);
+  if (hyphenated) variations.add(hyphenated);
+
+  return { normalized, variations: Array.from(variations) };
+};
+
+export async function GET(
+  _request: Request,
+  { params }: { params: { id: string } },
+) {
+  try {
+    const vanId = parseIdParam(params.id);
+
+    if (vanId !== null) {
+      const van = await prisma.van.findUnique({
+        where: { id: vanId },
+        select: VAN_SELECT,
+      });
+
+      if (!van) {
+        return NextResponse.json(
+          { error: "Van não encontrada." },
+          { status: 404 },
+        );
+      }
+
+      return NextResponse.json({ van: formatVan(van) });
+    }
+
+    const plateParam = parsePlateParam(params.id);
+    if (!plateParam) {
+      return NextResponse.json(
+        { error: "Identificador da van inválido." },
+        { status: 400 },
+      );
+    }
+
+    const van = await prisma.van.findFirst({
+      where: {
+        OR: plateParam.variations.map((plate) => ({
+          plate: { equals: plate, mode: "insensitive" },
+        })),
+      },
+      select: VAN_SELECT,
+    });
+
+    if (!van) {
+      return NextResponse.json(
+        { error: "Van não encontrada." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ van: formatVan(van) });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Não foi possível carregar a van." },
+      { status: 500 },
+    );
+  }
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } },
@@ -118,17 +207,7 @@ export async function PUT(
         billingDay: sanitizeBillingDay(body.billingDay),
         monthlyFee: sanitizeCurrency(body.monthlyFee),
       },
-      select: {
-        id: true,
-        model: true,
-        color: true,
-        year: true,
-        plate: true,
-        driverCpf: true,
-        driver: { select: { name: true } },
-        billingDay: true,
-        monthlyFee: true,
-      },
+      select: VAN_SELECT,
     });
 
     return NextResponse.json({ van: formatVan(van) });
