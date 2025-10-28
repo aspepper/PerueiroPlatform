@@ -1,0 +1,23 @@
+﻿"timestamp [UTC]",severityLevel,message,"cloud_RoleName","operation_Name","operation_Id"
+"27/10/2025, 21:46:26.817",1,"prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }","staticwebapps-0cb4fb8c-a0a3-4e59-a590-d1d3b6a56fe3",,
+"27/10/2025, 21:46:26.817",1,"prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }","staticwebapps-0cb4fb8c-a0a3-4e59-a590-d1d3b6a56fe3",,
+"27/10/2025, 21:46:26.816",1,"prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }","staticwebapps-0cb4fb8c-a0a3-4e59-a590-d1d3b6a56fe3",,
+"27/10/2025, 21:41:14.637",2," ⚠ Unsupported metadata themeColor is configured in metadata export in /vans. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport","staticwebapps-0cb4fb8c-a0a3-4e59-a590-d1d3b6a56fe3",,4fce8a3f482f4a2b58b9b9a960ecfff1
+"27/10/2025, 21:41:11.179",2," ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport","staticwebapps-0cb4fb8c-a0a3-4e59-a590-d1d3b6a56fe3",,64acc3e2233c4ca28f1bad3b250c83b3
+"27/10/2025, 21:39:37.416",2," ⚠ Unsupported metadata themeColor is configured in metadata export in /clients. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport","staticwebapps-0cb4fb8c-a0a3-4e59-a590-d1d3b6a56fe3",,7b362e9a1417bab58c6c4f53bc8c18c8
+"27/10/2025, 21:39:31.958",2," ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport","staticwebapps-0cb4fb8c-a0a3-4e59-a590-d1d3b6a56fe3",,960824c7a8abd11e68ef2ce55bd1f4b7
+"27/10/2025, 21:31:14.982",1,"prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }","staticwebapps-0cb4fb8c-a0a3-4e59-a590-d1d3b6a56fe3",,
+"27/10/2025, 21:31:14.982",1,"prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }","staticwebapps-0cb4fb8c-a0a3-4e59-a590-d1d3b6a56fe3",,
+"27/10/2025, 21:31:14.982",1,"prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }","staticwebapps-0cb4fb8c-a0a3-4e59-a590-d1d3b6a56fe3",,
+"27/10/2025, 21:26:02.631",1,"[telemetry:event] MobileLoginSuccess {
+  cpfMasked: '121******12',
+  role: 'DRIVER',
+  hasUserAccount: 'true',
+  passwordHashType: 'bcrypt',
+  usedDefaultPassword: 'true',
+  hasEmail: 'true'
+}","staticwebapps-0cb4fb8c-a0a3-4e59-a590-d1d3b6a56fe3",,074bbac6005c44244182ca8d4ea27a1e

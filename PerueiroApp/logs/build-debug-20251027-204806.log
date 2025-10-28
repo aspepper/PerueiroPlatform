@@ -20,57 +20,36 @@
 > Task :app:processDebugManifest UP-TO-DATE
 > Task :app:processDebugManifestForPackage UP-TO-DATE
 > Task :app:processDebugResources UP-TO-DATE
+> Task :app:kaptGenerateStubsDebugKotlin UP-TO-DATE
+> Task :app:kaptDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
 > Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
 > Task :app:mergeDebugShaders UP-TO-DATE
 > Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:mergeDebugAssets UP-TO-DATE
 > Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
 > Task :app:checkDebugDuplicateClasses UP-TO-DATE
 > Task :app:desugarDebugFileDependencies UP-TO-DATE
 > Task :app:mergeExtDexDebug UP-TO-DATE
 > Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:dexBuilderDebug UP-TO-DATE
+> Task :app:mergeProjectDexDebug UP-TO-DATE
 > Task :app:mergeDebugJniLibFolders UP-TO-DATE
 > Task :app:mergeDebugNativeLibs UP-TO-DATE
 > Task :app:stripDebugDebugSymbols UP-TO-DATE
 > Task :app:validateSigningDebug UP-TO-DATE
 > Task :app:writeDebugAppMetadata UP-TO-DATE
 > Task :app:writeDebugSigningConfigVersions UP-TO-DATE
-
-> Task :app:kaptGenerateStubsDebugKotlin
-w: Kapt currently doesn't support language version 2.0+. Falling back to 1.9.
-
-> Task :app:kaptDebugKotlin
-
-> Task :app:compileDebugKotlin
-w: file:///Users/alexpimenta/Projects/PerueiroPlatform/PerueiroApp/app/src/main/java/com/idealinspecao/perueiroapp/ui/screens/management/VanManagementScreen.kt:189:43 Condition is always 'true'.
-w: file:///Users/alexpimenta/Projects/PerueiroPlatform/PerueiroApp/app/src/main/java/com/idealinspecao/perueiroapp/ui/screens/management/VanManagementScreen.kt:211:43 Condition is always 'true'.
-
-> Task :app:compileDebugJavaWithJavac
-Java compiler version 21 has deprecated support for compiling with source/target version 8.
-Try one of the following options:
-    1. [Recommended] Use Java toolchain with a lower language version
-    2. Set a higher source/target version
-    3. Use a lower version of the JDK running the build (if you're not using Java toolchain)
-For more details on how to configure these settings, see https://developer.android.com/build/jdks.
-To suppress this warning, set android.javaCompile.suppressSourceTargetDeprecationWarning=true in gradle.properties.
-warning: [options] source value 8 is obsolete and will be removed in a future release
-warning: [options] target value 8 is obsolete and will be removed in a future release
-warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
-3 warnings
-
-> Task :app:processDebugJavaRes UP-TO-DATE
-> Task :app:mergeDebugJavaResource UP-TO-DATE
-> Task :app:dexBuilderDebug
-> Task :app:mergeProjectDexDebug
-> Task :app:packageDebug
+> Task :app:packageDebug UP-TO-DATE
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
-> Task :app:assembleDebug
+> Task :app:assembleDebug UP-TO-DATE
 
-[Incubating] Problems report is available at: file:///Users/alexpimenta/Projects/PerueiroPlatform/PerueiroApp/build/reports/problems/problems-report.html
-
-BUILD SUCCESSFUL in 2m 24s
-40 actionable tasks: 7 executed, 33 up-to-date
+BUILD SUCCESSFUL in 1m 31s
+40 actionable tasks: 40 up-to-date
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
@@ -125,7 +104,7 @@ BUILD SUCCESSFUL in 8s
 41 actionable tasks: 1 executed, 40 up-to-date
 [INFO] Limpando logcat...
 [INFO] Resolvendo PID para 'com.idealinspecao.perueiroapp'...
-[INFO] PID: 22191
-[INFO] Gravando logcat em: ./logs/run-debug-20251027-195303.log
-[INFO] Filtro: --pid 22191
-[INFO] Logcat PID: 5223
+[INFO] PID: 30615
+[INFO] Gravando logcat em: ./logs/run-debug-20251027-204806.log
+[INFO] Filtro: --pid 30615
+[INFO] Logcat PID: 20263
