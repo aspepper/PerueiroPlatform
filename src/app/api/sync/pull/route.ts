@@ -250,20 +250,28 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
       students.push(withNormalizedCpfReferences(studentRecord));
     }
 
-    if (guardian && shouldInclude(guardian.updatedAt, updatedSince)) {
-      const normalizedCpf = normalizeCpfOrKeep(guardian.cpf);
-      guardiansMap.set(normalizedCpf, {
-        record: { ...guardian, cpf: normalizedCpf },
-        ensure: {
-          cpf: guardian.cpf,
-          name: guardian.name,
-          userId: guardian.userId,
-        },
-      });
+    if (guardian) {
+      const includeGuardian =
+        includeStudent || shouldInclude(guardian.updatedAt, updatedSince);
+      if (includeGuardian) {
+        const normalizedCpf = normalizeCpfOrKeep(guardian.cpf);
+        guardiansMap.set(normalizedCpf, {
+          record: { ...guardian, cpf: normalizedCpf },
+          ensure: {
+            cpf: guardian.cpf,
+            name: guardian.name,
+            userId: guardian.userId,
+          },
+        });
+      }
     }
 
-    if (school && shouldInclude(school.updatedAt, updatedSince)) {
-      schoolsMap.set(school.id.toString(), school);
+    if (school) {
+      const includeSchool =
+        includeStudent || shouldInclude(school.updatedAt, updatedSince);
+      if (includeSchool) {
+        schoolsMap.set(school.id.toString(), school);
+      }
     }
 
     if (van) {
@@ -271,7 +279,7 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
     }
 
     for (const payment of payments) {
-      if (shouldInclude(payment.updatedAt, updatedSince)) {
+      if (includeStudent || shouldInclude(payment.updatedAt, updatedSince)) {
         paymentsMap.set(payment.id.toString(), payment);
       }
     }
