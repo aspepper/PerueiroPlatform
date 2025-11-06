@@ -95,13 +95,13 @@ fun SplashScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "IDEAL",
+                text = "PERUEIROS",
                 style = MaterialTheme.typography.displaySmall,
                 color = SplashBackground,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "inspeção",
+                text = "2025® Todos direitos\nreservados",
                 style = MaterialTheme.typography.headlineSmall,
                 color = SplashBackground,
                 fontWeight = FontWeight.SemiBold
@@ -123,7 +123,7 @@ fun SplashScreen(
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Ideal Inspeção",
+                text = "Perueiros App",
                 color = Color.White,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium

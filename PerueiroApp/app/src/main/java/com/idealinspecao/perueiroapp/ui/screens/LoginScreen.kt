@@ -26,7 +26,7 @@ fun LoginScreen(onDriverLogin: () -> Unit, onParentLogin: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "IDEAL INSPEÇÃO", style = androidx.compose.material3.MaterialTheme.typography.headlineMedium)
+        Text(text = "PERUEIROS", style = androidx.compose.material3.MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(32.dp))
         
         TextField(

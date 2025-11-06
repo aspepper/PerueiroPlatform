@@ -92,7 +92,7 @@ fun LoginScreen(
                 GlowBadge()
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Ideal Inspeção",
+                    text = "Perueiros App",
                     color = Color.White,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
