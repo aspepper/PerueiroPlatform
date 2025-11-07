@@ -188,9 +188,6 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
     where: { OR: cpfConditions },
     include: {
       vans: { select: vanSelect },
-      students: {
-        include: studentInclude,
-      },
     },
   });
 
@@ -203,27 +200,22 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
     userId: driver.userId,
   });
 
-  const { vans: driverVans, students: directStudents, ...driverRecord } = driver;
+  const driverStudents = await prisma.student.findMany({
+    where: {
+      OR: [
+        { driverCpf: driver.cpf },
+        { van: { driverCpf: driver.cpf } },
+      ],
+    },
+    include: studentInclude,
+  });
 
-  const additionalStudents = driverVans.length
-    ? await prisma.student.findMany({
-        where: { vanId: { in: driverVans.map((van) => van.id) } },
-        include: studentInclude,
-      })
-    : [];
-
-  const studentMap = new Map<string, (typeof directStudents)[number]>();
-  for (const student of directStudents) {
-    studentMap.set(student.id.toString(), student);
-  }
-  for (const student of additionalStudents) {
-    studentMap.set(student.id.toString(), student as (typeof directStudents)[number]);
-  }
-  const driverStudents = Array.from(studentMap.values());
+  const { vans: driverVans, ...driverRecord } = driver;
 
   const drivers = shouldInclude(driver.updatedAt, updatedSince)
     ? [withNormalizedCpf(driverRecord)]
     : [];
+
   const guardiansMap = new Map<
     string,
     {
@@ -246,13 +238,14 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
   for (const student of driverStudents) {
     const { guardian, school, van, payments, ...studentRecord } = student;
     const includeStudent = shouldInclude(student.updatedAt, updatedSince);
-    if (includeStudent) {
+
+    if (!updatedSince || includeStudent) {
       students.push(withNormalizedCpfReferences(studentRecord));
     }
 
     if (guardian) {
       const includeGuardian =
-        includeStudent || shouldInclude(guardian.updatedAt, updatedSince);
+        includeStudent || !updatedSince || shouldInclude(guardian.updatedAt, updatedSince);
       if (includeGuardian) {
         const normalizedCpf = normalizeCpfOrKeep(guardian.cpf);
         guardiansMap.set(normalizedCpf, {
@@ -268,18 +261,19 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
 
     if (school) {
       const includeSchool =
-        includeStudent || shouldInclude(school.updatedAt, updatedSince);
+        includeStudent || !updatedSince || shouldInclude(school.updatedAt, updatedSince);
       if (includeSchool) {
         schoolsMap.set(school.id.toString(), school);
       }
     }
 
     if (van) {
-      collectVan(vansMap, van, updatedSince, includeStudent);
+      const forceInclude = includeStudent || !updatedSince;
+      collectVan(vansMap, van, updatedSince, forceInclude);
     }
 
     for (const payment of payments) {
-      if (includeStudent || shouldInclude(payment.updatedAt, updatedSince)) {
+      if (!updatedSince || includeStudent || shouldInclude(payment.updatedAt, updatedSince)) {
         paymentsMap.set(payment.id.toString(), payment);
       }
     }

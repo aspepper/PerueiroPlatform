@@ -15,11 +15,11 @@ val keystoreProgression = Properties().apply {
 }
 
 android {
-    namespace = "com.idealinspecao.perueiroapp"
+    namespace = "com.softwareinc.perueiroapp"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.idealinspecao.perueiroapp"
+        applicationId = "com.softwareinc.perueiroapp"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

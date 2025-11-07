@@ -14,7 +14,7 @@ Clear
 
 MODULE="${MODULE:-app}"
 VARIANT="${VARIANT:-debug}"
-APP_ID="${APP_ID:-com.idealinspecao.perueiroapp}"
+APP_ID="${APP_ID:-com.softwareinc.perueiroapp}"
 MAIN_ACTIVITY="${MAIN_ACTIVITY:-}"                 # vazio => auto-resolver LAUNCHER
 ADB_BIN="${ADB_BIN:-adb}"
 GRADLEW="${GRADLEW:-./gradlew}"
