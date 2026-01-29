@@ -440,7 +440,6 @@ class IdealRepository(
                 .put("id", student.id.takeIf { it > 0 })
                 .put("name", student.name)
                 .put("birthDate", student.birthDate)
-                .put("grade", student.grade)
                 .put("guardianCpf", student.motherCpf ?: student.fatherCpf)
                 .put("schoolId", student.schoolId)
                 .put("vanId", student.vanId)
@@ -448,6 +447,7 @@ class IdealRepository(
                 .put("mobile", student.mobile)
         )
     }
+
     suspend fun getStudent(id: Long) = dao.getStudent(id)
     fun observeStudentsByGuardian(cpf: String) = dao.observeStudentsByGuardian(cpf)
     suspend fun deleteStudent(id: Long) {
