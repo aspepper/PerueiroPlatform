@@ -142,14 +142,12 @@ async function loadDashboardData() {
     }),
     prisma.payment.findMany({
       where: { status: "OVERDUE" },
-      include: {
-        student: {
-          select: {
-            name: true,
-            guardian: { select: { name: true } },
-            school: { select: { name: true } },
-          },
-        },
+      select: {
+        id: true,
+        studentId: true,
+        amount: true,
+        discount: true,
+        dueDate: true,
       },
       orderBy: { dueDate: "desc" },
       take: 5,
@@ -157,6 +155,44 @@ async function loadDashboardData() {
     prisma.student.count({ where: { vanId: null } }),
     prisma.student.count({ where: { blacklist: true } }),
   ]);
+
+  const studentIds = [...new Set(overduePayments.map((payment) => payment.studentId))];
+  const students = studentIds.length
+    ? await prisma.student.findMany({
+        where: { id: { in: studentIds } },
+        select: { id: true, name: true, schoolId: true },
+      })
+    : [];
+
+  const schoolIds = [
+    ...new Set(students.map((student) => student.schoolId).filter((id): id is bigint => id !== null)),
+  ];
+  const schools = schoolIds.length
+    ? await prisma.school.findMany({
+        where: { id: { in: schoolIds } },
+        select: { id: true, name: true },
+      })
+    : [];
+
+  const studentById = new Map(students.map((student) => [student.id.toString(), student]));
+  const schoolById = new Map(schools.map((school) => [school.id.toString(), school]));
+
+  const overduePaymentsWithStudent = overduePayments.map((payment) => {
+    const student = studentById.get(payment.studentId.toString());
+    const school =
+      student?.schoolId !== null && student?.schoolId !== undefined
+        ? schoolById.get(student.schoolId.toString())
+        : undefined;
+    return {
+      ...payment,
+      student: student
+        ? {
+            name: student.name,
+            school: school ? { name: school.name } : null,
+          }
+        : null,
+    };
+  });
 
   return {
     driverCount,
@@ -173,7 +209,7 @@ async function loadDashboardData() {
     nextChargeDate: nextCharge?.dueDate ?? null,
     topVans,
     pendingDrivers,
-    overduePayments,
+    overduePayments: overduePaymentsWithStudent,
     studentsWithoutVanCount,
     blacklistedStudentsCount,
   };

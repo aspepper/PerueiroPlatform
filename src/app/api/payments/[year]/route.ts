@@ -38,37 +38,86 @@ export async function GET(
         status: { in: ACTIVE_STATUSES },
         dueDate: { gte: start, lt: end },
       },
-      include: {
-        student: {
-          select: {
-            id: true,
-            name: true,
-            guardian: { select: { cpf: true, name: true } },
-          },
-        },
-        van: {
-          select: {
-            id: true,
-            model: true,
-            plate: true,
-            driver: { select: { cpf: true, name: true } },
-          },
-        },
+      select: {
+        id: true,
+        studentId: true,
+        vanId: true,
+        dueDate: true,
+        status: true,
+        amount: true,
+        discount: true,
+        paidAt: true,
       },
       orderBy: [{ dueDate: "asc" }],
     });
 
+    const studentIds = [...new Set(payments.map((payment) => payment.studentId))];
+    const vanIds = [
+      ...new Set(payments.map((payment) => payment.vanId).filter((id): id is bigint => id !== null)),
+    ];
+
+    const students = studentIds.length
+      ? await prisma.student.findMany({
+          where: { id: { in: studentIds } },
+          select: { id: true, name: true, guardianCpf: true },
+        })
+      : [];
+
+    const guardianCpfs = [
+      ...new Set(
+        students
+          .map((student) => student.guardianCpf)
+          .filter((cpf): cpf is string => cpf !== null),
+      ),
+    ];
+    const guardians = guardianCpfs.length
+      ? await prisma.guardian.findMany({
+          where: { cpf: { in: guardianCpfs } },
+          select: { cpf: true, name: true },
+        })
+      : [];
+
+    const vans = vanIds.length
+      ? await prisma.van.findMany({
+          where: { id: { in: vanIds } },
+          select: { id: true, model: true, plate: true, driverCpf: true },
+        })
+      : [];
+
+    const driverCpfs = [
+      ...new Set(
+        vans
+          .map((van) => van.driverCpf)
+          .filter((cpf): cpf is string => cpf !== null),
+      ),
+    ];
+    const drivers = driverCpfs.length
+      ? await prisma.driver.findMany({
+          where: { cpf: { in: driverCpfs } },
+          select: { cpf: true, name: true },
+        })
+      : [];
+
+    const studentById = new Map(students.map((student) => [student.id.toString(), student]));
+    const guardianByCpf = new Map(guardians.map((guardian) => [guardian.cpf, guardian]));
+    const vanById = new Map(vans.map((van) => [van.id.toString(), van]));
+    const driverByCpf = new Map(drivers.map((driver) => [driver.cpf, driver]));
+
     const formatted = payments.map((payment) => ({
       id: payment.id.toString(),
       studentId: payment.studentId.toString(),
-      studentName: payment.student?.name ?? null,
-      guardianCpf: payment.student?.guardian?.cpf ?? null,
-      guardianName: payment.student?.guardian?.name ?? null,
-      vanId: payment.van?.id ? payment.van.id.toString() : null,
-      vanModel: payment.van?.model ?? null,
-      vanPlate: payment.van?.plate ?? null,
-      vanOwnerCpf: payment.van?.driver?.cpf ?? null,
-      vanOwnerName: payment.van?.driver?.name ?? null,
+      studentName: studentById.get(payment.studentId.toString())?.name ?? null,
+      guardianCpf: studentById.get(payment.studentId.toString())?.guardianCpf ?? null,
+      guardianName:
+        guardianByCpf.get(studentById.get(payment.studentId.toString())?.guardianCpf ?? "")?.name ??
+        null,
+      vanId: payment.vanId ? payment.vanId.toString() : null,
+      vanModel: payment.vanId ? vanById.get(payment.vanId.toString())?.model ?? null : null,
+      vanPlate: payment.vanId ? vanById.get(payment.vanId.toString())?.plate ?? null : null,
+      vanOwnerCpf: payment.vanId ? vanById.get(payment.vanId.toString())?.driverCpf ?? null : null,
+      vanOwnerName: payment.vanId
+        ? driverByCpf.get(vanById.get(payment.vanId.toString())?.driverCpf ?? "")?.name ?? null
+        : null,
       dueDate: payment.dueDate.toISOString(),
       status: payment.status,
       amount: Number(payment.amount),
