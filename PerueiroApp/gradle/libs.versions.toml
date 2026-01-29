@@ -17,9 +17,9 @@ lifecycleRuntimeKtxVersion = "2.7.0"
 navigationCompose = "2.9.5"
 datastorePreferences = "1.1.1"
 okhttp = "4.12.0"
-roomCompiler = "2.6.1"
-roomKtx = "2.6.1"
-roomRuntime = "2.6.1"
+roomCompiler = "2.7.0"
+roomKtx = "2.7.0"
+roomRuntime = "2.7.0"
 workManager = "2.9.0"
 
 [libraries]
