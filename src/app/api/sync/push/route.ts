@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { Prisma } from "@prisma/client";
+import { PaymentStatus, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { requireMobileJwt, resolveSyncScope } from "../shared";
@@ -38,6 +38,18 @@ function normalizeOperation(operation: string) {
   if (op === "CREATE" || op === "UPDATE" || op === "UPSERT") return "UPSERT";
   if (op === "DELETE") return "DELETE";
   return null;
+}
+
+const PAYMENT_STATUSES = new Set(Object.values(PaymentStatus));
+
+function resolvePaymentStatus(value: unknown) {
+  if (typeof value === "string") {
+    const normalized = value.toUpperCase();
+    if (PAYMENT_STATUSES.has(normalized as PaymentStatus)) {
+      return normalized as PaymentStatus;
+    }
+  }
+  return PaymentStatus.PENDING;
 }
 
 export async function POST(request: Request) {
@@ -292,6 +304,8 @@ async function handleUpsert(
       if (existing && isConflict(existing.updatedAt, clientUpdatedAt)) return true;
     }
 
+    const status = resolvePaymentStatus(payload.status);
+
     await prisma.payment.upsert({
       where: { id: id ?? BigInt(0) },
       update: {
@@ -301,7 +315,7 @@ async function handleUpsert(
         paidAt: payload.paidAt ? new Date(String(payload.paidAt)) : null,
         amount: new Prisma.Decimal(Number(payload.amount ?? 0)),
         discount: new Prisma.Decimal(Number(payload.discount ?? 0)),
-        status: String(payload.status ?? "PENDING"),
+        status,
         deletedAt: null,
       },
       create: {
@@ -311,7 +325,7 @@ async function handleUpsert(
         paidAt: payload.paidAt ? new Date(String(payload.paidAt)) : null,
         amount: new Prisma.Decimal(Number(payload.amount ?? 0)),
         discount: new Prisma.Decimal(Number(payload.discount ?? 0)),
-        status: String(payload.status ?? "PENDING"),
+        status,
       },
     });
     return false;
