@@ -6,6 +6,7 @@ import { normalizeCpfOrKeep } from "@/lib/cpf";
 import { isBcryptHash, verifyPassword } from "@/lib/password";
 import { logTelemetryEvent } from "@/lib/telemetry";
 import { maskCpf } from "@/lib/sanitizers";
+import { signMobileToken } from "@/lib/mobile-jwt";
 import {
   cpfSearchConditions,
   requireMobileApiKey,
@@ -113,6 +114,18 @@ async function authenticateDriver(
     { password },
   );
 
+  const refreshedDriver = await prisma.driver.findUnique({
+    where: { cpf: driver.cpf },
+    select: { userId: true },
+  });
+  const token = refreshedDriver?.userId
+    ? await signMobileToken({
+        userId: refreshedDriver.userId,
+        role: "DRIVER",
+        cpf: normalizeCpfOrKeep(driver.cpf),
+      })
+    : null;
+
   logTelemetryEvent("MobileLoginSuccess", {
     cpfMasked: maskedCpf,
     role: "DRIVER",
@@ -132,6 +145,7 @@ async function authenticateDriver(
       address: driver.address,
       updatedAt: driver.updatedAt.toISOString(),
     },
+    token,
     syncedAt: new Date().toISOString(),
   });
 }
@@ -192,6 +206,18 @@ async function authenticateGuardian(
     { password },
   );
 
+  const refreshedGuardian = await prisma.guardian.findUnique({
+    where: { cpf: guardian.cpf },
+    select: { userId: true },
+  });
+  const token = refreshedGuardian?.userId
+    ? await signMobileToken({
+        userId: refreshedGuardian.userId,
+        role: "GUARDIAN",
+        cpf: normalizeCpfOrKeep(guardian.cpf),
+      })
+    : null;
+
   logTelemetryEvent("MobileLoginSuccess", {
     cpfMasked: maskedCpf,
     role: "GUARDIAN",
@@ -215,6 +241,7 @@ async function authenticateGuardian(
       workPhone: guardian.workPhone,
       updatedAt: guardian.updatedAt.toISOString(),
     },
+    token,
     syncedAt: new Date().toISOString(),
   });
 }

@@ -25,7 +25,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class IdealAppViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = IdealRepository(IdealDatabase.getInstance(application).idealDao())
+    private val repository =
+        IdealRepository(IdealDatabase.getInstance(application).idealDao(), application)
     private val sessionDataSource = UserSessionDataSource(application)
 
     val loggedUser: StateFlow<LoggedUser?> = sessionDataSource.session
@@ -80,7 +81,11 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
                 when (val result = repository.authenticateDriver(cpf, password)) {
                     is AuthenticationResult.Success -> {
                         val driver = result.user
-                        sessionDataSource.setSession(driver.cpf, UserRole.DRIVER.name)
+                        sessionDataSource.setSession(
+                            driver.cpf,
+                            UserRole.DRIVER.name,
+                            result.token
+                        )
                         LoginOutcome.Driver(driver)
                     }
 
@@ -98,7 +103,11 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
                             guardian.mustChangePassword -> LoginOutcome.MustChangePassword(guardian.cpf)
                             guardian.isBlacklisted -> LoginOutcome.Error("Responsável bloqueado devido a pendências")
                             else -> {
-                                sessionDataSource.setSession(guardian.cpf, UserRole.GUARDIAN.name)
+                                sessionDataSource.setSession(
+                                    guardian.cpf,
+                                    UserRole.GUARDIAN.name,
+                                    result.token
+                                )
                                 LoginOutcome.Guardian(guardian)
                             }
                         }
@@ -213,7 +222,7 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
     }
 
     suspend fun syncFromServer(loggedUser: LoggedUser?) {
-        repository.syncFromServer(loggedUser?.role, loggedUser?.cpf)
+        repository.syncFromServer(loggedUser?.role, loggedUser?.cpf, loggedUser?.token)
     }
 
     fun studentsForGuardian(cpf: String): StateFlow<List<StudentEntity>> {
@@ -261,10 +270,12 @@ data class GuardianLookupResult(
     val alreadyExists: Boolean
 )
 
-data class LoggedUser(val cpf: String, val role: UserRole)
+data class LoggedUser(val cpf: String, val role: UserRole, val token: String?)
 
 private fun UserSession.toLoggedUser(): LoggedUser? =
-    runCatching { UserRole.valueOf(role) }.getOrNull()?.let { LoggedUser(cpf = cpf, role = it) }
+    runCatching { UserRole.valueOf(role) }.getOrNull()?.let {
+        LoggedUser(cpf = cpf, role = it, token = token)
+    }
 
 sealed interface LoginOutcome {
     data class Driver(val driver: DriverEntity) : LoginOutcome

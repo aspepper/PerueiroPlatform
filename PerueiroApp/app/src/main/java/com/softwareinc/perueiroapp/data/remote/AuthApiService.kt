@@ -77,6 +77,8 @@ class AuthApiService(
         val role = UserRole.entries.firstOrNull { it.name.equals(json.optString("role"), ignoreCase = true) }
             ?: throw IOException("Resposta de autenticação inválida")
 
+        val token = json.optString("token").takeIf { it.isNotBlank() }
+
         val driver = json.optJSONObject("driver")?.let { driverJson ->
             val cpf = driverJson.optString("cpf").takeIf { it.isNotBlank() }
                 ?: throw IOException("Resposta de autenticação inválida")
@@ -118,7 +120,8 @@ class AuthApiService(
             role = role,
             driver = driver,
             guardian = guardian,
-            syncedAt = json.optNullableString("syncedAt")?.toDateOrNull()
+            syncedAt = json.optNullableString("syncedAt")?.toDateOrNull(),
+            token = token
         )
     }
 
@@ -126,7 +129,8 @@ class AuthApiService(
         val role: UserRole,
         val driver: RemoteDriver?,
         val guardian: RemoteGuardian?,
-        val syncedAt: Date?
+        val syncedAt: Date?,
+        val token: String?
     )
 
     data class RemoteDriver(

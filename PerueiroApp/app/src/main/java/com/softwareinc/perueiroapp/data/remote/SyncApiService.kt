@@ -8,6 +8,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
@@ -19,13 +20,15 @@ import java.util.TimeZone
 
 class SyncApiService(
     private val client: OkHttpClient = OkHttpClient(),
-    private val pullUrl: String = RemoteApiConfig.syncPullUrl
+    private val pullUrl: String = RemoteApiConfig.syncPullUrl,
+    private val pushUrl: String = RemoteApiConfig.syncPushUrl
 ) {
 
     suspend fun fetchFullSync(
         userRole: UserRole? = null,
         userCpf: String? = null,
-        updatedSince: Date? = null
+        updatedSince: Date? = null,
+        token: String? = null
     ): RemoteSyncPayload = withContext(Dispatchers.IO) {
         val urlBuilder = pullUrl
             .toHttpUrl()
@@ -33,13 +36,20 @@ class SyncApiService(
             .withApiKey()
         userRole?.let { urlBuilder.addQueryParameter("role", it.name) }
         userCpf?.let { urlBuilder.addQueryParameter("cpf", it) }
-        updatedSince?.let { urlBuilder.addQueryParameter("updatedSince", formatUpdatedSince(it)) }
+        updatedSince?.let { updated ->
+            val formatted = formatUpdatedSince(updated)
+            urlBuilder.addQueryParameter("since", formatted)
+            urlBuilder.addQueryParameter("updatedSince", formatted)
+        }
 
-        val request = Request.Builder()
+        val requestBuilder = Request.Builder()
             .url(urlBuilder.build())
             .get()
             .withApiKey()
-            .build()
+
+        token?.takeIf { it.isNotBlank() }?.let { requestBuilder.addHeader("Authorization", "Bearer $it") }
+
+        val request = requestBuilder.build()
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
@@ -196,6 +206,55 @@ class SyncApiService(
         val syncedAt: Date?
     )
 
+    suspend fun pushQueue(
+        token: String,
+        operations: List<SyncQueueOperation>
+    ): SyncQueueResult = withContext(Dispatchers.IO) {
+        val payload = JSONObject().apply {
+            put(
+                "operations",
+                JSONArray().apply {
+                    operations.forEach { operation ->
+                        put(
+                            JSONObject().apply {
+                                put("queueId", operation.queueId)
+                                put("entityType", operation.entityType)
+                                put("entityId", operation.entityId)
+                                put("operation", operation.operation)
+                                put("clientUpdatedAt", operation.clientUpdatedAt)
+                                put("payload", operation.payload)
+                            }
+                        )
+                    }
+                }
+            )
+        }
+
+        val request = Request.Builder()
+            .url(pushUrl)
+            .addHeader("Content-Type", RemoteApiConfig.jsonMediaTypeString)
+            .addHeader("Authorization", "Bearer $token")
+            .withApiKey()
+            .post(payload.toString().toRequestBody(RemoteApiConfig.jsonMediaType))
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw IOException("Falha ao enviar fila de sync: HTTP ${response.code}")
+            }
+
+            val body = response.body?.string() ?: throw IOException("Resposta vazia ao enviar fila")
+            val json = JSONObject(body)
+            val applied = json.optJSONArray("applied") ?: JSONArray()
+            val conflicts = json.optJSONArray("conflicts") ?: JSONArray()
+
+            SyncQueueResult(
+                appliedIds = applied.toLongList(),
+                conflictIds = conflicts.toLongList()
+            )
+        }
+    }
+
     data class RemoteGuardian(
         val cpf: String,
         val name: String,
@@ -207,6 +266,20 @@ class SyncApiService(
         val landline: String?,
         val workAddress: String?,
         val workPhone: String?
+    )
+
+    data class SyncQueueOperation(
+        val queueId: Long,
+        val entityType: String,
+        val entityId: String?,
+        val operation: String,
+        val payload: JSONObject,
+        val clientUpdatedAt: Long
+    )
+
+    data class SyncQueueResult(
+        val appliedIds: List<Long>,
+        val conflictIds: List<Long>
     )
 
     data class RemoteSchool(
@@ -286,6 +359,18 @@ class SyncApiService(
             is Number -> value.toDouble()
             is String -> value.trim().takeIf { it.isNotEmpty() }?.replace(',', '.')?.toDoubleOrNull()
             else -> null
+        }
+    }
+
+    private fun JSONArray.toLongList(): List<Long> = buildList {
+        for (index in 0 until length()) {
+            val value = opt(index)
+            val parsed = when (value) {
+                is Number -> value.toLong()
+                is String -> value.trim().toLongOrNull()
+                else -> null
+            }
+            if (parsed != null) add(parsed)
         }
     }
 

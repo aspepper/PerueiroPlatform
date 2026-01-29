@@ -9,6 +9,7 @@ import {
   normalizeCpfOrKeep,
   normalizeOptionalCpf,
 } from "@/lib/cpf";
+import { requireMobileJwt, resolveSyncScope } from "../shared";
 
 function unauthorized() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,12 +17,16 @@ function unauthorized() {
 
 function emptyPayload() {
   return {
+    syncedAt: new Date().toISOString(),
     guardians: [],
     schools: [],
     drivers: [],
     vans: [],
     students: [],
     payments: [],
+    blacklist: [],
+    calendar: [],
+    publicSettings: [],
   } as const;
 }
 
@@ -135,42 +140,22 @@ function collectVan(
 
 export async function GET(request: Request) {
   try {
+    const { unauthorized, payload } = await requireMobileJwt(request);
+    if (unauthorized) return unauthorized;
+
+    const scope = await resolveSyncScope(payload!);
+    if (!scope) return unauthorized();
+
     const url = new URL(request.url);
-    const key = url.searchParams.get("apiKey");
-    if (!key || key !== process.env.NEXTAUTH_SECRET) return unauthorized();
+    const updatedSince = toDateOrNull(
+      url.searchParams.get("since") ?? url.searchParams.get("updatedSince"),
+    );
 
-    const updatedSince = toDateOrNull(url.searchParams.get("updatedSince"));
-    const role = url.searchParams.get("role")?.toUpperCase();
-    const cpf = url.searchParams.get("cpf")?.trim();
-
-    if (role === "DRIVER" && cpf) {
-      return NextResponse.json(await pullForDriver(cpf, updatedSince));
+    if (scope.role === "DRIVER") {
+      return NextResponse.json(await pullForDriver(scope.cpf, updatedSince));
     }
 
-    if (role === "GUARDIAN" && cpf) {
-      return NextResponse.json(await pullForGuardian(cpf, updatedSince));
-    }
-
-    const whereUpdated = updatedSince ? { updatedAt: { gt: updatedSince } } : {};
-
-    const [guardians, schools, drivers, vans, students, payments] = await Promise.all([
-      prisma.guardian.findMany({ where: whereUpdated }),
-      prisma.school.findMany({ where: whereUpdated }),
-      prisma.driver.findMany({ where: whereUpdated }),
-      prisma.van.findMany({ where: whereUpdated, select: vanSelect }),
-      prisma.student.findMany({ where: whereUpdated }),
-      prisma.payment.findMany({ where: whereUpdated }),
-    ]);
-
-    return NextResponse.json({
-      syncedAt: new Date().toISOString(),
-      guardians: guardians.map(withNormalizedCpf),
-      schools,
-      drivers: drivers.map(withNormalizedCpf),
-      vans: vans.map(formatVanForSync),
-      students: students.map(withNormalizedCpfReferences),
-      payments,
-    });
+    return NextResponse.json(await pullForGuardian(scope.cpf, updatedSince));
   } catch (error) {
     console.error("Falha ao executar sincronização", error);
     return NextResponse.json(
@@ -185,9 +170,9 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
   if (cpfConditions.length === 0) return emptyPayload();
 
   const driver = await prisma.driver.findFirst({
-    where: { OR: cpfConditions },
+    where: { OR: cpfConditions, deletedAt: null },
     include: {
-      vans: { select: vanSelect },
+      vans: { select: vanSelect, where: { deletedAt: null } },
     },
   });
 
@@ -202,6 +187,7 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
 
   const driverStudents = await prisma.student.findMany({
     where: {
+      deletedAt: null,
       OR: [
         { driverCpf: driver.cpf },
         { van: { driverCpf: driver.cpf } },
@@ -243,7 +229,7 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
       students.push(withNormalizedCpfReferences(studentRecord));
     }
 
-    if (guardian) {
+    if (guardian && guardian.deletedAt === null) {
       const includeGuardian =
         includeStudent || !updatedSince || shouldInclude(guardian.updatedAt, updatedSince);
       if (includeGuardian) {
@@ -259,7 +245,7 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
       }
     }
 
-    if (school) {
+    if (school && school.deletedAt === null) {
       const includeSchool =
         includeStudent || !updatedSince || shouldInclude(school.updatedAt, updatedSince);
       if (includeSchool) {
@@ -267,13 +253,16 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
       }
     }
 
-    if (van) {
+    if (van && van.deletedAt === null) {
       const forceInclude = includeStudent || !updatedSince;
       collectVan(vansMap, van, updatedSince, forceInclude);
     }
 
     for (const payment of payments) {
-      if (!updatedSince || includeStudent || shouldInclude(payment.updatedAt, updatedSince)) {
+      if (
+        payment.deletedAt === null &&
+        (!updatedSince || includeStudent || shouldInclude(payment.updatedAt, updatedSince))
+      ) {
         paymentsMap.set(payment.id.toString(), payment);
       }
     }
@@ -291,6 +280,9 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
     vans: Array.from(vansMap.values()),
     students,
     payments: Array.from(paymentsMap.values()),
+    blacklist: [],
+    calendar: [],
+    publicSettings: [],
   };
 }
 
@@ -299,9 +291,10 @@ async function pullForGuardian(cpf: string, updatedSince: Date | null) {
   if (cpfConditions.length === 0) return emptyPayload();
 
   const guardian = await prisma.guardian.findFirst({
-    where: { OR: cpfConditions },
+    where: { OR: cpfConditions, deletedAt: null },
     include: {
       students: {
+        where: { deletedAt: null },
         include: {
           school: true,
           van: { select: vanSelect },
@@ -353,7 +346,7 @@ async function pullForGuardian(cpf: string, updatedSince: Date | null) {
       students.push(withNormalizedCpfReferences(studentRecord));
     }
 
-    if (driver && shouldInclude(driver.updatedAt, updatedSince)) {
+    if (driver && driver.deletedAt === null && shouldInclude(driver.updatedAt, updatedSince)) {
       const normalizedCpf = normalizeCpfOrKeep(driver.cpf);
       driversMap.set(normalizedCpf, {
         record: { ...driver, cpf: normalizedCpf },
@@ -366,16 +359,16 @@ async function pullForGuardian(cpf: string, updatedSince: Date | null) {
       });
     }
 
-    if (van) {
+    if (van && van.deletedAt === null) {
       collectVan(vansMap, van, updatedSince, includeStudent);
     }
 
-    if (school && shouldInclude(school.updatedAt, updatedSince)) {
+    if (school && school.deletedAt === null && shouldInclude(school.updatedAt, updatedSince)) {
       schoolsMap.set(school.id.toString(), school);
     }
 
     for (const payment of payments) {
-      if (shouldInclude(payment.updatedAt, updatedSince)) {
+      if (payment.deletedAt === null && shouldInclude(payment.updatedAt, updatedSince)) {
         paymentsMap.set(payment.id.toString(), payment);
       }
     }
@@ -393,5 +386,8 @@ async function pullForGuardian(cpf: string, updatedSince: Date | null) {
     vans: Array.from(vansMap.values()),
     students,
     payments: Array.from(paymentsMap.values()),
+    blacklist: [],
+    calendar: [],
+    publicSettings: [],
   };
 }
