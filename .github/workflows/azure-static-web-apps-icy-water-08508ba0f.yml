@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD
+name: Perueiro Platform + App CI/CD
 
 on:
   push:
@@ -14,114 +14,76 @@ concurrency:
   cancel-in-progress: true # Define se outros workflows em andamento são cancelados ou não
 
 jobs:
-  build_and_deploy_job:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+  # -----------------------------
+  # 1️⃣ BUILD DO APLICATIVO ANDROID
+  # -----------------------------
+  build_android_app:
     runs-on: ubuntu-latest
-    name: Build and Deploy Job
-    env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-      AUTH_TRUST_HOST: 'true'
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          submodules: true
-          lfs: false
-          
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x ./gradlew
+        working-directory: PerueiroApp
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+        working-directory: PerueiroApp
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: perueiro-app-debug
+          path: PerueiroApp/app/build/outputs/apk/debug/app-debug.apk
+
+  # -----------------------------
+  # 2️⃣ BUILD + DEPLOY DA PLATAFORMA
+  # -----------------------------
+  build_and_deploy_web:
+    needs: build_android_app
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          api-level: 35
-          build-tools: '35.0.0'
-
-      - name: Build Android release APK
-        working-directory: PerueiroApp
-        run: |
-          chmod +x gradlew
-          ./gradlew --no-daemon clean assembleRelease
-
-      - name: Include Android release APK in public assets
-        run: |
-          mkdir -p public/downloads
-          APK_SRC=$(find PerueiroApp/app/build/outputs/apk/release -maxdepth 1 -type f -name "app-release*.apk" | head -n 1)
-          if [ -z "$APK_SRC" ]; then
-            echo "Release APK not found in PerueiroApp/app/build/outputs/apk/release" >&2
-            echo "Available files:" >&2
-            ls -R PerueiroApp/app/build/outputs/apk >&2 || true
-            exit 1
-          fi
-          cp "$APK_SRC" public/downloads/perueiros-app-release.apk
-
-      # Build do app web Next.js (após gerar o APK em modo release).
       - name: Install dependencies
         run: npm ci
 
-      - name: Build web app (includes Prisma client)
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Build Next.js
         run: npm run build
-        
-      - name: Prepare standalone artifact for deployment
-        run: |
-          rm -rf deploy
-          mkdir -p deploy
-          cp -R .next/standalone/. deploy/
-          mkdir -p deploy/.next/static
-          cp -R .next/static/. deploy/.next/static
-          cp package.json deploy/package.json
-          cp next.config.mjs deploy/next.config.mjs
-          cp -R prisma deploy/prisma
-          if [ -d public ]; then
-            cp -R public deploy/public
-          fi
-          npm prune --omit=dev --prefix deploy
-          ./scripts/prune-deploy-artifact.sh deploy
 
-      # (Opcional de diagnóstico: ver Node & Prisma)
-      - name: Diagnostics
-        run: |
-          node -v
-          npx prisma -v
+      - name: Download Android App Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: perueiro-app-debug
+          path: public/downloads
 
-      - name: Build And Deploy
-        if: github.event_name == 'push'
-        id: builddeploy
+      - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ICY_WATER_08508BA0F }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "deploy" # App source code path
-          api_location: "" # Next.js SSR bundle já está contido no artefato principal
-          skip_app_build: true
-          skip_api_build: true
-          output_location: "" # artefato standalone já está no diretório configurado
-          ###### End of Repository/Build Configurations ######
-          is_static_export: false
-          # (variáveis expostas ao tempo de execução já devem estar configuradas diretamente no Azure)
-
-  close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    name: Close Pull Request Job
-    steps:
-      - name: Close Pull Request
-        id: closepullrequest
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ICY_WATER_08508BA0F }}
-          action: "close"
+          app_location: "/"
+          output_location: ".next"
