@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 import { logApiError } from '@/lib/error'
+import { createPrismaAdapter } from '@/lib/prisma-adapter'
 import { ensurePrismaEnginePath } from '@/lib/prisma-engine'
 
 export async function GET(req: Request) {
@@ -17,7 +18,9 @@ export async function GET(req: Request) {
 
     const { PrismaClient } = await import('@prisma/client')
     ensurePrismaEnginePath()
-    const prisma = new PrismaClient()
+    const prisma = new PrismaClient({
+      adapter: createPrismaAdapter(),
+    })
     const r = await prisma.$queryRaw`SELECT 1 AS ok`
     await prisma.$disconnect()
     return Response.json({ ok: true, r })
