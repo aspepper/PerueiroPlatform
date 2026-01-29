@@ -140,8 +140,9 @@ function collectVan(
 
 export async function GET(request: Request) {
   try {
-    const { unauthorized, payload } = await requireMobileJwt(request);
-    if (unauthorized) return unauthorized;
+    const { unauthorized: unauthorizedResponse, payload } =
+      await requireMobileJwt(request);
+    if (unauthorizedResponse) return unauthorizedResponse;
 
     const scope = await resolveSyncScope(payload!);
     if (!scope) return unauthorized();
