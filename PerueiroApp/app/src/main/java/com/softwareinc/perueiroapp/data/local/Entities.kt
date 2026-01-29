@@ -98,3 +98,15 @@ data class SyncStatusEntity(
     @PrimaryKey val id: String,
     val lastSyncedAt: Long
 )
+
+@Entity(tableName = "sync_queue")
+data class SyncQueueEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val entityType: String,
+    val entityId: String?,
+    val operation: String,
+    val payload: String,
+    val enqueuedAt: Long,
+    val attempts: Int = 0,
+    val lastAttemptAt: Long? = null
+)

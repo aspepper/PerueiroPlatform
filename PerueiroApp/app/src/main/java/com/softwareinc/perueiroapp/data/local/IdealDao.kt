@@ -159,4 +159,16 @@ interface IdealDao {
 
     @Query("SELECT * FROM sync_status WHERE id = :id LIMIT 1")
     suspend fun getSyncStatus(id: String): SyncStatusEntity?
+
+    @Upsert
+    suspend fun upsertSyncQueue(item: SyncQueueEntity)
+
+    @Query("SELECT * FROM sync_queue ORDER BY enqueuedAt ASC LIMIT :limit")
+    suspend fun getPendingSyncQueue(limit: Int = 50): List<SyncQueueEntity>
+
+    @Query("UPDATE sync_queue SET attempts = :attempts, lastAttemptAt = :lastAttemptAt WHERE id = :id")
+    suspend fun updateSyncQueueAttempt(id: Long, attempts: Int, lastAttemptAt: Long)
+
+    @Query("DELETE FROM sync_queue WHERE id = :id")
+    suspend fun deleteSyncQueue(id: Long)
 }

@@ -9,26 +9,35 @@ import kotlinx.coroutines.flow.map
 
 private val Context.userSessionDataStore by preferencesDataStore(name = "user_session")
 
-data class UserSession(val cpf: String, val role: String)
+data class UserSession(
+    val cpf: String,
+    val role: String,
+    val token: String?
+)
 
 class UserSessionDataSource(private val context: Context) {
     private val cpfKey = stringPreferencesKey("cpf")
     private val roleKey = stringPreferencesKey("role")
+    private val tokenKey = stringPreferencesKey("token")
 
     val session: Flow<UserSession?> = context.userSessionDataStore.data.map { preferences ->
         val cpf = preferences[cpfKey]
         val role = preferences[roleKey]
+        val token = preferences[tokenKey]
         if (!cpf.isNullOrBlank() && !role.isNullOrBlank()) {
-            UserSession(cpf = cpf, role = role)
+            UserSession(cpf = cpf, role = role, token = token)
         } else {
             null
         }
     }
 
-    suspend fun setSession(cpf: String, role: String) {
+    suspend fun setSession(cpf: String, role: String, token: String? = null) {
         context.userSessionDataStore.edit { preferences ->
             preferences[cpfKey] = cpf
             preferences[roleKey] = role
+            if (token != null) {
+                preferences[tokenKey] = token
+            }
         }
     }
 

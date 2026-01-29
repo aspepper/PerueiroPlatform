@@ -1,146 +1,381 @@
-import { prisma } from "@/lib/prisma";
-import { ensureDriverUser, ensureGuardianUser } from "@/lib/user-accounts";
 import { NextResponse } from "next/server";
 
-function requireApiKey(request: Request) {
-  const key = request.headers.get("x-api-key");
-  if (!key || key !== process.env.NEXTAUTH_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+import { Prisma } from "@prisma/client";
+
+import { prisma } from "@/lib/prisma";
+import { requireMobileJwt, resolveSyncScope } from "../shared";
+
+type SyncOperationPayload = {
+  queueId: number;
+  entityType: string;
+  entityId?: string | null;
+  operation: string;
+  clientUpdatedAt?: number | null;
+  payload?: Record<string, unknown>;
+};
+
+function badRequest(message: string) {
+  return NextResponse.json({ error: message }, { status: 400 });
+}
+
+function isConflict(serverUpdatedAt: Date | null, clientUpdatedAt?: number | null) {
+  if (!clientUpdatedAt || !serverUpdatedAt) return false;
+  return serverUpdatedAt.getTime() > clientUpdatedAt;
+}
+
+function toBigInt(value: unknown) {
+  if (typeof value === "bigint") return value;
+  if (typeof value === "number" && Number.isFinite(value)) return BigInt(Math.trunc(value));
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    if (!Number.isNaN(parsed)) return BigInt(Math.trunc(parsed));
   }
   return null;
 }
 
+function normalizeOperation(operation: string) {
+  const op = operation.toUpperCase();
+  if (op === "CREATE" || op === "UPDATE" || op === "UPSERT") return "UPSERT";
+  if (op === "DELETE") return "DELETE";
+  return null;
+}
+
 export async function POST(request: Request) {
-  const unauthorized = requireApiKey(request);
+  const { unauthorized, payload } = await requireMobileJwt(request);
   if (unauthorized) return unauthorized;
 
-  const payload = await request.json();
-  const upserts = [] as Promise<any>[];
+  const scope = await resolveSyncScope(payload!);
+  if (!scope) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (Array.isArray(payload.guardians)) {
-    for (const g of payload.guardians) {
-      upserts.push((async () => {
-        const guardian = await prisma.guardian.upsert({
-          where: { cpf: g.cpf },
-          update: g,
-          create: g,
-          select: {
-            cpf: true,
-            name: true,
-            userId: true,
-          },
-        });
-        await ensureGuardianUser({
-          cpf: guardian.cpf,
-          name: guardian.name,
-          userId: guardian.userId,
-        });
-      })());
-    }
+  let body: { operations?: SyncOperationPayload[] };
+  try {
+    body = await request.json();
+  } catch {
+    return badRequest("Corpo da requisição inválido.");
   }
-  if (Array.isArray(payload.schools)) {
-    for (const s of payload.schools) {
-      upserts.push(prisma.school.upsert({
-        where: { id: BigInt(s.id ?? 0) },
-        update: { name: s.name, address: s.address, phone: s.phone, contact: s.contact, principal: s.principal, doorman: s.doorman },
-        create: { name: s.name, address: s.address, phone: s.phone, contact: s.contact, principal: s.principal, doorman: s.doorman },
-      }));
-    }
+
+  if (!Array.isArray(body.operations)) {
+    return badRequest("Lista de operações é obrigatória.");
   }
-  if (Array.isArray(payload.drivers)) {
-    for (const d of payload.drivers) {
-      upserts.push((async () => {
-        const driver = await prisma.driver.upsert({
-          where: { cpf: d.cpf },
-          update: d,
-          create: d,
-          select: {
-            cpf: true,
-            name: true,
-            email: true,
-            userId: true,
-          },
-        });
-        await ensureDriverUser({
-          cpf: driver.cpf,
-          name: driver.name,
-          email: driver.email,
-          userId: driver.userId,
-        });
-      })());
+
+  const applied: number[] = [];
+  const conflicts: number[] = [];
+
+  for (const operation of body.operations) {
+    const normalized = normalizeOperation(operation.operation ?? "");
+    if (!normalized || typeof operation.queueId !== "number") {
+      continue;
     }
-  }
-  if (Array.isArray(payload.vans)) {
-    for (const v of payload.vans) {
-      const billingDay = Number.parseInt(String(v.billingDay ?? 10), 10);
-      const monthlyFee = Number(v.monthlyFee ?? 0);
-      upserts.push(prisma.van.upsert({
-        where: { plate: v.plate },
-        update: {
-          model: v.model,
-          plate: v.plate,
-          color: v.color,
-          year: v.year,
-          driverCpf: v.driverCpf,
-          billingDay: Number.isNaN(billingDay) ? 10 : billingDay,
-          monthlyFee,
-        },
-        create: {
-          model: v.model,
-          plate: v.plate,
-          color: v.color,
-          year: v.year,
-          driverCpf: v.driverCpf,
-          billingDay: Number.isNaN(billingDay) ? 10 : billingDay,
-          monthlyFee,
-        },
-      }));
-    }
-  }
-  if (Array.isArray(payload.students)) {
-    for (const st of payload.students) {
-      upserts.push(prisma.student.upsert({
-        where: { id: BigInt(st.id ?? 0) },
-        update: { name: st.name, birthDate: st.birthDate ? new Date(st.birthDate) : null, grade: st.grade, guardianCpf: st.guardianCpf, schoolId: st.schoolId ? BigInt(st.schoolId) : null, vanId: st.vanId ? BigInt(st.vanId) : null, driverCpf: st.driverCpf, mobile: st.mobile, blacklist: !!st.blacklist },
-        create: { name: st.name, birthDate: st.birthDate ? new Date(st.birthDate) : null, grade: st.grade, guardianCpf: st.guardianCpf, schoolId: st.schoolId ? BigInt(st.schoolId) : null, vanId: st.vanId ? BigInt(st.vanId) : null, driverCpf: st.driverCpf, mobile: st.mobile, blacklist: !!st.blacklist },
-      }));
-    }
-  }
-  if (Array.isArray(payload.payments)) {
-    for (const p of payload.payments) {
-      upserts.push(prisma.payment.upsert({
-        where: { id: BigInt(p.id ?? 0) },
-        update: {
-          studentId: BigInt(p.studentId),
-          vanId: p.vanId ? BigInt(p.vanId) : null,
-          dueDate: new Date(p.dueDate),
-          paidAt: p.paidAt ? new Date(p.paidAt) : null,
-          amount: p.amount,
-          discount: p.discount ?? 0,
-          status: p.status ?? "PENDING",
-          boletoId: p.boletoId ?? null,
-        },
-        create: {
-          studentId: BigInt(p.studentId),
-          vanId: p.vanId ? BigInt(p.vanId) : null,
-          dueDate: new Date(p.dueDate),
-          paidAt: p.paidAt ? new Date(p.paidAt) : null,
-          amount: p.amount,
-          discount: p.discount ?? 0,
-          status: p.status ?? "PENDING",
-          boletoId: p.boletoId ?? null,
-        },
-      }));
+
+    try {
+      const entityType = (operation.entityType ?? "").toLowerCase();
+      const clientUpdatedAt = operation.clientUpdatedAt ?? null;
+      const payloadData = operation.payload ?? {};
+
+      if (normalized === "DELETE") {
+        await handleDelete(entityType, payloadData, scope);
+        applied.push(operation.queueId);
+        continue;
+      }
+
+      const conflict = await handleUpsert(
+        entityType,
+        payloadData,
+        clientUpdatedAt,
+        scope,
+      );
+      if (conflict) {
+        conflicts.push(operation.queueId);
+      } else {
+        applied.push(operation.queueId);
+      }
+    } catch (error) {
+      console.error("Falha ao processar operação de sync", error);
     }
   }
 
-  await Promise.all(upserts);
-  return NextResponse.json({ ok: true, counts: {
-    guardians: payload.guardians?.length || 0,
-    schools: payload.schools?.length || 0,
-    drivers: payload.drivers?.length || 0,
-    vans: payload.vans?.length || 0,
-    students: payload.students?.length || 0,
-    payments: payload.payments?.length || 0,
-  }});
+  return NextResponse.json({ applied, conflicts });
+}
+
+async function handleDelete(
+  entityType: string,
+  payload: Record<string, unknown>,
+  scope: { role: "DRIVER" | "GUARDIAN"; cpf: string },
+) {
+  const now = new Date();
+  if (entityType === "guardian") {
+    if (scope.role !== "GUARDIAN") return;
+    const cpf = String(payload.cpf ?? "");
+    if (cpf && cpf === scope.cpf) {
+      await prisma.guardian.update({
+        where: { cpf },
+        data: { deletedAt: now },
+      });
+    }
+    return;
+  }
+
+  if (entityType === "driver") {
+    if (scope.role !== "DRIVER") return;
+    const cpf = String(payload.cpf ?? "");
+    if (cpf && cpf === scope.cpf) {
+      await prisma.driver.update({
+        where: { cpf },
+        data: { deletedAt: now },
+      });
+    }
+    return;
+  }
+
+  if (entityType === "student") {
+    const id = toBigInt(payload.id);
+    if (!id) return;
+    const student = await prisma.student.findUnique({ where: { id } });
+    if (!student) return;
+    if (scope.role === "DRIVER" && student.driverCpf !== scope.cpf) return;
+    if (scope.role === "GUARDIAN" && student.guardianCpf !== scope.cpf) return;
+    await prisma.student.update({ where: { id }, data: { deletedAt: now } });
+    return;
+  }
+
+  if (entityType === "payment") {
+    const id = toBigInt(payload.id);
+    if (!id) return;
+    const payment = await prisma.payment.findUnique({
+      where: { id },
+      include: { student: true },
+    });
+    if (!payment) return;
+    if (scope.role === "DRIVER" && payment.student.driverCpf !== scope.cpf) return;
+    if (scope.role === "GUARDIAN" && payment.student.guardianCpf !== scope.cpf) return;
+    await prisma.payment.update({ where: { id }, data: { deletedAt: now } });
+    return;
+  }
+
+  if (entityType === "van") {
+    if (scope.role !== "DRIVER") return;
+    const id = toBigInt(payload.id);
+    if (!id) return;
+    const van = await prisma.van.findUnique({ where: { id } });
+    if (!van || van.driverCpf !== scope.cpf) return;
+    await prisma.van.update({ where: { id }, data: { deletedAt: now } });
+    return;
+  }
+
+  if (entityType === "school") {
+    const id = toBigInt(payload.id);
+    if (!id) return;
+    await prisma.school.update({ where: { id }, data: { deletedAt: now } });
+  }
+}
+
+async function handleUpsert(
+  entityType: string,
+  payload: Record<string, unknown>,
+  clientUpdatedAt: number | null,
+  scope: { role: "DRIVER" | "GUARDIAN"; cpf: string },
+) {
+  if (entityType === "guardian") {
+    if (scope.role !== "GUARDIAN") return true;
+    const cpf = String(payload.cpf ?? "");
+    if (!cpf || cpf !== scope.cpf) return true;
+    const existing = await prisma.guardian.findUnique({ where: { cpf } });
+    if (existing && isConflict(existing.updatedAt, clientUpdatedAt)) return true;
+    await prisma.guardian.upsert({
+      where: { cpf },
+      update: {
+        name: String(payload.name ?? existing?.name ?? ""),
+        kinship: String(payload.kinship ?? existing?.kinship ?? ""),
+        birthDate: payload.birthDate ? new Date(String(payload.birthDate)) : existing?.birthDate,
+        spouseName: payload.spouseName ? String(payload.spouseName) : existing?.spouseName,
+        address: String(payload.address ?? existing?.address ?? ""),
+        mobile: String(payload.mobile ?? existing?.mobile ?? ""),
+        landline: payload.landline ? String(payload.landline) : existing?.landline,
+        workAddress: payload.workAddress ? String(payload.workAddress) : existing?.workAddress,
+        workPhone: payload.workPhone ? String(payload.workPhone) : existing?.workPhone,
+        deletedAt: null,
+      },
+      create: {
+        cpf,
+        name: String(payload.name ?? ""),
+        kinship: String(payload.kinship ?? ""),
+        birthDate: payload.birthDate ? new Date(String(payload.birthDate)) : null,
+        spouseName: payload.spouseName ? String(payload.spouseName) : null,
+        address: String(payload.address ?? ""),
+        mobile: String(payload.mobile ?? ""),
+        landline: payload.landline ? String(payload.landline) : null,
+        workAddress: payload.workAddress ? String(payload.workAddress) : "",
+        workPhone: payload.workPhone ? String(payload.workPhone) : null,
+      },
+    });
+    return false;
+  }
+
+  if (entityType === "driver") {
+    if (scope.role !== "DRIVER") return true;
+    const cpf = String(payload.cpf ?? "");
+    if (!cpf || cpf !== scope.cpf) return true;
+    const existing = await prisma.driver.findUnique({ where: { cpf } });
+    if (existing && isConflict(existing.updatedAt, clientUpdatedAt)) return true;
+    await prisma.driver.upsert({
+      where: { cpf },
+      update: {
+        name: String(payload.name ?? existing?.name ?? ""),
+        cnh: payload.cnh ? String(payload.cnh) : existing?.cnh,
+        phone: payload.phone ? String(payload.phone) : existing?.phone,
+        email: payload.email ? String(payload.email) : existing?.email,
+        address: payload.address ? String(payload.address) : existing?.address,
+        deletedAt: null,
+      },
+      create: {
+        cpf,
+        name: String(payload.name ?? ""),
+        cnh: payload.cnh ? String(payload.cnh) : null,
+        phone: payload.phone ? String(payload.phone) : null,
+        email: payload.email ? String(payload.email) : null,
+        address: payload.address ? String(payload.address) : null,
+      },
+    });
+    return false;
+  }
+
+  if (entityType === "student") {
+    const id = toBigInt(payload.id);
+    const guardianCpf = payload.guardianCpf ? String(payload.guardianCpf) : null;
+    const driverCpf = payload.driverCpf ? String(payload.driverCpf) : null;
+    if (scope.role === "DRIVER" && driverCpf !== scope.cpf) return true;
+    if (scope.role === "GUARDIAN" && guardianCpf !== scope.cpf) return true;
+
+    if (id) {
+      const existing = await prisma.student.findUnique({ where: { id } });
+      if (existing && isConflict(existing.updatedAt, clientUpdatedAt)) return true;
+    }
+
+    await prisma.student.upsert({
+      where: { id: id ?? BigInt(0) },
+      update: {
+        name: String(payload.name ?? ""),
+        birthDate: payload.birthDate ? new Date(String(payload.birthDate)) : null,
+        grade: payload.grade ? String(payload.grade) : null,
+        guardianCpf,
+        schoolId: toBigInt(payload.schoolId),
+        vanId: toBigInt(payload.vanId),
+        driverCpf,
+        mobile: payload.mobile ? String(payload.mobile) : null,
+        deletedAt: null,
+      },
+      create: {
+        name: String(payload.name ?? ""),
+        birthDate: payload.birthDate ? new Date(String(payload.birthDate)) : null,
+        grade: payload.grade ? String(payload.grade) : null,
+        guardianCpf,
+        schoolId: toBigInt(payload.schoolId),
+        vanId: toBigInt(payload.vanId),
+        driverCpf,
+        mobile: payload.mobile ? String(payload.mobile) : null,
+      },
+    });
+    return false;
+  }
+
+  if (entityType === "payment") {
+    const id = toBigInt(payload.id);
+    const studentId = toBigInt(payload.studentId);
+    if (!studentId) return true;
+    const student = await prisma.student.findUnique({ where: { id: studentId } });
+    if (!student) return true;
+    if (scope.role === "DRIVER" && student.driverCpf !== scope.cpf) return true;
+    if (scope.role === "GUARDIAN" && student.guardianCpf !== scope.cpf) return true;
+
+    if (id) {
+      const existing = await prisma.payment.findUnique({ where: { id } });
+      if (existing && isConflict(existing.updatedAt, clientUpdatedAt)) return true;
+    }
+
+    await prisma.payment.upsert({
+      where: { id: id ?? BigInt(0) },
+      update: {
+        studentId,
+        vanId: toBigInt(payload.vanId),
+        dueDate: new Date(String(payload.dueDate)),
+        paidAt: payload.paidAt ? new Date(String(payload.paidAt)) : null,
+        amount: new Prisma.Decimal(Number(payload.amount ?? 0)),
+        discount: new Prisma.Decimal(Number(payload.discount ?? 0)),
+        status: String(payload.status ?? "PENDING"),
+        deletedAt: null,
+      },
+      create: {
+        studentId,
+        vanId: toBigInt(payload.vanId),
+        dueDate: new Date(String(payload.dueDate)),
+        paidAt: payload.paidAt ? new Date(String(payload.paidAt)) : null,
+        amount: new Prisma.Decimal(Number(payload.amount ?? 0)),
+        discount: new Prisma.Decimal(Number(payload.discount ?? 0)),
+        status: String(payload.status ?? "PENDING"),
+      },
+    });
+    return false;
+  }
+
+  if (entityType === "van") {
+    if (scope.role !== "DRIVER") return true;
+    const plate = String(payload.plate ?? "");
+    if (!plate) return true;
+    const existing = await prisma.van.findUnique({ where: { plate } });
+    if (existing && existing.driverCpf !== scope.cpf) return true;
+    if (existing && isConflict(existing.updatedAt, clientUpdatedAt)) return true;
+    await prisma.van.upsert({
+      where: { plate },
+      update: {
+        model: String(payload.model ?? existing?.model ?? ""),
+        plate,
+        color: payload.color ? String(payload.color) : existing?.color,
+        year: payload.year ? String(payload.year) : existing?.year,
+        driverCpf: scope.cpf,
+        billingDay: Number(payload.billingDay ?? existing?.billingDay ?? 10),
+        monthlyFee: new Prisma.Decimal(Number(payload.monthlyFee ?? existing?.monthlyFee ?? 0)),
+        deletedAt: null,
+      },
+      create: {
+        model: String(payload.model ?? ""),
+        plate,
+        color: payload.color ? String(payload.color) : null,
+        year: payload.year ? String(payload.year) : null,
+        driverCpf: scope.cpf,
+        billingDay: Number(payload.billingDay ?? 10),
+        monthlyFee: new Prisma.Decimal(Number(payload.monthlyFee ?? 0)),
+      },
+    });
+    return false;
+  }
+
+  if (entityType === "school") {
+    const id = toBigInt(payload.id);
+    if (!id) return true;
+    const existing = await prisma.school.findUnique({ where: { id } });
+    if (existing && isConflict(existing.updatedAt, clientUpdatedAt)) return true;
+    await prisma.school.upsert({
+      where: { id },
+      update: {
+        name: String(payload.name ?? existing?.name ?? ""),
+        address: payload.address ? String(payload.address) : existing?.address,
+        phone: payload.phone ? String(payload.phone) : existing?.phone,
+        contact: payload.contact ? String(payload.contact) : existing?.contact,
+        principal: payload.principal ? String(payload.principal) : existing?.principal,
+        doorman: payload.doorman ? String(payload.doorman) : existing?.doorman,
+        deletedAt: null,
+      },
+      create: {
+        name: String(payload.name ?? ""),
+        address: payload.address ? String(payload.address) : null,
+        phone: payload.phone ? String(payload.phone) : null,
+        contact: payload.contact ? String(payload.contact) : null,
+        principal: payload.principal ? String(payload.principal) : null,
+        doorman: payload.doorman ? String(payload.doorman) : null,
+      },
+    });
+    return false;
+  }
+
+  return true;
 }

@@ -43,6 +43,7 @@ model Guardian {
   userId      String?   @unique
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 }
 
 model School {
@@ -56,6 +57,7 @@ model School {
   students  Student[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model Driver {
@@ -71,6 +73,7 @@ model Driver {
   userId    String?   @unique
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model Van {
@@ -87,6 +90,7 @@ model Van {
   payments   Payment[]
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
 }
 
 model Student {
@@ -107,6 +111,7 @@ model Student {
   payments    Payment[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 }
 
 model Payment {
@@ -123,6 +128,7 @@ model Payment {
   boletoId  String?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  deletedAt DateTime?
 
   @@index([studentId, dueDate])
   @@index([vanId, dueDate])

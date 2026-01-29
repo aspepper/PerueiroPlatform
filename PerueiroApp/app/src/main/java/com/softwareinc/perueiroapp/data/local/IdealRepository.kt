@@ -8,10 +8,12 @@ import com.softwareinc.perueiroapp.data.remote.GuardianApiService
 import com.softwareinc.perueiroapp.data.remote.PasswordResetResult
 import com.softwareinc.perueiroapp.data.remote.SyncApiService
 import com.softwareinc.perueiroapp.data.remote.VanApiService
+import com.softwareinc.perueiroapp.data.sync.SyncQueueWorker
 import com.softwareinc.perueiroapp.model.UserRole
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -20,6 +22,7 @@ import java.util.Locale
 
 class IdealRepository(
     private val dao: IdealDao,
+    private val context: android.content.Context,
     private val driverApiService: DriverApiService = DriverApiService(),
     private val syncApiService: SyncApiService = SyncApiService(),
     private val authApiService: AuthApiService = AuthApiService(),
@@ -39,9 +42,9 @@ class IdealRepository(
         val localDriver = if (cpfs.isEmpty()) null else dao.getDriverByCpfs(cpfs)
 
         if (localDriver != null && localDriver.password == password) {
-            syncFromServer(UserRole.DRIVER, localDriver.cpf)
+            syncFromServer(UserRole.DRIVER, localDriver.cpf, token = null)
             val refreshed = dao.getDriverByCpfs(cpfs) ?: localDriver
-            return AuthenticationResult.Success(refreshed)
+            return AuthenticationResult.Success(refreshed, token = null)
         }
 
         return try {
@@ -60,9 +63,9 @@ class IdealRepository(
                 )
 
             dao.upsertDriver(remoteDriver)
-            syncFromServer(UserRole.DRIVER, remoteDriver.cpf)
+            syncFromServer(UserRole.DRIVER, remoteDriver.cpf, token = remote.token)
             val refreshed = dao.getDriverByCpfs(possibleCpfs(remoteDriver.cpf)) ?: remoteDriver
-            AuthenticationResult.Success(refreshed)
+            AuthenticationResult.Success(refreshed, token = remote.token)
         } catch (exception: AuthApiService.InvalidCredentialsException) {
             AuthenticationResult.InvalidCredentials
         } catch (exception: AuthApiService.NotFoundException) {
@@ -79,9 +82,9 @@ class IdealRepository(
         val localGuardian = if (cpfs.isEmpty()) null else dao.getGuardianByCpfs(cpfs)
 
         if (localGuardian != null && localGuardian.password == password) {
-            syncFromServer(UserRole.GUARDIAN, localGuardian.cpf)
+            syncFromServer(UserRole.GUARDIAN, localGuardian.cpf, token = null)
             val refreshed = dao.getGuardianByCpfs(cpfs) ?: localGuardian
-            return AuthenticationResult.Success(refreshed)
+            return AuthenticationResult.Success(refreshed, token = null)
         }
 
         return try {
@@ -109,9 +112,9 @@ class IdealRepository(
                 )
 
             dao.upsertGuardian(remoteGuardian)
-            syncFromServer(UserRole.GUARDIAN, remoteGuardian.cpf)
+            syncFromServer(UserRole.GUARDIAN, remoteGuardian.cpf, token = remote.token)
             val refreshed = dao.getGuardianByCpfs(possibleCpfs(remoteGuardian.cpf)) ?: remoteGuardian
-            AuthenticationResult.Success(refreshed)
+            AuthenticationResult.Success(refreshed, token = remote.token)
         } catch (exception: AuthApiService.InvalidCredentialsException) {
             AuthenticationResult.InvalidCredentials
         } catch (exception: AuthApiService.NotFoundException) {
@@ -141,7 +144,25 @@ class IdealRepository(
         }
     }
 
-    suspend fun saveGuardian(guardian: GuardianEntity) = dao.upsertGuardian(guardian)
+    suspend fun saveGuardian(guardian: GuardianEntity) {
+        dao.upsertGuardian(guardian)
+        enqueueSyncOperation(
+            entityType = "guardian",
+            entityId = guardian.cpf,
+            operation = "UPSERT",
+            payload = JSONObject()
+                .put("cpf", guardian.cpf)
+                .put("name", guardian.name)
+                .put("kinship", guardian.kinship)
+                .put("birthDate", guardian.birthDate)
+                .put("spouseName", guardian.spouseName)
+                .put("address", guardian.address)
+                .put("mobile", guardian.mobile)
+                .put("landline", guardian.landline)
+                .put("workAddress", guardian.workAddress)
+                .put("workPhone", guardian.workPhone)
+        )
+    }
 
     suspend fun getGuardian(cpf: String): GuardianEntity? {
         val cpfs = possibleCpfs(cpf)
@@ -182,7 +203,15 @@ class IdealRepository(
             throw exception
         }
     }
-    suspend fun deleteGuardian(cpf: String) = dao.deleteGuardian(cpf)
+    suspend fun deleteGuardian(cpf: String) {
+        dao.deleteGuardian(cpf)
+        enqueueSyncOperation(
+            entityType = "guardian",
+            entityId = cpf,
+            operation = "DELETE",
+            payload = JSONObject().put("cpf", cpf)
+        )
+    }
 
     suspend fun lookupVan(plate: String): VanLookupResult {
         val normalizedPlate = normalizePlate(plate)
@@ -210,9 +239,32 @@ class IdealRepository(
         }
     }
 
-    suspend fun saveSchool(school: SchoolEntity) = dao.upsertSchool(school)
+    suspend fun saveSchool(school: SchoolEntity) {
+        dao.upsertSchool(school)
+        enqueueSyncOperation(
+            entityType = "school",
+            entityId = school.id.toString(),
+            operation = "UPSERT",
+            payload = JSONObject()
+                .put("id", school.id)
+                .put("name", school.fantasyName)
+                .put("address", school.address)
+                .put("phone", school.phone)
+                .put("contact", school.contact)
+                .put("principal", school.principal)
+                .put("doorman", school.doorman)
+        )
+    }
     suspend fun getSchool(id: Long) = dao.getSchool(id)
-    suspend fun deleteSchool(id: Long) = dao.deleteSchool(id)
+    suspend fun deleteSchool(id: Long) {
+        dao.deleteSchool(id)
+        enqueueSyncOperation(
+            entityType = "school",
+            entityId = id.toString(),
+            operation = "DELETE",
+            payload = JSONObject().put("id", id)
+        )
+    }
 
     suspend fun saveVan(
         van: VanEntity,
@@ -245,6 +297,20 @@ class IdealRepository(
         val persisted = dao.getVanByPlate(normalizedPlate) ?: sanitizedVan
 
         if (!syncWithServer || normalizedDriverCpf == null) {
+            enqueueSyncOperation(
+                entityType = "van",
+                entityId = persisted.id.toString(),
+                operation = "UPSERT",
+                payload = JSONObject()
+                    .put("id", persisted.id.takeIf { it > 0 })
+                    .put("model", persisted.model)
+                    .put("color", persisted.color)
+                    .put("year", persisted.year)
+                    .put("plate", persisted.plate)
+                    .put("driverCpf", normalizedDriverCpf)
+                    .put("billingDay", 10)
+                    .put("monthlyFee", 0)
+            )
             return VanSaveResult.Synced(persisted)
         }
 
@@ -298,7 +364,15 @@ class IdealRepository(
         }
     }
     suspend fun getVan(id: Long) = dao.getVan(id)
-    suspend fun deleteVan(id: Long) = dao.deleteVan(id)
+    suspend fun deleteVan(id: Long) {
+        dao.deleteVan(id)
+        enqueueSyncOperation(
+            entityType = "van",
+            entityId = id.toString(),
+            operation = "DELETE",
+            payload = JSONObject().put("id", id)
+        )
+    }
 
     suspend fun saveDriver(driver: DriverEntity) {
         val normalizedDriver = driver.copy(cpf = normalizeCpfValue(driver.cpf))
@@ -309,6 +383,17 @@ class IdealRepository(
             dao.getDriverByCpfs(cpfs) != null
         }
         dao.upsertDriver(normalizedDriver)
+        enqueueSyncOperation(
+            entityType = "driver",
+            entityId = normalizedDriver.cpf,
+            operation = "UPSERT",
+            payload = JSONObject()
+                .put("cpf", normalizedDriver.cpf)
+                .put("name", normalizedDriver.name)
+                .put("phone", normalizedDriver.phone)
+                .put("email", normalizedDriver.email)
+                .put("address", normalizedDriver.address)
+        )
 
         try {
             driverApiService.syncDriver(normalizedDriver, alreadyExists)
@@ -328,35 +413,95 @@ class IdealRepository(
         dao.upsertDriver(normalizedDriver)
 
         driverApiService.syncDriver(normalizedDriver, alreadyExists)
-        syncFromServer(UserRole.DRIVER, normalizedDriver.cpf)
+        syncFromServer(UserRole.DRIVER, normalizedDriver.cpf, token = null)
     }
     suspend fun getDriver(cpf: String): DriverEntity? {
         val cpfs = possibleCpfs(cpf)
         if (cpfs.isEmpty()) return null
         return dao.getDriverByCpfs(cpfs)
     }
-    suspend fun deleteDriver(cpf: String) = dao.deleteDriver(cpf)
+    suspend fun deleteDriver(cpf: String) {
+        dao.deleteDriver(cpf)
+        enqueueSyncOperation(
+            entityType = "driver",
+            entityId = cpf,
+            operation = "DELETE",
+            payload = JSONObject().put("cpf", cpf)
+        )
+    }
 
-    suspend fun saveStudent(student: StudentEntity) = dao.upsertStudent(student)
+    suspend fun saveStudent(student: StudentEntity) {
+        dao.upsertStudent(student)
+        enqueueSyncOperation(
+            entityType = "student",
+            entityId = student.id.toString(),
+            operation = "UPSERT",
+            payload = JSONObject()
+                .put("id", student.id.takeIf { it > 0 })
+                .put("name", student.name)
+                .put("birthDate", student.birthDate)
+                .put("grade", student.grade)
+                .put("guardianCpf", student.motherCpf ?: student.fatherCpf)
+                .put("schoolId", student.schoolId)
+                .put("vanId", student.vanId)
+                .put("driverCpf", student.driverCpf)
+                .put("mobile", student.mobile)
+        )
+    }
     suspend fun getStudent(id: Long) = dao.getStudent(id)
     fun observeStudentsByGuardian(cpf: String) = dao.observeStudentsByGuardian(cpf)
-    suspend fun deleteStudent(id: Long) = dao.deleteStudent(id)
+    suspend fun deleteStudent(id: Long) {
+        dao.deleteStudent(id)
+        enqueueSyncOperation(
+            entityType = "student",
+            entityId = id.toString(),
+            operation = "DELETE",
+            payload = JSONObject().put("id", id)
+        )
+    }
 
-    suspend fun savePayment(payment: PaymentEntity) = dao.upsertPayment(payment)
+    suspend fun savePayment(payment: PaymentEntity) {
+        dao.upsertPayment(payment)
+        enqueueSyncOperation(
+            entityType = "payment",
+            entityId = payment.id.toString(),
+            operation = "UPSERT",
+            payload = JSONObject()
+                .put("id", payment.id.takeIf { it > 0 })
+                .put("studentId", payment.studentId)
+                .put("dueDate", payment.paymentDate)
+                .put("amount", payment.amount)
+                .put("discount", payment.discount)
+                .put("status", payment.status)
+        )
+    }
     fun observePaymentsByStudent(studentId: Long) = dao.observePaymentsByStudent(studentId)
-    suspend fun deletePayment(id: Long) = dao.deletePayment(id)
-    suspend fun syncFromServer(userRole: UserRole?, userCpf: String?) {
+    suspend fun deletePayment(id: Long) {
+        dao.deletePayment(id)
+        enqueueSyncOperation(
+            entityType = "payment",
+            entityId = id.toString(),
+            operation = "DELETE",
+            payload = JSONObject().put("id", id)
+        )
+    }
+    suspend fun syncFromServer(userRole: UserRole?, userCpf: String?, token: String?) {
         withContext(Dispatchers.IO) {
             try {
                 try {
-                    pushPendingVans()
+                    pushPendingVans(token)
                 } catch (exception: Exception) {
                     Log.e(TAG, "Erro ao sincronizar vans pendentes", exception)
                 }
 
                 val normalizedUserCpf = userCpf?.let { normalizeCpfValue(it) }
                 val updatedSince = loadLastSyncAt(userRole, normalizedUserCpf)
-                val payload = syncApiService.fetchFullSync(userRole, normalizedUserCpf, updatedSince)
+                val payload = syncApiService.fetchFullSync(
+                    userRole,
+                    normalizedUserCpf,
+                    updatedSince,
+                    token
+                )
 
                 val existingGuardians = dao.getAllGuardians().associateBy { normalizeCpfValue(it.cpf) }
                 val guardiansToPersist = payload.guardians.map { remote ->
@@ -418,7 +563,7 @@ class IdealRepository(
         }
     }
 
-    private suspend fun pushPendingVans() {
+    private suspend fun pushPendingVans(token: String?) {
         val pendings = dao.getPendingVans()
         if (pendings.isEmpty()) return
 
@@ -479,10 +624,29 @@ class IdealRepository(
         val cpfPart = userCpf?.takeIf { it.isNotBlank() }?.let { normalizeCpfValue(it) } ?: "-"
         return "$rolePart:$cpfPart"
     }
+
+    private suspend fun enqueueSyncOperation(
+        entityType: String,
+        entityId: String?,
+        operation: String,
+        payload: JSONObject
+    ) {
+        val now = System.currentTimeMillis()
+        dao.upsertSyncQueue(
+            SyncQueueEntity(
+                entityType = entityType,
+                entityId = entityId,
+                operation = operation,
+                payload = payload.toString(),
+                enqueuedAt = now
+            )
+        )
+        SyncQueueWorker.enqueue(context)
+    }
 }
 
 sealed class AuthenticationResult<out T> {
-    data class Success<T>(val user: T) : AuthenticationResult<T>()
+    data class Success<T>(val user: T, val token: String?) : AuthenticationResult<T>()
     data object NotFound : AuthenticationResult<Nothing>()
     data object InvalidCredentials : AuthenticationResult<Nothing>()
     data class Failure(val message: String, val throwable: Throwable? = null) : AuthenticationResult<Nothing>()
