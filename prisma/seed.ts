@@ -1,4 +1,4 @@
-git import { prisma } from "../src/lib/prisma";
+import { prisma } from "../src/lib/prisma";
 import { resolvePasswordHash } from "../src/lib/password";
 
 async function main() {
