@@ -381,7 +381,7 @@ async function handleUpsert(
       },
       create: {
         name: String(payload.name ?? ""),
-        address: payload.address ? String(payload.address) : null,
+        address: String(payload.address ?? ""),
         phone: payload.phone ? String(payload.phone) : null,
         contact: payload.contact ? String(payload.contact) : null,
         principal: payload.principal ? String(payload.principal) : null,
