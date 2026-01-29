@@ -66,25 +66,6 @@ function withNormalizedCpfReferences<
   return { ...record, guardianCpf, driverCpf };
 }
 
-const studentInclude = {
-  guardian: true,
-  school: true,
-  van: {
-    select: {
-      id: true,
-      model: true,
-      color: true,
-      year: true,
-      plate: true,
-      driverCpf: true,
-      billingDay: true,
-      monthlyFee: true,
-      updatedAt: true,
-    },
-  },
-  payments: true,
-} as const;
-
 const vanSelect = {
   id: true,
   model: true,
@@ -95,6 +76,16 @@ const vanSelect = {
   billingDay: true,
   monthlyFee: true,
   updatedAt: true,
+  deletedAt: true,
+} as const;
+
+const studentInclude = {
+  guardian: true,
+  school: true,
+  van: {
+    select: vanSelect,
+  },
+  payments: true,
 } as const;
 
 type VanRecord = Prisma.VanGetPayload<{ select: typeof vanSelect }>;
