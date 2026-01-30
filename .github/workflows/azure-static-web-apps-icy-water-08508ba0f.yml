@@ -47,6 +47,7 @@ jobs:
           java-version: 21
 
       - name: 🤖 Build Android APK (Release)
+        working-directory: PerueiroApp
         run: |
           chmod +x ./build_release.sh
           ./build_release.sh
