@@ -3,32 +3,26 @@ set -e
 
 echo "🚀 Build RELEASE Perueiros (CI)"
 
-# Diretório do projeto Android
-ANDROID_DIR="PerueiroApp"
-APP_DIR="$ANDROID_DIR/app"
-OUTPUT_DIR="$APP_DIR/build/outputs/apk/release"
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ANDROID_DIR="$ROOT_DIR/PerueiroApp"
+GRADLEW="$ANDROID_DIR/gradlew"
 
-# Validação básica
-if [ ! -f "$ANDROID_DIR/gradlew" ]; then
-  echo "❌ gradlew não encontrado"
+if [ ! -f "$GRADLEW" ]; then
+  echo "❌ gradlew não encontrado em $GRADLEW"
   exit 1
 fi
 
-chmod +x "$ANDROID_DIR/gradlew"
+chmod +x "$GRADLEW"
 
-# Build
 cd "$ANDROID_DIR"
 ./gradlew clean assembleRelease
 
-# Descobre versão automaticamente
-APK_FILE=$(ls $OUTPUT_DIR/*release*.apk | head -n 1)
+APK_PATH=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
 
-if [ -z "$APK_FILE" ]; then
+if [ -z "$APK_PATH" ]; then
   echo "❌ APK não encontrado"
   exit 1
 fi
 
-echo "✅ APK gerado: $APK_FILE"
-
-# Exporta caminho para o workflow
-echo "APK_PATH=$APK_FILE" >> $GITHUB_ENV
+echo "APK_PATH=$ANDROID_DIR/$APK_PATH" >> "$GITHUB_ENV"
+echo "✅ APK gerado em $APK_PATH"
