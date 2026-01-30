@@ -19,6 +19,8 @@ import {
 } from "@/lib/prisma-selects";
 import { requireMobileJwt, resolveSyncScope } from "../shared";
 
+export const dynamic = "force-dynamic";
+
 function unauthorized() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }
