@@ -3,14 +3,20 @@ set -e
 
 echo "🚀 Build RELEASE Perueiros (CI)"
 
-if [ ! -f "./gradlew" ]; then
-  echo "❌ gradlew não encontrado em $(pwd)/gradlew"
+ROOT_DIR="$(pwd)"
+APP_DIR="$ROOT_DIR/PerueiroApp"
+GRADLEW="$APP_DIR/gradlew"
+
+if [ ! -f "$GRADLEW" ]; then
+  echo "❌ gradlew não encontrado em $GRADLEW"
   exit 1
 fi
 
-chmod +x ./gradlew
+chmod +x "$GRADLEW"
 
-echo "🧹 Limpando build anterior"
+cd "$APP_DIR"
+
+echo "🧹 Limpando build"
 ./gradlew clean
 
 echo "🏗️ Gerando APK RELEASE"
@@ -23,6 +29,5 @@ if [ -z "$APK_PATH" ]; then
   exit 1
 fi
 
-echo "✅ APK gerado com sucesso: $APK_PATH"
-
-echo "APK_PATH=$APK_PATH" >> "$GITHUB_ENV"
+echo "✅ APK gerado:"
+echo "$APK_PATH"
