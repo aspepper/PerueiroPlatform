@@ -14,3 +14,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "PerueiroApp"
 include(":app")
+enableFeaturePreview("STABLE_CONFIGURATION_CACHE")

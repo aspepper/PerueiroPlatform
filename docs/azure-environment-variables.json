@@ -1,0 +1,78 @@
+[
+  {
+    "name": "ADMIN_EMAIL",
+    "value": "admin@perueiros.local"
+  },
+  {
+    "name": "ADMIN_PASSWORD",
+    "value": "admin123"
+  },
+  {
+    "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+    "value": "InstrumentationKey=ce1b2b74-c9c6-478e-a6f8-d61bb286c08a;IngestionEndpoint=https://eastus2-3.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus2.livediagnostics.monitor.azure.com/;ApplicationId=10ddf3f0-79d3-4664-ba3a-8270bd44f0c5"
+  },
+  {
+    "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+    "value": "~3"
+  },
+  {
+    "name": "DATABASE_URL",
+    "value": "postgresql://neondb_owner:npg_4c2uxJbNfnUE@ep-lingering-smoke-a8btkicc-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&pgbouncer=true&connect_timeout=15"
+  },
+  {
+    "name": "NEXTAUTH_SECRET",
+    "value": "7U1KKRvRVe1mBW4Old0Q"
+  },
+  {
+    "name": "NEXTAUTH_URL",
+    "value": "https://icy-water-08508ba0f.2.azurestaticapps.net/"
+  },
+  {
+    "name": "R2_ACCESS_KEY_ID",
+    "value": "812ae43555c72507a2d896e1c1b6125d"
+  },
+  {
+    "name": "R2_ACCOUNT_ID",
+    "value": "e41ff1f957e77c4e42f3e74a44ffdeec"
+  },
+  {
+    "name": "R2_BUCKET_NAME",
+    "value": "perueiros"
+  },
+  {
+    "name": "R2_PUBLIC_BASE_URL",
+    "value": "https://pub-db3ad87349b9432681f938c7915becba.r2.dev"
+  },
+  {
+    "name": "R2_REGION",
+    "value": "auto"
+  },
+  {
+    "name": "R2_SECRET_ACCESS_KEY",
+    "value": "11bb14f58330686d0b23ade22c9077ea89dcc81db89bdcf8dcbac8cf9982eaee"
+  },
+  {
+    "name": "SMTP_FROM",
+    "value": "no-reply@perueiros.com"
+  },
+  {
+    "name": "SMTP_HOST",
+    "value": "sandbox.smtp.mailtrap.io"
+  },
+  {
+    "name": "SMTP_PASSWORD",
+    "value": "8a2198c37b4ff3"
+  },
+  {
+    "name": "SMTP_PORT",
+    "value": "2525"
+  },
+  {
+    "name": "SMTP_USER",
+    "value": "f38051317a517d"
+  },
+  {
+    "name": "STORAGE_DRIVER",
+    "value": "r2"
+  }
+]

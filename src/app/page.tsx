@@ -7,6 +7,8 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 
+import { DownloadApkButton } from "@/components/DownloadApkButton";
+
 export const dynamic = "force-dynamic";
 
 const steps: { title: string; description: ReactNode }[] = [
@@ -296,18 +298,11 @@ export default async function RootPage() {
             confia no seu trabalho todos os dias.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <a
-              href="/downloads/perueiros-app-release.apk"
-              download
-              className="rounded-xl border border-slate-300 px-5 py-3 text-slate-700 transition-colors hover:bg-slate-100"
-            >
-              Baixar para Android
-            </a>
+            <DownloadApkButton />
             <button
               type="button"
               disabled
-              className="rounded-xl border border-slate-200 px-5 py-3 text-slate-400 cursor-not-allowed"
-            >
+              className="rounded-xl border border-slate-200 px-5 py-3 text-slate-400 cursor-not-allowed">
               iOS (em breve)
             </button>
           </div>

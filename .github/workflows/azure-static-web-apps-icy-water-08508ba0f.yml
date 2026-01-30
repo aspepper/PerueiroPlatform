@@ -24,28 +24,51 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
+          distribution: temurin
+          java-version: 21
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Grant execute permission to gradlew
-        run: chmod +x ./gradlew
+      - name: Build APK
         working-directory: PerueiroApp
+        run: ./gradlew assembleRelease
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
-        working-directory: PerueiroApp
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=$(grep versionName app/build.gradle.kts | cut -d '"' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - name: Rename APK
+        run: |
+          mv PerueiroApp/app/build/outputs/apk/release/app-release.apk \
+             perueiros-release-${{ steps.version.outputs.version }}.apk
+
+      - name: Upload APK to R2
+        uses: cloudflare/wrangler-action@v3
         with:
-          name: perueiro-app-debug
-          path: PerueiroApp/app/build/outputs/apk/debug/app-debug.apk
+          apiToken: ${{ secrets.R2_API_TOKEN }}
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+        run: |
+          wrangler r2 object put \
+            perueiros/app-android/perueiros-release-${{ steps.version.outputs.version }}.apk \
+            --file=perueiros-release-${{ steps.version.outputs.version }}.apk
+
+      - name: Upload latest.json
+        run: |
+          cat <<EOF > latest.json
+          {
+            "version": "${{ steps.version.outputs.version }}",
+            "file": "perueiros-release-${{ steps.version.outputs.version }}.apk",
+            "url": "${{ secrets.R2_PUBLIC_BASE_URL }}/perueiros/app-android/perueiros-release-${{ steps.version.outputs.version }}.apk"
+          }
+          EOF
+
+          wrangler r2 object put \
+            perueiros/app-android/latest.json \
+            --file=latest.json
 
   # -----------------------------
   # 2️⃣ BUILD + DEPLOY DA PLATAFORMA
