@@ -4,7 +4,7 @@ set -e
 echo "🚀 Build RELEASE Perueiros (CI)"
 
 ROOT_DIR="$(pwd)"
-APP_DIR="$ROOT_DIR/PerueiroApp"
+APP_DIR="$ROOT_DIR/"
 GRADLEW="$APP_DIR/gradlew"
 
 if [ ! -f "$GRADLEW" ]; then
