@@ -17,96 +17,94 @@ jobs:
   # -----------------------------
   # 1️⃣ BUILD DO APLICATIVO ANDROID
   # -----------------------------
-  build_android_app:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
+    env:
+      # Cloudflare R2
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+      R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
+      R2_REGION: ${{ secrets.R2_REGION }}
+
+      # Web
+      NEXT_PUBLIC_R2_BASE: ${{ secrets.NEXT_PUBLIC_R2_BASE }}
+      NEXT_PUBLIC_R2_BUCKET: ${{ secrets.NEXT_PUBLIC_R2_BUCKET }}
+
     steps:
-      - name: Checkout
+      - name: ⬇️ Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK
+      # -------------------------
+      # ANDROID BUILD
+      # -------------------------
+      - name: ☕ Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
-      - name: Build APK
+      - name: 🤖 Build Android APK (Release)
         working-directory: PerueiroApp
-        run: ./gradlew assembleRelease
-
-      - name: Extract version
-        id: version
         run: |
-          VERSION=$(grep versionName app/build.gradle.kts | cut -d '"' -f2)
+          chmod +x ./build_release.zsh
+          ./build_release.zsh
+
+      - name: 📦 Detect APK and version
+        id: apk
+        run: |
+          APK_PATH=$(ls PerueiroApp/app/build/outputs/apk/release/*.apk | head -n 1)
+          APK_NAME=$(basename "$APK_PATH")
+
+          VERSION=$(echo "$APK_NAME" | sed -E 's/perueiros-release-(.*)\.apk/\1/')
+
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Rename APK
+      - name: ☁️ Upload APK to Cloudflare R2
         run: |
-          mv PerueiroApp/app/build/outputs/apk/release/app-release.apk \
-             perueiros-release-${{ steps.version.outputs.version }}.apk
+          npm install -g aws-cli
 
-      - name: Upload APK to R2
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.R2_API_TOKEN }}
-        env:
-          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        run: |
-          wrangler r2 object put \
-            perueiros/app-android/perueiros-release-${{ steps.version.outputs.version }}.apk \
-            --file=perueiros-release-${{ steps.version.outputs.version }}.apk
+          aws configure set aws_access_key_id $R2_ACCESS_KEY_ID
+          aws configure set aws_secret_access_key $R2_SECRET_ACCESS_KEY
+          aws configure set default.region $R2_REGION
 
-      - name: Upload latest.json
+          aws s3 cp \
+            "${{ steps.apk.outputs.apk_path }}" \
+            "s3://${R2_BUCKET_NAME}/app-android/${{ steps.apk.outputs.apk_name }}" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+
+      - name: 📝 Update latest.json
         run: |
           cat <<EOF > latest.json
           {
-            "version": "${{ steps.version.outputs.version }}",
-            "file": "perueiros-release-${{ steps.version.outputs.version }}.apk",
-            "url": "${{ secrets.R2_PUBLIC_BASE_URL }}/perueiros/app-android/perueiros-release-${{ steps.version.outputs.version }}.apk"
+            "version": "${{ steps.apk.outputs.version }}",
+            "url": "${R2_PUBLIC_BASE_URL}/${R2_BUCKET_NAME}/app-android/${{ steps.apk.outputs.apk_name }}"
           }
           EOF
 
-          wrangler r2 object put \
-            perueiros/app-android/latest.json \
-            --file=latest.json
+          aws s3 cp \
+            latest.json \
+            "s3://${R2_BUCKET_NAME}/app-android/latest.json" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
-  # -----------------------------
-  # 2️⃣ BUILD + DEPLOY DA PLATAFORMA
-  # -----------------------------
-  build_and_deploy_web:
-    needs: build_android_app
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
+      # -------------------------
+      # WEB BUILD + DEPLOY
+      # -------------------------
+      - name: 📦 Install dependencies
         run: npm ci
 
-      - name: Generate Prisma Client
-        run: npx prisma generate
-
-      - name: Build Next.js
+      - name: 🏗️ Build Web
         run: npm run build
 
-      - name: Download Android App Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: perueiro-app-debug
-          path: public/downloads
-
-      - name: Deploy to Azure Static Web Apps
+      - name: 🚀 Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ICY_WATER_08508BA0F }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: "upload"
+          action: upload
           app_location: "/"
           output_location: ".next"
