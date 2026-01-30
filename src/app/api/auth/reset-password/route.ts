@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resolvePasswordHash } from "@/lib/password";
+import { PASSWORD_RESET_TOKEN_SELECT } from "@/lib/prisma-selects";
 import { z } from "zod";
 
 const resetPasswordSchema = z.object({
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
 
   const resetToken = await prisma.passwordResetToken.findUnique({
     where: { token },
-    include: { user: true },
+    select: PASSWORD_RESET_TOKEN_SELECT,
   });
 
   if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {

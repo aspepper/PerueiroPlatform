@@ -9,6 +9,14 @@ import {
   normalizeCpfOrKeep,
   normalizeOptionalCpf,
 } from "@/lib/cpf";
+import {
+  DRIVER_SYNC_SELECT,
+  GUARDIAN_SYNC_SELECT,
+  PAYMENT_SYNC_SELECT,
+  SCHOOL_SYNC_SELECT,
+  STUDENT_SYNC_SELECT,
+  VAN_SYNC_SELECT,
+} from "@/lib/prisma-selects";
 import { requireMobileJwt, resolveSyncScope } from "../shared";
 
 function unauthorized() {
@@ -66,29 +74,15 @@ function withNormalizedCpfReferences<
   return { ...record, guardianCpf, driverCpf };
 }
 
-const vanSelect = {
-  id: true,
-  model: true,
-  color: true,
-  year: true,
-  plate: true,
-  driverCpf: true,
-  billingDay: true,
-  monthlyFee: true,
-  updatedAt: true,
-  deletedAt: true,
+const studentSelect = {
+  ...STUDENT_SYNC_SELECT,
+  guardian: { select: GUARDIAN_SYNC_SELECT },
+  school: { select: SCHOOL_SYNC_SELECT },
+  van: { select: VAN_SYNC_SELECT },
+  payments: { select: PAYMENT_SYNC_SELECT },
 } as const;
 
-const studentInclude = {
-  guardian: true,
-  school: true,
-  van: {
-    select: vanSelect,
-  },
-  payments: true,
-} as const;
-
-type VanRecord = Prisma.VanGetPayload<{ select: typeof vanSelect }>;
+type VanRecord = Prisma.VanGetPayload<{ select: typeof VAN_SYNC_SELECT }>;
 
 type VanSyncPayload = {
   id: string;
@@ -163,8 +157,9 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
 
   const driver = await prisma.driver.findFirst({
     where: { OR: cpfConditions, deletedAt: null },
-    include: {
-      vans: { select: vanSelect, where: { deletedAt: null } },
+    select: {
+      ...DRIVER_SYNC_SELECT,
+      vans: { select: VAN_SYNC_SELECT, where: { deletedAt: null } },
     },
   });
 
@@ -185,7 +180,7 @@ async function pullForDriver(cpf: string, updatedSince: Date | null) {
         { van: { driverCpf: driver.cpf } },
       ],
     },
-    include: studentInclude,
+    select: studentSelect,
   });
 
   const { vans: driverVans, ...driverRecord } = driver;
@@ -284,14 +279,16 @@ async function pullForGuardian(cpf: string, updatedSince: Date | null) {
 
   const guardian = await prisma.guardian.findFirst({
     where: { OR: cpfConditions, deletedAt: null },
-    include: {
+    select: {
+      ...GUARDIAN_SYNC_SELECT,
       students: {
         where: { deletedAt: null },
-        include: {
-          school: true,
-          van: { select: vanSelect },
-          driver: true,
-          payments: true,
+        select: {
+          ...STUDENT_SYNC_SELECT,
+          school: { select: SCHOOL_SYNC_SELECT },
+          van: { select: VAN_SYNC_SELECT },
+          driver: { select: DRIVER_SYNC_SELECT },
+          payments: { select: PAYMENT_SYNC_SELECT },
         },
       },
     },
