@@ -7,6 +7,7 @@ import { isBcryptHash, verifyPassword } from "@/lib/password";
 import { logTelemetryEvent } from "@/lib/telemetry";
 import { maskCpf } from "@/lib/sanitizers";
 import { signMobileToken } from "@/lib/mobile-jwt";
+import { DRIVER_AUTH_SELECT, GUARDIAN_AUTH_SELECT } from "@/lib/prisma-selects";
 import {
   cpfSearchConditions,
   requireMobileApiKey,
@@ -79,7 +80,7 @@ async function authenticateDriver(
 
   const driver = await prisma.driver.findFirst({
     where: { OR: conditions },
-    include: { user: true },
+    select: DRIVER_AUTH_SELECT,
   });
 
   if (!driver) {
@@ -170,7 +171,7 @@ async function authenticateGuardian(
 
   const guardian = await prisma.guardian.findFirst({
     where: { OR: conditions },
-    include: { user: true },
+    select: GUARDIAN_AUTH_SELECT,
   });
 
   if (!guardian) {

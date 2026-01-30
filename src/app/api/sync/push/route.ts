@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { PaymentStatus, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { STUDENT_SCOPE_SELECT } from "@/lib/prisma-selects";
 import { requireMobileJwt, resolveSyncScope } from "../shared";
 
 type SyncOperationPayload = {
@@ -155,7 +156,7 @@ async function handleDelete(
     if (!id) return;
     const payment = await prisma.payment.findUnique({
       where: { id },
-      include: { student: true },
+      select: { student: { select: STUDENT_SCOPE_SELECT } },
     });
     if (!payment) return;
     if (scope.role === "DRIVER" && payment.student.driverCpf !== scope.cpf) return;
