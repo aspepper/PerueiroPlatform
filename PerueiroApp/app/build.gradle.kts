@@ -63,9 +63,7 @@ android {
         val resolvedBaseUrl =
             candidate(project.findProperty("perueiroApiBaseUrl") as? String)
                 ?: candidate(System.getenv("PERUEIRO_API_BASE_URL"))
-                ?: candidate(System.getenv("NEXTAUTH_URL"))
                 ?: candidate(dotenvValue("PERUEIRO_API_BASE_URL"))
-                ?: candidate(dotenvValue("NEXTAUTH_URL"))
                 ?: defaultApiBaseUrl
         val escapedBaseUrl = resolvedBaseUrl.replace("\"", "\\\"")
         buildConfigField("String", "REMOTE_API_BASE_URL", "\"$escapedBaseUrl\"")
