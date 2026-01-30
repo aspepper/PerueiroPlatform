@@ -7,6 +7,10 @@ import { logTelemetryEvent } from "@/lib/telemetry";
 import { maskCpf, maskEmail } from "@/lib/sanitizers";
 import { sendPasswordResetEmail } from "@/lib/mailer";
 import { logApiError } from "@/lib/error";
+import {
+  DRIVER_WITH_USER_EMAIL_SELECT,
+  GUARDIAN_WITH_USER_EMAIL_SELECT,
+} from "@/lib/prisma-selects";
 import { cpfSearchConditions, requireMobileApiKey } from "../shared";
 
 const TOKEN_EXPIRATION_MS = 1000 * 60 * 60;
@@ -21,11 +25,17 @@ function emailsMatch(input: string, candidate?: string | null) {
 }
 
 async function refreshDriver(cpf: string) {
-  return prisma.driver.findUnique({ where: { cpf }, include: { user: true } });
+  return prisma.driver.findUnique({
+    where: { cpf },
+    select: DRIVER_WITH_USER_EMAIL_SELECT,
+  });
 }
 
 async function refreshGuardian(cpf: string) {
-  return prisma.guardian.findUnique({ where: { cpf }, include: { user: true } });
+  return prisma.guardian.findUnique({
+    where: { cpf },
+    select: GUARDIAN_WITH_USER_EMAIL_SELECT,
+  });
 }
 
 export async function POST(request: Request) {
@@ -83,7 +93,7 @@ export async function POST(request: Request) {
 
   const driver = await prisma.driver.findFirst({
     where: { OR: conditions },
-    include: { user: true },
+    select: DRIVER_WITH_USER_EMAIL_SELECT,
   });
 
   if (driver) {
@@ -152,7 +162,7 @@ export async function POST(request: Request) {
 
   const guardian = await prisma.guardian.findFirst({
     where: { OR: conditions },
-    include: { user: true },
+    select: GUARDIAN_WITH_USER_EMAIL_SELECT,
   });
 
   if (guardian) {
