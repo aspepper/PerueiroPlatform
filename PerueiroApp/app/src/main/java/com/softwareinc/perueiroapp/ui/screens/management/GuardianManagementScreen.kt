@@ -152,6 +152,7 @@ fun GuardianFormScreen(
 
         var cpf by remember { mutableStateOf(guardian?.cpf ?: "") }
         var name by remember { mutableStateOf(guardian?.name ?: "") }
+        var rg by remember { mutableStateOf(guardian?.rg ?: "") }
         var kinship by remember { mutableStateOf(normalizeKinship(guardian?.kinship)) }
         var birthDate by remember { mutableStateOf(guardian?.birthDate ?: "") }
         var spouse by remember { mutableStateOf(guardian?.spouseName ?: "") }
@@ -196,6 +197,7 @@ fun GuardianFormScreen(
                 if (result.alreadyExists && fetched != null) {
                     cpf = fetched.cpf
                     name = fetched.name
+                    rg = fetched.rg ?: ""
                     kinship = normalizeKinship(fetched.kinship)
                     birthDate = fetched.birthDate
                     spouse = fetched.spouseName
@@ -214,6 +216,7 @@ fun GuardianFormScreen(
                     lookupStatusMessage = "Responsável encontrado. Dados carregados."
                 } else {
                     name = ""
+                    rg = ""
                     kinship = KINSHIP_OPTIONS.first()
                     birthDate = ""
                     spouse = ""
@@ -298,6 +301,7 @@ fun GuardianFormScreen(
                 )
             }
             FormTextField(value = name, onValueChange = { name = it }, label = "Nome", enabled = fieldsEnabled)
+            FormTextField(value = rg, onValueChange = { rg = it }, label = "RG", enabled = fieldsEnabled)
             SelectionField(
                 label = "Grau de parentesco",
                 value = kinship,
@@ -357,6 +361,7 @@ fun GuardianFormScreen(
                                 cpf = cpf,
                                 name = name,
                                 kinship = kinship,
+                                rg = rg.takeIf { it.isNotBlank() },
                                 birthDate = birthDate,
                                 spouseName = spouse,
                                 address = address,

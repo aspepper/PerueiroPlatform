@@ -158,6 +158,9 @@ class VanApiService(
         json.putNullable("year", payload.year)
         json.put("plate", payload.plate)
         json.putNullable("driverCpf", payload.driverCpf)
+        json.putNullable("city", payload.city)
+        payload.billingDay?.let { json.put("billingDay", it) }
+        payload.monthlyFee?.let { json.put("monthlyFee", it) }
         return json
     }
 
@@ -231,7 +234,10 @@ class VanApiService(
         val color: String?,
         val year: String?,
         val plate: String,
-        val driverCpf: String?
+        val driverCpf: String?,
+        val city: String? = null,
+        val billingDay: Int? = null,
+        val monthlyFee: Double? = null
     )
 
     private class HttpConflictException : IOException()

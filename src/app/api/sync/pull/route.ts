@@ -93,6 +93,7 @@ type VanSyncPayload = {
   year: string | null;
   plate: string;
   driverCpf: string | null;
+  city: string | null;
   billingDay: number;
   monthlyFee: number;
   updatedAt: string;
@@ -106,6 +107,7 @@ function formatVanForSync(van: VanRecord): VanSyncPayload {
     year: van.year,
     plate: van.plate,
     driverCpf: van.driverCpf,
+    city: van.city,
     billingDay: van.billingDay,
     monthlyFee: Number(van.monthlyFee),
     updatedAt: van.updatedAt.toISOString(),

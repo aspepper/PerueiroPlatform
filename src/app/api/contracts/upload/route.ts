@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { uploadSignedContract } from "@/lib/storage/r2";
-import { isTokenExpired } from "@/lib/auth/token";
 
 export const dynamic = "force-dynamic";
 
@@ -16,14 +15,20 @@ const ALLOWED_MIME_TYPES = new Set([
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
-    const token = typeof formData.get("token") === "string" ? String(formData.get("token")).trim() : "";
-    const parentId =
-      typeof formData.get("parentId") === "string" ? String(formData.get("parentId")).trim() : "";
+    const contractIdRaw = formData.get("contractId");
+    const guardianCpfRaw = formData.get("guardianCpf");
     const file = formData.get("file");
 
-    if (!token || !parentId) {
+    const contractId =
+      typeof contractIdRaw === "string" && /^\d+$/.test(contractIdRaw.trim())
+        ? BigInt(contractIdRaw.trim())
+        : null;
+    const guardianCpf =
+      typeof guardianCpfRaw === "string" ? guardianCpfRaw.trim() : "";
+
+    if (!contractId || !guardianCpf) {
       return NextResponse.json(
-        { error: "Token e responsável são obrigatórios." },
+        { error: "contractId e guardianCpf são obrigatórios." },
         { status: 400 },
       );
     }
@@ -49,41 +54,32 @@ export async function POST(request: Request) {
       );
     }
 
-    const contract = await prisma.contract.findUnique({ where: { token } });
+    const contract = await prisma.contract.findUnique({ where: { id: contractId } });
 
     if (!contract) {
       return NextResponse.json({ error: "Contrato não encontrado." }, { status: 404 });
     }
 
-    if (contract.parentId !== parentId) {
+    if (contract.guardianCpf !== guardianCpf) {
       return NextResponse.json(
         { error: "Responsável não autorizado para este contrato." },
         { status: 403 },
       );
     }
 
-    if (isTokenExpired(contract.tokenExpiry)) {
-      if (contract.status !== "EXPIRED") {
-        await prisma.contract.update({
-          where: { id: contract.id },
-          data: { status: "EXPIRED" },
-        });
-      }
-      return NextResponse.json(
-        { error: "Token expirado. Solicite um novo contrato." },
-        { status: 410 },
-      );
-    }
-
     const buffer = Buffer.from(await file.arrayBuffer());
-    const signedUrl = await uploadSignedContract(buffer, contract.id, file.type);
+    const signedPdfUrl = await uploadSignedContract(
+      buffer,
+      contract.id.toString(),
+      file.type,
+    );
 
     await prisma.contract.update({
       where: { id: contract.id },
       data: {
-        signedUrl,
-        status: "SIGNED_UPLOAD",
+        signed: true,
         signedAt: new Date(),
+        signedPdfUrl,
       },
     });
 

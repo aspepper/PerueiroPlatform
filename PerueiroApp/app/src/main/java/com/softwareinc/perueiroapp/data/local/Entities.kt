@@ -8,6 +8,7 @@ data class GuardianEntity(
     @PrimaryKey val cpf: String,
     val name: String,
     val kinship: String,
+    val rg: String? = null,
     val birthDate: String,
     val spouseName: String,
     val address: String,
@@ -43,7 +44,10 @@ data class VanEntity(
     val color: String,
     val year: String,
     val plate: String,
-    val driverCpfs: String
+    val driverCpfs: String,
+    val city: String? = null,
+    val billingDay: Int = 5,
+    val monthlyFee: Double = 0.0
 )
 
 @Entity(tableName = "pending_vans")
@@ -75,12 +79,55 @@ data class StudentEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
     val birthDate: String,
+    val cpf: String? = null,
+    val rg: String? = null,
+    val period: String? = null,
     val fatherCpf: String?,
     val motherCpf: String?,
     val schoolId: Long?,
     val mobile: String?,
     val vanId: Long?,
     val driverCpf: String?
+)
+
+@Entity(tableName = "student_guardians", primaryKeys = ["studentId", "guardianCpf"])
+data class StudentGuardianEntity(
+    val studentId: Long,
+    val guardianCpf: String
+)
+
+@Entity(tableName = "contract_groups")
+data class ContractGroupEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val vanId: Long,
+    val period: String,
+    val startDate: String,
+    val endDate: String,
+    val billingDay: Int,
+    val rescissionFine: Double,
+    val forumCity: String
+)
+
+@Entity(tableName = "contracts")
+data class ContractEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val studentId: Long,
+    val studentName: String,
+    val guardianCpf: String,
+    val guardianName: String,
+    val vanId: Long,
+    val driverCpf: String?,
+    val period: String,
+    val startDate: String,
+    val endDate: String,
+    val billingDay: Int,
+    val rescissionFine: Double,
+    val forumCity: String,
+    val signed: Boolean = false,
+    val signedAt: String? = null,
+    val pdfUrl: String? = null,
+    val signedPdfUrl: String? = null,
+    val createdAt: String
 )
 
 @Entity(tableName = "payments")

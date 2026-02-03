@@ -25,4 +25,10 @@ sealed class AppDestination(val route: String) {
     data object Students : AppDestination("students")
     data object Payments : AppDestination("payments")
     data object PaymentNotifications : AppDestination("paymentNotifications")
+    data object DriverContracts : AppDestination("driverContracts/{cpf}") {
+        fun buildRoute(cpf: String) = "driverContracts/$cpf"
+    }
+    data object GuardianContracts : AppDestination("guardianContracts/{cpf}") {
+        fun buildRoute(cpf: String) = "guardianContracts/$cpf"
+    }
 }

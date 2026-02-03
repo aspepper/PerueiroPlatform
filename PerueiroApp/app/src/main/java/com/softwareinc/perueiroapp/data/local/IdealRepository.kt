@@ -3,6 +3,7 @@ package com.softwareinc.perueiroapp.data.local
 import android.util.Log
 import com.softwareinc.perueiroapp.BuildConfig
 import com.softwareinc.perueiroapp.data.remote.AuthApiService
+import com.softwareinc.perueiroapp.data.remote.ContractApiService
 import com.softwareinc.perueiroapp.data.remote.DriverApiService
 import com.softwareinc.perueiroapp.data.remote.GuardianApiService
 import com.softwareinc.perueiroapp.data.remote.PasswordResetResult
@@ -27,7 +28,8 @@ class IdealRepository(
     private val syncApiService: SyncApiService = SyncApiService(),
     private val authApiService: AuthApiService = AuthApiService(),
     private val guardianApiService: GuardianApiService = GuardianApiService(),
-    private val vanApiService: VanApiService = VanApiService()
+    private val vanApiService: VanApiService = VanApiService(),
+    private val contractApiService: ContractApiService = ContractApiService()
 ) {
     val guardians: Flow<List<GuardianEntity>> = dao.observeGuardians()
     val schools: Flow<List<SchoolEntity>> = dao.observeSchools()
@@ -35,6 +37,7 @@ class IdealRepository(
     val drivers: Flow<List<DriverEntity>> = dao.observeDrivers()
     val students: Flow<List<StudentEntity>> = dao.observeStudents()
     val payments: Flow<List<PaymentEntity>> = dao.observePayments()
+    val contracts: Flow<List<ContractEntity>> = dao.observeContracts()
 
     suspend fun authenticateDriver(cpf: String, password: String): AuthenticationResult<DriverEntity> {
         val trimmedCpf = cpf.trim()
@@ -95,6 +98,7 @@ class IdealRepository(
                     cpf = normalizeCpfValue(trimmedCpf),
                     name = trimmedCpf,
                     kinship = localGuardian?.kinship ?: "",
+                    rg = localGuardian?.rg,
                     birthDate = localGuardian?.birthDate ?: "",
                     spouseName = localGuardian?.spouseName ?: "",
                     address = localGuardian?.address ?: "",
@@ -154,6 +158,7 @@ class IdealRepository(
                 .put("cpf", guardian.cpf)
                 .put("name", guardian.name)
                 .put("kinship", guardian.kinship)
+                .put("rg", guardian.rg)
                 .put("birthDate", guardian.birthDate)
                 .put("spouseName", guardian.spouseName)
                 .put("address", guardian.address)
@@ -308,8 +313,9 @@ class IdealRepository(
                     .put("year", persisted.year)
                     .put("plate", persisted.plate)
                     .put("driverCpf", normalizedDriverCpf)
-                    .put("billingDay", 10)
-                    .put("monthlyFee", 0)
+                    .put("city", persisted.city)
+                    .put("billingDay", persisted.billingDay)
+                    .put("monthlyFee", persisted.monthlyFee)
             )
             return VanSaveResult.Synced(persisted)
         }
@@ -324,7 +330,10 @@ class IdealRepository(
                     color = sanitizedVan.color.takeIf { it.isNotBlank() },
                     year = sanitizedVan.year.takeIf { it.isNotBlank() },
                     plate = normalizedPlate,
-                    driverCpf = normalizedDriverCpf
+                    driverCpf = normalizedDriverCpf,
+                    city = sanitizedVan.city,
+                    billingDay = sanitizedVan.billingDay,
+                    monthlyFee = sanitizedVan.monthlyFee
                 )
             )
             val targetId = remote.id ?: persisted.id
@@ -440,6 +449,9 @@ class IdealRepository(
                 .put("id", student.id.takeIf { it > 0 })
                 .put("name", student.name)
                 .put("birthDate", student.birthDate)
+                .put("cpf", student.cpf)
+                .put("rg", student.rg)
+                .put("period", student.period)
                 .put("guardianCpf", student.motherCpf ?: student.fatherCpf)
                 .put("schoolId", student.schoolId)
                 .put("vanId", student.vanId)
@@ -534,6 +546,17 @@ class IdealRepository(
                     dao.upsertStudents(studentsToPersist)
                 }
 
+                val guardianLinks = payload.students
+                    .mapNotNull { student ->
+                        val studentId = student.id ?: return@mapNotNull null
+                        val guardianCpf = normalizeOptionalCpf(student.guardianCpf) ?: return@mapNotNull null
+                        StudentGuardianEntity(studentId = studentId, guardianCpf = guardianCpf)
+                    }
+
+                if (guardianLinks.isNotEmpty()) {
+                    dao.upsertStudentGuardians(guardianLinks)
+                }
+
                 val filteredPayments = payload.filterPayments(userRole, normalizedUserCpf)
                 if (filteredPayments.isNotEmpty()) {
                     dao.upsertPayments(filteredPayments.map { it.toEntity() })
@@ -560,6 +583,65 @@ class IdealRepository(
             } catch (exception: Exception) {
                 Log.e(TAG, "Erro ao sincronizar base local", exception)
             }
+        }
+    }
+
+    fun observeContractsByGuardian(cpf: String): Flow<List<ContractEntity>> =
+        dao.observeContractsByGuardian(cpf)
+
+    fun observeContractsByDriver(cpf: String): Flow<List<ContractEntity>> =
+        dao.observeContractsByDriver(cpf)
+
+    suspend fun refreshPendingContracts(guardianCpf: String? = null, driverCpf: String? = null) {
+        try {
+            val contracts = contractApiService.fetchPendingContracts(guardianCpf, driverCpf, null)
+            if (contracts.isNotEmpty()) {
+                dao.upsertContracts(contracts.map { it.toEntity() })
+            }
+        } catch (exception: Exception) {
+            Log.e(TAG, "Erro ao sincronizar contratos pendentes", exception)
+        }
+    }
+
+    suspend fun refreshSignedContracts(guardianCpf: String? = null, driverCpf: String? = null) {
+        try {
+            val contracts = contractApiService.fetchSignedContracts(guardianCpf, driverCpf, null)
+            if (contracts.isNotEmpty()) {
+                dao.upsertContracts(contracts.map { it.toEntity() })
+            }
+        } catch (exception: Exception) {
+            Log.e(TAG, "Erro ao sincronizar contratos assinados", exception)
+        }
+    }
+
+    suspend fun sendContracts(contractIds: List<Long>): List<Long> {
+        return try {
+            contractApiService.sendContracts(contractIds)
+        } catch (exception: Exception) {
+            Log.e(TAG, "Erro ao enviar contratos", exception)
+            emptyList()
+        }
+    }
+
+    suspend fun markContractPending(contractId: Long, driverCpf: String): Boolean {
+        return try {
+            contractApiService.markContractPending(contractId, driverCpf)
+            val local = dao.getContract(contractId)
+            if (local != null) {
+                dao.upsertContracts(
+                    listOf(
+                        local.copy(
+                            signed = false,
+                            signedAt = null,
+                            signedPdfUrl = null
+                        )
+                    )
+                )
+            }
+            true
+        } catch (exception: Exception) {
+            Log.e(TAG, "Erro ao marcar contrato como pendente", exception)
+            false
         }
     }
 
@@ -663,6 +745,7 @@ private fun SyncApiService.RemoteGuardian.toEntity(
         cpf = normalizedCpf,
         name = name,
         kinship = kinship ?: existing?.kinship ?: "",
+        rg = rg ?: existing?.rg,
         birthDate = formatDate(birthDate) ?: (existing?.birthDate ?: ""),
         spouseName = spouseName ?: existing?.spouseName ?: "",
         address = address ?: existing?.address ?: "",
@@ -723,6 +806,7 @@ private fun AuthApiService.RemoteGuardian.toEntity(
         cpf = normalizedCpf,
         name = name,
         kinship = kinship ?: existing?.kinship ?: "",
+        rg = rg ?: existing?.rg,
         birthDate = formatDate(birthDate) ?: (existing?.birthDate ?: ""),
         spouseName = spouseName ?: existing?.spouseName ?: "",
         address = address ?: existing?.address ?: "",
@@ -751,6 +835,7 @@ private fun GuardianApiService.RemoteGuardian.toEntity(
         cpf = normalizedCpf,
         name = name,
         kinship = kinship ?: existing?.kinship ?: "",
+        rg = rg ?: existing?.rg,
         birthDate = formatDate(birthDate) ?: (existing?.birthDate ?: ""),
         spouseName = spouseName ?: existing?.spouseName ?: "",
         address = address ?: existing?.address ?: "",
@@ -788,7 +873,10 @@ private fun SyncApiService.RemoteVan.toEntity(): VanEntity {
         color = color ?: "",
         year = year ?: "",
         plate = plate,
-        driverCpfs = driverCpf?.let { normalizeCpfValue(it) } ?: ""
+        driverCpfs = driverCpf?.let { normalizeCpfValue(it) } ?: "",
+        city = city,
+        billingDay = billingDay ?: 5,
+        monthlyFee = monthlyFee ?: 0.0
     )
 }
 
@@ -799,7 +887,10 @@ private fun VanApiService.RemoteVan.toEntity(): VanEntity {
         color = color.orEmpty(),
         year = year.orEmpty(),
         plate = plate,
-        driverCpfs = driverCpf?.let { normalizeCpfValue(it) } ?: ""
+        driverCpfs = driverCpf?.let { normalizeCpfValue(it) } ?: "",
+        city = null,
+        billingDay = 5,
+        monthlyFee = 0.0
     )
 }
 
@@ -808,6 +899,9 @@ private fun SyncApiService.RemoteStudent.toEntity(): StudentEntity {
         id = id ?: 0,
         name = name,
         birthDate = formatDate(birthDate) ?: "",
+        cpf = cpf,
+        rg = rg,
+        period = period,
         fatherCpf = normalizeOptionalCpf(guardianCpf),
         motherCpf = null,
         schoolId = schoolId,
@@ -825,6 +919,29 @@ private fun SyncApiService.RemotePayment.toEntity(): PaymentEntity {
         amount = amount ?: 0.0,
         discount = discount ?: 0.0,
         status = localizedStatus(status)
+    )
+}
+
+private fun ContractApiService.RemoteContract.toEntity(): ContractEntity {
+    return ContractEntity(
+        id = id,
+        studentId = studentId,
+        studentName = studentName,
+        guardianCpf = normalizeCpfValue(guardianCpf),
+        guardianName = guardianName,
+        vanId = vanId,
+        driverCpf = driverCpf?.let { normalizeCpfValue(it) },
+        period = period,
+        startDate = startDate,
+        endDate = endDate,
+        billingDay = billingDay,
+        rescissionFine = rescissionFine,
+        forumCity = forumCity,
+        signed = signed,
+        signedAt = signedAt,
+        pdfUrl = pdfUrl,
+        signedPdfUrl = signedPdfUrl,
+        createdAt = createdAt
     )
 }
 

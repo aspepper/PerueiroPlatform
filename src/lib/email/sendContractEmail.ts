@@ -4,11 +4,12 @@ import { getAppBaseUrlForEmails, getMailerTransporter } from "@/lib/mailer";
 
 const SMTP_FROM = process.env.SMTP_FROM || "no-reply@perueiros.com";
 
-export async function sendContractEmail(to: string, token: string) {
+export async function sendContractEmail(to: string, contractId: string) {
   const baseUrl = getAppBaseUrlForEmails();
-  const contractUrl = `${baseUrl}/contract/${token}`;
+  const contractUrl = `${baseUrl}/contracts/${contractId}`;
   const subject = "Contrato de transporte escolar - Perueiro";
-  const text = `Olá!\n\nSeu contrato de transporte escolar já está disponível. ` +
+  const text =
+    "Olá!\n\nSeu contrato de transporte escolar já está disponível. " +
     `Acesse o link abaixo para visualizar e assinar:\n\n${contractUrl}\n\n` +
     "Se você não reconhece este contrato, ignore este e-mail.";
   const html = `

@@ -30,6 +30,7 @@ model Guardian {
   cpf         String    @id
   name        String
   kinship     String
+  rg          String?
   birthDate   DateTime?
   spouseName  String?
   address     String
@@ -38,6 +39,7 @@ model Guardian {
   workAddress String?
   workPhone   String?
   students    Student[]
+  studentLinks StudentGuardian[]
   user        User?     @relation("GuardianAccount", fields: [userId], references: [id])
   userId      String?   @unique
   createdAt   DateTime  @default(now())
@@ -83,10 +85,13 @@ model Van {
   plate      String    @unique
   driverCpf  String?
   driver     Driver?   @relation(fields: [driverCpf], references: [cpf])
-  billingDay Int       @default(10)
+  city       String?
+  billingDay Int       @default(5)
   monthlyFee Decimal   @default(0) @db.Decimal(12, 2)
   students   Student[]
   payments   Payment[]
+  contractGroups ContractGroup[]
+  contracts  Contract[]
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
@@ -96,6 +101,9 @@ model Student {
   id          BigInt    @id @default(autoincrement())
   name        String
   birthDate   DateTime?
+  cpf         String?
+  rg          String?
+  period      String?
   grade       String?
   guardianCpf String?
   guardian    Guardian? @relation(fields: [guardianCpf], references: [cpf])
@@ -108,6 +116,8 @@ model Student {
   mobile      String?
   blacklist   Boolean   @default(false)
   payments    Payment[]
+  guardians   StudentGuardian[]
+  contracts   Contract[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
@@ -140,28 +150,58 @@ enum PaymentStatus {
   CANCELED
 }
 
-enum ContractStatus {
-  PENDING
-  SIGNED_DIGITAL
-  SIGNED_UPLOAD
-  EXPIRED
+model StudentGuardian {
+  studentId   BigInt
+  guardianCpf String
+  student     Student  @relation(fields: [studentId], references: [id])
+  guardian    Guardian @relation(fields: [guardianCpf], references: [cpf])
+  createdAt   DateTime @default(now())
+
+  @@id([studentId, guardianCpf])
+  @@index([guardianCpf])
+}
+
+model ContractGroup {
+  id            BigInt   @id @default(autoincrement())
+  vanId         BigInt
+  van           Van      @relation(fields: [vanId], references: [id])
+  period        String
+  startDate     DateTime
+  endDate       DateTime
+  billingDay    Int
+  rescissionFine Float
+  forumCity     String
+  createdAt     DateTime @default(now())
+  contracts     Contract[]
+
+  @@index([vanId, period])
 }
 
 model Contract {
-  id          String         @id @default(uuid())
-  studentId   String
-  parentId    String
-  driverId    String
-  pdfUrl      String
-  signedUrl   String?
-  status      ContractStatus @default(PENDING)
-  token       String         @unique
-  tokenExpiry DateTime
-  createdAt   DateTime       @default(now())
-  signedAt    DateTime?
+  id             BigInt   @id @default(autoincrement())
+  studentId      BigInt
+  guardianCpf    String
+  vanId          BigInt
+  groupId        BigInt?
+  period         String
+  startDate      DateTime
+  endDate        DateTime
+  billingDay     Int      @default(10)
+  rescissionFine Float
+  forumCity      String
+  signed         Boolean  @default(false)
+  signedAt       DateTime?
+  pdfUrl         String?
+  signedPdfUrl   String?
+  createdAt      DateTime @default(now())
 
-  @@index([driverId, status])
-  @@index([parentId, status])
+  student   Student       @relation(fields: [studentId], references: [id])
+  guardian  Guardian      @relation(fields: [guardianCpf], references: [cpf])
+  van       Van           @relation(fields: [vanId], references: [id])
+  group     ContractGroup? @relation(fields: [groupId], references: [id])
+
+  @@index([guardianCpf, signed])
+  @@index([vanId, signed])
   @@index([studentId])
 }
 

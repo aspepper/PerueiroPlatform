@@ -11,6 +11,7 @@ import com.softwareinc.perueiroapp.data.local.IdealRepository
 import com.softwareinc.perueiroapp.data.local.PaymentEntity
 import com.softwareinc.perueiroapp.data.local.SchoolEntity
 import com.softwareinc.perueiroapp.data.local.StudentEntity
+import com.softwareinc.perueiroapp.data.local.ContractEntity
 import com.softwareinc.perueiroapp.data.local.UserSession
 import com.softwareinc.perueiroapp.data.local.UserSessionDataSource
 import com.softwareinc.perueiroapp.data.local.VanEntity
@@ -70,6 +71,12 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
     )
 
     val payments = repository.payments.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList()
+    )
+
+    val contracts = repository.contracts.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList()
@@ -197,6 +204,44 @@ class IdealAppViewModel(application: Application) : AndroidViewModel(application
 
     fun deletePayment(id: Long) {
         viewModelScope.launch { repository.deletePayment(id) }
+    }
+
+    fun refreshPendingContracts(guardianCpf: String? = null, driverCpf: String? = null) {
+        viewModelScope.launch { repository.refreshPendingContracts(guardianCpf, driverCpf) }
+    }
+
+    fun refreshSignedContracts(guardianCpf: String? = null, driverCpf: String? = null) {
+        viewModelScope.launch { repository.refreshSignedContracts(guardianCpf, driverCpf) }
+    }
+
+    fun observeContractsByGuardian(cpf: String): StateFlow<List<ContractEntity>> {
+        return repository.observeContractsByGuardian(cpf).stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList()
+        )
+    }
+
+    fun observeContractsByDriver(cpf: String): StateFlow<List<ContractEntity>> {
+        return repository.observeContractsByDriver(cpf).stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList()
+        )
+    }
+
+    fun sendContracts(contractIds: List<Long>, onComplete: (List<Long>) -> Unit) {
+        viewModelScope.launch {
+            val sent = repository.sendContracts(contractIds)
+            onComplete(sent)
+        }
+    }
+
+    fun markContractPending(contractId: Long, driverCpf: String, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val ok = repository.markContractPending(contractId, driverCpf)
+            onComplete(ok)
+        }
     }
 
     fun changeGuardianPassword(cpf: String, newPassword: String) {

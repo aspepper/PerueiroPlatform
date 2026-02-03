@@ -140,6 +140,9 @@ fun VanFormScreen(
         var color by remember(van?.id) { mutableStateOf(van?.color ?: "") }
         var year by remember(van?.id) { mutableStateOf(van?.year ?: "") }
         var plate by remember(van?.id) { mutableStateOf(van?.plate ?: "") }
+        var city by remember(van?.id) { mutableStateOf(van?.city ?: "") }
+        var billingDay by remember(van?.id) { mutableStateOf(van?.billingDay?.toString() ?: "5") }
+        var monthlyFee by remember(van?.id) { mutableStateOf(van?.monthlyFee?.toString() ?: "0") }
         val selectedDrivers = remember(van?.id, loggedDriverCpf) {
             mutableStateListOf<String>().apply {
                 val existing = van?.driverCpfs
@@ -185,6 +188,9 @@ fun VanFormScreen(
                     color = fetched.color
                     year = fetched.year
                     plate = fetched.plate
+                    city = fetched.city ?: ""
+                    billingDay = fetched.billingDay.toString()
+                    monthlyFee = fetched.monthlyFee.toString()
                     selectedDrivers.clear()
                     if (isDriverLogged && loggedDriverCpf != null) {
                         selectedDrivers.add(loggedDriverCpf)
@@ -303,6 +309,24 @@ fun VanFormScreen(
                 label = "Ano",
                 enabled = fieldsEnabled && !isSaving
             )
+            FormTextField(
+                value = city,
+                onValueChange = { city = it },
+                label = "Cidade",
+                enabled = fieldsEnabled && !isSaving
+            )
+            FormTextField(
+                value = billingDay,
+                onValueChange = { billingDay = it },
+                label = "Dia de vencimento",
+                enabled = fieldsEnabled && !isSaving
+            )
+            FormTextField(
+                value = monthlyFee,
+                onValueChange = { monthlyFee = it },
+                label = "Mensalidade (R$)",
+                enabled = fieldsEnabled && !isSaving
+            )
             if (isDriverLogged) {
                 val driverName = drivers.firstOrNull { it.cpf == loggedDriverCpf }?.name
                 Text(
@@ -344,13 +368,18 @@ fun VanFormScreen(
                         isSaving = true
                         submissionError = null
                         try {
+                            val parsedBillingDay = billingDay.trim().toIntOrNull() ?: 5
+                            val parsedMonthlyFee = monthlyFee.trim().replace(',', '.').toDoubleOrNull() ?: 0.0
                             val entity = VanEntity(
                                 id = if (vanId > 0) vanId else 0,
                                 model = model,
                                 color = color,
                                 year = year,
                                 plate = normalizedPlate,
-                                driverCpfs = selectedDrivers.joinToString(", ")
+                                driverCpfs = selectedDrivers.joinToString(", "),
+                                city = city.takeIf { it.isNotBlank() },
+                                billingDay = parsedBillingDay,
+                                monthlyFee = parsedMonthlyFee
                             )
                             val result = onSave(
                                 entity,

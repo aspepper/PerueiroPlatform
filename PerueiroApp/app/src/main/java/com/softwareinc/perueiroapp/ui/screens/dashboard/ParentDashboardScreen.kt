@@ -1,6 +1,7 @@
 package com.softwareinc.perueiroapp.ui.screens.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -59,6 +60,7 @@ fun ParentDashboardScreen(
     fetchGuardian: suspend (String) -> GuardianEntity?,
     students: List<StudentEntity>,
     payments: List<PaymentEntity>,
+    onNavigateToContracts: () -> Unit,
     onLogout: () -> Unit
 ) {
     var guardian by remember { mutableStateOf<GuardianEntity?>(null) }
@@ -101,6 +103,12 @@ fun ParentDashboardScreen(
 
             item { Spacer(modifier = Modifier.height(24.dp)) }
 
+            item {
+                ContractShortcut(onNavigateToContracts = onNavigateToContracts)
+            }
+
+            item { Spacer(modifier = Modifier.height(24.dp)) }
+
             if (relatedStudents.isEmpty()) {
                 item { EmptyStateCard() }
             } else {
@@ -111,6 +119,43 @@ fun ParentDashboardScreen(
                     StudentPaymentCard(student = student, payments = studentPayments)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ContractShortcut(onNavigateToContracts: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        colors = CardDefaults.cardColors(containerColor = AccentSoft),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = "Contratos",
+                style = MaterialTheme.typography.titleMedium,
+                color = AccentBlue,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Assine digitalmente ou envie seu contrato assinado.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "Abrir contratos",
+                style = MaterialTheme.typography.bodyMedium,
+                color = AccentBlue,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White)
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                    .clickable { onNavigateToContracts() }
+            )
         }
     }
 }

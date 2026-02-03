@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AttachMoney
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.DirectionsBus
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Groups
@@ -66,6 +67,7 @@ fun DriverDashboardScreen(
     onNavigateToStudents: () -> Unit,
     onNavigateToPayments: () -> Unit,
     onNavigateToNotifications: () -> Unit,
+    onNavigateToContracts: () -> Unit,
     onLogout: () -> Unit,
 ) {
     var driver by remember { mutableStateOf<DriverEntity?>(null) }
@@ -117,6 +119,12 @@ fun DriverDashboardScreen(
                 description = "Envie notificações",
                 icon = Icons.Outlined.NotificationsActive,
                 onClick = onNavigateToNotifications
+            ),
+            DashboardAction(
+                title = "Contratos",
+                description = "Envios e assinaturas",
+                icon = Icons.Outlined.Description,
+                onClick = onNavigateToContracts
             )
         )
     }

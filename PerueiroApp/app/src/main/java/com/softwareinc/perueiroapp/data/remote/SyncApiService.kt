@@ -89,6 +89,7 @@ class SyncApiService(
                     cpf = cpf,
                     name = name,
                     kinship = item.optNullableString("kinship"),
+                    rg = item.optNullableString("rg"),
                     birthDate = item.optNullableString("birthDate")?.toDateOrNull(),
                     spouseName = item.optNullableString("spouseName"),
                     address = item.optNullableString("address"),
@@ -149,6 +150,7 @@ class SyncApiService(
                     year = item.optNullableString("year"),
                     plate = plate,
                     driverCpf = item.optNullableString("driverCpf"),
+                    city = item.optNullableString("city"),
                     billingDay = item.optLongFromAny("billingDay")?.toInt(),
                     monthlyFee = item.optDoubleFromAny("monthlyFee")
                 )
@@ -165,6 +167,9 @@ class SyncApiService(
                     id = item.optLongFromAny("id"),
                     name = name,
                     birthDate = item.optNullableString("birthDate")?.toDateOrNull(),
+                    cpf = item.optNullableString("cpf"),
+                    rg = item.optNullableString("rg"),
+                    period = item.optNullableString("period"),
                     grade = item.optNullableString("grade"),
                     guardianCpf = item.optNullableString("guardianCpf"),
                     schoolId = item.optLongFromAny("schoolId"),
@@ -259,6 +264,7 @@ class SyncApiService(
         val cpf: String,
         val name: String,
         val kinship: String?,
+        val rg: String?,
         val birthDate: Date?,
         val spouseName: String?,
         val address: String?,
@@ -307,6 +313,7 @@ class SyncApiService(
         val year: String?,
         val plate: String,
         val driverCpf: String?,
+        val city: String?,
         val billingDay: Int?,
         val monthlyFee: Double?
     )
@@ -315,6 +322,9 @@ class SyncApiService(
         val id: Long?,
         val name: String,
         val birthDate: Date?,
+        val cpf: String?,
+        val rg: String?,
+        val period: String?,
         val grade: String?,
         val guardianCpf: String?,
         val schoolId: Long?,

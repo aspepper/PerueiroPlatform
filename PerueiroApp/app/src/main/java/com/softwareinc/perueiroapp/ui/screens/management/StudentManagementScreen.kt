@@ -131,6 +131,9 @@ fun StudentFormScreen(
     ) { padding, snackbar ->
         var name by remember { mutableStateOf(student?.name ?: "") }
         var birthDate by remember { mutableStateOf(student?.birthDate ?: "") }
+        var cpf by remember { mutableStateOf(student?.cpf ?: "") }
+        var rg by remember { mutableStateOf(student?.rg ?: "") }
+        var period by remember { mutableStateOf(student?.period ?: "") }
         var father by remember { mutableStateOf(student?.fatherCpf ?: "") }
         var mother by remember { mutableStateOf(student?.motherCpf ?: "") }
         var schoolId by remember { mutableStateOf(student?.schoolId ?: 0L) }
@@ -141,6 +144,7 @@ fun StudentFormScreen(
         var showSchoolDialog by remember { mutableStateOf(false) }
         var showVanDialog by remember { mutableStateOf(false) }
         var showDriverDialog by remember { mutableStateOf(false) }
+        var showPeriodDialog by remember { mutableStateOf(false) }
         val coroutineScope = rememberCoroutineScope()
 
         val fatherSiblings = remember(father, existingStudents) {
@@ -158,6 +162,13 @@ fun StudentFormScreen(
         ) {
             FormTextField(name, { name = it }, "Nome")
             FormTextField(birthDate, { birthDate = it }, "Data de nascimento")
+            FormTextField(cpf, { cpf = it }, "CPF do aluno")
+            FormTextField(rg, { rg = it }, "RG do aluno")
+            SelectionTextField(
+                label = "Período",
+                value = if (period.isBlank()) "Selecionar" else period,
+                onClick = { showPeriodDialog = true }
+            )
             SelectionTextField(
                 label = "Pai",
                 value = guardians.firstOrNull { it.cpf == father }?.name ?: "Selecionar",
@@ -202,6 +213,9 @@ fun StudentFormScreen(
                                 id = student?.id ?: 0,
                                 name = name,
                                 birthDate = birthDate,
+                                cpf = cpf.takeIf { it.isNotBlank() },
+                                rg = rg.takeIf { it.isNotBlank() },
+                                period = period.takeIf { it.isNotBlank() },
                                 fatherCpf = father.takeIf { it.isNotBlank() },
                                 motherCpf = mother.takeIf { it.isNotBlank() },
                                 schoolId = schoolId.takeIf { it != 0L },
@@ -237,6 +251,16 @@ fun StudentFormScreen(
                 itemLabel = { it.fantasyName },
                 onItemSelected = { schoolId = it.id },
                 onDismiss = { showSchoolDialog = false }
+            )
+        }
+        if (showPeriodDialog) {
+            val options = listOf("MANHA", "TARDE", "NOITE")
+            SelectionDialog(
+                title = "Selecionar período",
+                items = options,
+                itemLabel = { it },
+                onItemSelected = { period = it },
+                onDismiss = { showPeriodDialog = false }
             )
         }
         if (showVanDialog) {

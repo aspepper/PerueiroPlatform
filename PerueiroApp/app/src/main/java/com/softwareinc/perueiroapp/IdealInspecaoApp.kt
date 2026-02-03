@@ -15,6 +15,8 @@ import androidx.navigation.navArgument
 import com.softwareinc.perueiroapp.navigation.AppDestination
 import com.softwareinc.perueiroapp.ui.screens.dashboard.DriverDashboardScreen
 import com.softwareinc.perueiroapp.ui.screens.dashboard.ParentDashboardScreen
+import com.softwareinc.perueiroapp.ui.screens.contracts.DriverContractsScreen
+import com.softwareinc.perueiroapp.ui.screens.contracts.GuardianContractsScreen
 import com.softwareinc.perueiroapp.ui.screens.login.ChangePasswordScreen
 import com.softwareinc.perueiroapp.ui.screens.login.ForgotPasswordScreen
 import com.softwareinc.perueiroapp.ui.screens.login.LoginScreen
@@ -130,6 +132,7 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                 onNavigateToStudents = { navController.navigate(AppDestination.Students.route) },
                 onNavigateToPayments = { navController.navigate(AppDestination.Payments.route) },
                 onNavigateToNotifications = { navController.navigate(AppDestination.PaymentNotifications.route) },
+                onNavigateToContracts = { navController.navigate(AppDestination.DriverContracts.buildRoute(cpf)) },
                 onLogout = {
                     viewModel.logout()
                     navController.navigate(AppDestination.Splash.route) {
@@ -149,6 +152,7 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                 fetchGuardian = { viewModel.getGuardian(it) },
                 students = students,
                 payments = payments,
+                onNavigateToContracts = { navController.navigate(AppDestination.GuardianContracts.buildRoute(cpf)) },
                 onLogout = {
                     viewModel.logout()
                     navController.navigate(AppDestination.Splash.route) {
@@ -417,6 +421,48 @@ fun IdealInspecaoApp(viewModel: IdealAppViewModel) {
                 guardians = guardians,
                 students = students,
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = AppDestination.DriverContracts.route,
+            arguments = listOf(navArgument("cpf") { type = NavType.StringType })
+        ) { entry ->
+            val cpf = entry.arguments?.getString("cpf") ?: return@composable
+            val contracts by viewModel.observeContractsByDriver(cpf).collectAsState()
+            DriverContractsScreen(
+                driverCpf = cpf,
+                pending = contracts.filter { !it.signed },
+                signed = contracts.filter { it.signed },
+                onBack = { navController.popBackStack() },
+                onRefresh = {
+                    viewModel.refreshPendingContracts(driverCpf = cpf)
+                    viewModel.refreshSignedContracts(driverCpf = cpf)
+                },
+                onSendContract = { contractId ->
+                    viewModel.sendContracts(listOf(contractId)) {}
+                },
+                onMarkPending = { contractId ->
+                    viewModel.markContractPending(contractId, cpf) {}
+                }
+            )
+        }
+
+        composable(
+            route = AppDestination.GuardianContracts.route,
+            arguments = listOf(navArgument("cpf") { type = NavType.StringType })
+        ) { entry ->
+            val cpf = entry.arguments?.getString("cpf") ?: return@composable
+            val contracts by viewModel.observeContractsByGuardian(cpf).collectAsState()
+            GuardianContractsScreen(
+                guardianCpf = cpf,
+                pending = contracts.filter { !it.signed },
+                signed = contracts.filter { it.signed },
+                onBack = { navController.popBackStack() },
+                onRefresh = {
+                    viewModel.refreshPendingContracts(guardianCpf = cpf)
+                    viewModel.refreshSignedContracts(guardianCpf = cpf)
+                }
             )
         }
     }

@@ -127,8 +127,21 @@ interface IdealDao {
     @Query("SELECT * FROM students WHERE id = :id")
     suspend fun getStudent(id: Long): StudentEntity?
 
-    @Query("SELECT * FROM students WHERE fatherCpf = :cpf OR motherCpf = :cpf")
+    @Query(
+        "SELECT s.* FROM students s " +
+            "LEFT JOIN student_guardians sg ON s.id = sg.studentId " +
+            "WHERE s.fatherCpf = :cpf OR s.motherCpf = :cpf OR sg.guardianCpf = :cpf"
+    )
     fun observeStudentsByGuardian(cpf: String): Flow<List<StudentEntity>>
+
+    @Upsert
+    suspend fun upsertStudentGuardians(links: List<StudentGuardianEntity>)
+
+    @Query("SELECT * FROM student_guardians WHERE guardianCpf = :cpf")
+    suspend fun getStudentGuardiansForGuardian(cpf: String): List<StudentGuardianEntity>
+
+    @Query("DELETE FROM student_guardians")
+    suspend fun clearStudentGuardians()
 
     @Query("DELETE FROM students WHERE id = :id")
     suspend fun deleteStudent(id: Long)
@@ -153,6 +166,36 @@ interface IdealDao {
 
     @Query("DELETE FROM payments")
     suspend fun clearPayments()
+
+    @Upsert
+    suspend fun upsertContractGroup(group: ContractGroupEntity)
+
+    @Upsert
+    suspend fun upsertContractGroups(groups: List<ContractGroupEntity>)
+
+    @Query("SELECT * FROM contract_groups WHERE vanId = :vanId")
+    suspend fun getContractGroupsByVan(vanId: Long): List<ContractGroupEntity>
+
+    @Query("DELETE FROM contract_groups")
+    suspend fun clearContractGroups()
+
+    @Upsert
+    suspend fun upsertContracts(contracts: List<ContractEntity>)
+
+    @Query("SELECT * FROM contracts ORDER BY createdAt DESC")
+    fun observeContracts(): Flow<List<ContractEntity>>
+
+    @Query("SELECT * FROM contracts WHERE guardianCpf = :cpf ORDER BY createdAt DESC")
+    fun observeContractsByGuardian(cpf: String): Flow<List<ContractEntity>>
+
+    @Query("SELECT * FROM contracts WHERE driverCpf = :driverCpf ORDER BY createdAt DESC")
+    fun observeContractsByDriver(driverCpf: String): Flow<List<ContractEntity>>
+
+    @Query("SELECT * FROM contracts WHERE id = :id LIMIT 1")
+    suspend fun getContract(id: Long): ContractEntity?
+
+    @Query("DELETE FROM contracts")
+    suspend fun clearContracts()
 
     @Upsert
     suspend fun upsertSyncStatus(status: SyncStatusEntity)

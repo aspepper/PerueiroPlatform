@@ -9,6 +9,7 @@ object RemoteApiConfig {
     private const val DEFAULT_JSON_MEDIA_TYPE = "application/json; charset=utf-8"
 
     val baseUrl: String = BuildConfig.REMOTE_API_BASE_URL.trimEnd('/')
+    val appBaseUrl: String = baseUrl.removeSuffix("/api")
 
     val driversUrl: String = "$baseUrl/drivers"
     val vansUrl: String = "$baseUrl/vans"
@@ -17,6 +18,13 @@ object RemoteApiConfig {
     val syncPushUrl: String = "$baseUrl/sync/push"
     val mobileLoginUrl: String = "$baseUrl/mobile/login"
     val forgotPasswordUrl: String = "$baseUrl/mobile/forgot-password"
+    val contractsPendingUrl: String = "$baseUrl/contracts/pending"
+    val contractsSignedUrl: String = "$baseUrl/contracts/signed"
+    val contractsSendUrl: String = "$baseUrl/contracts/send"
+    val contractsUploadUrl: String = "$baseUrl/contracts/upload"
+    val contractsMarkPendingUrl: String = "$baseUrl/contracts/mark-pending"
+    val contractsSignDigitalUrl: String = "$baseUrl/contracts/sign-digital"
+    val contractsWebBaseUrl: String = "$appBaseUrl/contracts"
 
     const val jsonMediaTypeString: String = DEFAULT_JSON_MEDIA_TYPE
     val jsonMediaType = DEFAULT_JSON_MEDIA_TYPE.toMediaType()
