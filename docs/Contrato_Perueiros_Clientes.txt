@@ -1,0 +1,54 @@
+TRANSPORTADOR: TIO RÔ LOPES/TIA ELAINE (CRT 238)                              VIA DO TRANSPORTADOR
+REGISTRO ESCOLAR: (CRT 127)
+
+ENDEREÇO: Rua: Luiza de Araújo Silveira Cabreira, n° 71 - Jardim Cacique - Suzano - SP
+TELEFONES: (11) 971135770 (vivo) / (11) 975468561 (vivo)
+
+                           CONTRARO DE TRANSPORTE ESCOLAR
+
+ALUNO: <Student.name>
+DATA DE NASCIMENTO: <Student.birthdate>
+
+PAI: <Guardian.name when Guardian.kinship == "Pai" or if Student didn't another assigned Guardian registred kinship == "Pai", use "Mãe" or "Responsável Legal" or "Avó" or "Avó" in this order by.> 
+R.G: <Guardian.rg> C.P.F: <Guardian.cpf>
+
+MÃE: <Guardian.name when Guardian.kinship == "Mãe", if this already used in PAI field above>
+R.G: <Guardian.rg when Guardian.kinship == "Mãe", if this already used in PAI field above> C.P.F: <Guardian.cpf when Guardian.kinship == "Mãe", if this already used in PAI field above>
+
+ENDEREÇO: <Guardian.address used at PAI field>
+TELEFONES: <Guardian.mobile used at PAI field>
+
+ESCOLA: <School.name> PERÍODO: <Contract.period> SÉRIE: <Student.grade>
+
+1) Fica o contratado responsável pelo transporte do aluno de sua residência à escola, e vice-versa, no horário normal de aula.
+   OBS: Eventos como excursões, reuniões e atividades extras não terão transporte. Emenda de feriado (segunda/terça e quinta/sexta) o transporte também emendará.
+
+2) O contratado se compromete a oferecer o veículo em bom estado de conservação e limpeza, garantindo assim condições de tráfego e bem-estar do aluno.
+
+3) O aluno deverá estar pronto no horário marcado, para que não haja atraso ao próximo e nem pelo horário de entrada nas escolas.
+
+4) É de responsabilidade dos pais informar ao transportador quando o aluno irá faltar à escola (principalmente o aluno que só utiliza um trecho); ou quando a ida/volta será feita por outros que não seja o transportador.
+   Lembrando que, na ausência da criança por qualquer motivo, a mensalidade deverá ser paga normalmente.
+
+5) Se por eventual motivo, o aluno que utiliza o transporte de ida e volta, for à escola por outros meios, não é responsabilidade do transportador retirá-lo na saída, a não ser que haja comunicação prévia.
+
+6) O presente contrato terá início no mês de <MÊS DE CADASTRO/ALTERAÇÃO DE Student.vanId> de <ANO DE CADASTRO/ALTERAÇÃO DE Student.vanId>, e término no mês de ................................... de 20......
+   O contratante se compromete a pagar o valor total de R$ <Van.monthlyFee * Number of months of validity> (<Fee amount in words>), podendo parcelar em <Number of months of validity> vezes.
+
+7) O valor acordado é um valor fixo, parcelado em até <Number of months of validity> vezes. O contratante pode optar por mudar o número de parcelas ou obter 5% de desconto sobre o valor total para pagamentos à vista.
+   Dia do vencimento escolhido (01, 05, 10, 15 ao 21): <Contract.billingDay>
+   Havendo atraso no pagamento, será cobrado multa no valor de R$ 4,00 ao dia.
+
+8) O usuário que rescindir o contrato deverá efetuar o pagamento total da parcela do mês corrente, mais a multa de R$ <Contract.terminationPenaltyValue>.
+
+9) Fica eleito o FORO DA COMARCA DE <Contract.forumCity> para todas as questões oriundas do presente contrato. Por estarem de presente acordo com as cláusulas, assinam o presente em 2 (duas) vias.
+
+
+                                       <Contract.forumCity>, <Day from Contract.signedAt> de <Word of mouth from Contract.signedAt> de <Year from Contract.signedAt>
+
+
+
+
+                                       _____________________________________________________________________________
+                                       <Guardian.name used at PAI field>
+

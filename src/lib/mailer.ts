@@ -104,3 +104,11 @@ export async function sendPasswordResetEmail(to: string, token: string) {
     throw error;
   }
 }
+
+export function getMailerTransporter() {
+  return getTransporter();
+}
+
+export function getAppBaseUrlForEmails() {
+  return getAppBaseUrl();
+}

@@ -140,6 +140,31 @@ enum PaymentStatus {
   CANCELED
 }
 
+enum ContractStatus {
+  PENDING
+  SIGNED_DIGITAL
+  SIGNED_UPLOAD
+  EXPIRED
+}
+
+model Contract {
+  id          String         @id @default(uuid())
+  studentId   String
+  parentId    String
+  driverId    String
+  pdfUrl      String
+  signedUrl   String?
+  status      ContractStatus @default(PENDING)
+  token       String         @unique
+  tokenExpiry DateTime
+  createdAt   DateTime       @default(now())
+  signedAt    DateTime?
+
+  @@index([driverId, status])
+  @@index([parentId, status])
+  @@index([studentId])
+}
+
 model PasswordResetToken {
   id        String    @id @default(cuid())
   token     String    @unique
