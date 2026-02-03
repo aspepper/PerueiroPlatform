@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { ensureDriverUser } from "@/lib/user-accounts";
 
 const formatDriver = (driver: {
   cpf: string;
@@ -10,12 +9,14 @@ const formatDriver = (driver: {
   cnh: string | null;
   phone: string | null;
   email: string | null;
+  address: string | null;
 }) => ({
   cpf: driver.cpf,
   name: driver.name,
   cnh: driver.cnh,
   phone: driver.phone,
   email: driver.email,
+  address: driver.address,
 });
 
 const sanitizeRequiredString = (value: unknown) =>
@@ -31,7 +32,14 @@ export async function GET() {
   try {
     const drivers = await prisma.driver.findMany({
       orderBy: { name: "asc" },
-      select: { cpf: true, name: true, cnh: true, phone: true, email: true },
+      select: {
+        cpf: true,
+        name: true,
+        cnh: true,
+        phone: true,
+        email: true,
+        address: true,
+      },
     });
 
     return NextResponse.json({ drivers: drivers.map(formatDriver) });
@@ -44,29 +52,53 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  let body: unknown;
   try {
-    const body = await request.json();
-    const cpf = sanitizeRequiredString(body.cpf);
-    const name = sanitizeRequiredString(body.name);
-    const password =
-      typeof body.password === "string" && body.password.trim().length > 0
-        ? body.password.trim()
-        : undefined;
+    body = await request.json();
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Body malformado." },
+      { status: 400 },
+    );
+  }
 
-    if (!cpf || !name) {
-      return NextResponse.json(
-        { error: "Nome e CPF são obrigatórios." },
-        { status: 400 },
-      );
-    }
+  if (typeof body !== "object" || body === null) {
+    return NextResponse.json({ error: "Body malformado." }, { status: 400 });
+  }
 
+  const cpf = sanitizeRequiredString((body as Record<string, unknown>).cpf);
+  const name = sanitizeRequiredString((body as Record<string, unknown>).name);
+
+  if (!cpf || !name) {
+    return NextResponse.json(
+      { error: "Nome e CPF são obrigatórios." },
+      { status: 400 },
+    );
+  }
+
+  const existingDriver = await prisma.driver.findUnique({
+    where: { cpf },
+    select: { cpf: true },
+  });
+
+  if (existingDriver) {
+    return NextResponse.json(
+      { error: "Já existe um motorista cadastrado com este CPF." },
+      { status: 400 },
+    );
+  }
+
+  try {
     const driver = await prisma.driver.create({
       data: {
         cpf,
         name,
-        cnh: sanitizeOptionalString(body.cnh),
-        phone: sanitizeOptionalString(body.phone),
-        email: sanitizeOptionalString(body.email),
+        cnh: sanitizeOptionalString((body as Record<string, unknown>).cnh),
+        phone: sanitizeOptionalString((body as Record<string, unknown>).phone),
+        email: sanitizeOptionalString((body as Record<string, unknown>).email),
+        address: sanitizeOptionalString(
+          (body as Record<string, unknown>).address,
+        ),
       },
       select: {
         cpf: true,
@@ -74,35 +106,24 @@ export async function POST(request: Request) {
         cnh: true,
         phone: true,
         email: true,
-        userId: true,
+        address: true,
       },
     });
 
-    await ensureDriverUser(
-      {
-        cpf: driver.cpf,
-        name: driver.name,
-        email: driver.email,
-        userId: driver.userId,
-      },
-      { password },
-    );
-
     return NextResponse.json({ driver: formatDriver(driver) }, { status: 201 });
-  } catch (error) {
+  } catch (e) {
     if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === "P2002"
     ) {
       return NextResponse.json(
         { error: "Já existe um motorista cadastrado com este CPF." },
-        { status: 409 },
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      { error: "Não foi possível cadastrar o motorista." },
-      { status: 500 },
-    );
+    console.error("Erro ao criar driver:", e);
+    const err = e as Error;
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
